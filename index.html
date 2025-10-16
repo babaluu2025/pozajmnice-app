@@ -152,7 +152,7 @@
             background-color: #e67e22;
         }
         
-        .person-card {
+        .objekat-card {
             background: white;
             border-radius: 10px;
             padding: 20px;
@@ -163,19 +163,19 @@
             border-left: 4px solid var(--secondary-color);
         }
         
-        .person-card:hover {
+        .objekat-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
         }
         
-        .person-header {
+        .objekat-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
         }
         
-        .person-name {
+        .objekat-name {
             font-size: 1.3rem;
             font-weight: bold;
             color: var(--primary-color);
@@ -338,12 +338,29 @@
             margin-bottom: 20px;
         }
         
-        .person-detail-header {
+        .objekat-detail-header {
             background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
             color: white;
             padding: 20px;
             border-radius: 10px;
             margin-bottom: 20px;
+        }
+        
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            padding-left: 40px;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
         }
         
         @media (max-width: 768px) {
@@ -401,32 +418,34 @@
         <div class="container">
             <!-- Main Navigation -->
             <div class="main-tabs">
-                <button class="main-tab active" data-section="people">Osobe</button>
+                <button class="main-tab active" data-section="objekti">Objekti</button>
                 <button class="main-tab" data-section="transactions">Sve Transakcije</button>
                 <button class="main-tab" data-section="items">Artikli</button>
             </div>
             
-            <!-- People Section -->
-            <div id="people" class="content-section active">
-                <div class="form-group">
-                    <input type="text" id="searchPerson" placeholder="🔍 Pretraži osobe...">
+            <!-- Objekti Section -->
+            <div id="objekti" class="content-section active">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchObjekat" placeholder="Pretraži objekte...">
                 </div>
                 
-                <div id="peopleList">
-                    <!-- Osobe će biti dodane ovdje -->
+                <div id="objektiList">
+                    <!-- Objekti će biti dodani ovdje -->
                 </div>
                 
-                <button onclick="showAddPersonForm()" class="btn-success" style="width: 100%; margin-top: 20px;">
-                    + Dodaj Novu Osobu
+                <button onclick="showAddObjekatForm()" class="btn-success" style="width: 100%; margin-top: 20px;">
+                    + Dodaj Novi Objekat
                 </button>
             </div>
             
-            <!-- Person Detail Section -->
-            <div id="personDetail" class="content-section">
-                <button class="back-btn" onclick="showSection('people')">← Nazad na osobe</button>
+            <!-- Objekat Detail Section -->
+            <div id="objekatDetail" class="content-section">
+                <button class="back-btn" onclick="showSection('objekti')">← Nazad na objekte</button>
                 
-                <div class="person-detail-header">
-                    <h2 id="detailPersonName"></h2>
+                <div class="objekat-detail-header">
+                    <h2 id="detailObjekatName"></h2>
+                    <div style="margin-top: 10px; font-size: 1.1rem;" id="detailObjekatContact"></div>
                     <div class="balance-info">
                         <div class="balance-item they-owe">
                             <div class="balance-amount" id="theyOweAmount">0.00</div>
@@ -466,8 +485,8 @@
                             <th>Akcije</th>
                         </tr>
                     </thead>
-                    <tbody id="personTransactions">
-                        <!-- Transakcije osobe -->
+                    <tbody id="objekatTransactions">
+                        <!-- Transakcije objekta -->
                     </tbody>
                 </table>
                 
@@ -483,7 +502,7 @@
                     <thead>
                         <tr>
                             <th>Datum</th>
-                            <th>Osoba</th>
+                            <th>Objekat</th>
                             <th>Artikal</th>
                             <th>Količina</th>
                             <th>Tip</th>
@@ -499,28 +518,44 @@
             <!-- Items Section -->
             <div id="items" class="content-section">
                 <h2>Artikli</h2>
-                <form id="itemForm">
-                    <div class="form-group">
-                        <label for="itemName">Naziv artikla:</label>
-                        <input type="text" id="itemName" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="itemUnit">Jedinica mjere:</label>
-                        <select id="itemUnit" required>
-                            <option value="">Odaberite jedinicu</option>
-                            <option value="komad">komad</option>
-                            <option value="kg">kg</option>
-                            <option value="l">l</option>
-                            <option value="boca">boca</option>
-                            <option value="pakovanje">pakovanje</option>
-                            <option value="metar">metar</option>
-                            <option value="kutija">kutija</option>
-                        </select>
-                    </div>
-                    <button type="submit">Dodaj artikal</button>
-                </form>
                 
-                <table style="margin-top: 20px;">
+                <!-- Add/Edit Item Form -->
+                <div id="itemFormContainer" style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <h3 id="itemFormTitle">Dodaj Novi Artikal</h3>
+                    <form id="itemForm">
+                        <input type="hidden" id="editingItemId" value="">
+                        <div class="form-group">
+                            <label for="itemName">Naziv artikla:</label>
+                            <input type="text" id="itemName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="itemUnit">Jedinica mjere:</label>
+                            <select id="itemUnit" required>
+                                <option value="">Odaberite jedinicu</option>
+                                <option value="kg">kg</option>
+                                <option value="g">g</option>
+                                <option value="l">l</option>
+                                <option value="ml">ml</option>
+                                <option value="komad">komad</option>
+                                <option value="boca">boca</option>
+                                <option value="pakovanje">pakovanje</option>
+                                <option value="kutija">kutija</option>
+                                <option value="metar">metar</option>
+                                <option value="kesa">kesa</option>
+                            </select>
+                        </div>
+                        <button type="submit" id="itemSubmitBtn">Dodaj artikal</button>
+                        <button type="button" id="itemCancelBtn" class="btn-danger" style="display: none; margin-left: 10px;">Otkaži</button>
+                    </form>
+                </div>
+                
+                <!-- Items List -->
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchItem" placeholder="Pretraži artikle...">
+                </div>
+                
+                <table>
                     <thead>
                         <tr>
                             <th>Naziv</th>
@@ -534,30 +569,30 @@
                 </table>
             </div>
             
-            <!-- Add Person Form -->
-            <div id="addPersonForm" class="content-section">
-                <button class="back-btn" onclick="showSection('people')">← Nazad</button>
-                <h2>Dodaj Novu Osobu</h2>
-                <form id="personForm">
+            <!-- Add Objekat Form -->
+            <div id="addObjekatForm" class="content-section">
+                <button class="back-btn" onclick="showSection('objekti')">← Nazad</button>
+                <h2>Dodaj Novi Objekat</h2>
+                <form id="objekatForm">
                     <div class="form-group">
-                        <label for="personName">Ime i prezime:</label>
-                        <input type="text" id="personName" required>
+                        <label for="objekatName">Naziv objekta:</label>
+                        <input type="text" id="objekatName" required>
                     </div>
                     <div class="form-group">
-                        <label for="personPhone">Telefon (opciono):</label>
-                        <input type="text" id="personPhone">
+                        <label for="objekatContact">Kontakt osoba (opciono):</label>
+                        <input type="text" id="objekatContact">
                     </div>
                     <div class="form-group">
-                        <label for="personNote">Napomena (opciono):</label>
-                        <textarea id="personNote" rows="3"></textarea>
+                        <label for="objekatNote">Napomena (opciono):</label>
+                        <textarea id="objekatNote" rows="3"></textarea>
                     </div>
-                    <button type="submit">Sačuvaj osobu</button>
+                    <button type="submit">Sačuvaj objekat</button>
                 </form>
             </div>
             
             <!-- Add Transaction Form -->
             <div id="addTransactionForm" class="content-section">
-                <button class="back-btn" onclick="showPersonDetail(currentPersonId)">← Nazad</button>
+                <button class="back-btn" onclick="showObjekatDetail(currentObjekatId)">← Nazad</button>
                 <h2>Nova Transakcija</h2>
                 <form id="transactionForm">
                     <div class="form-group">
@@ -597,23 +632,35 @@
     <script>
         // Konfiguracija - ŠIFRA JE 123
         const APP_PASSWORD = "123";
-        let currentPersonId = null;
+        let currentObjekatId = null;
         
         // Podaci
-        let people = JSON.parse(localStorage.getItem('people')) || [];
+        let objekti = JSON.parse(localStorage.getItem('objekti')) || [];
         let items = JSON.parse(localStorage.getItem('items')) || [];
         let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
         
-        // Inicijalizacija osnovnih artikala ako ne postoje
-        if (items.length === 0) {
-            items = [
-                { id: '1', name: 'Šećer', unit: 'kg' },
-                { id: '2', name: 'Brasno', unit: 'kg' },
-                { id: '3', name: 'Ulje', unit: 'l' },
-                { id: '4', name: 'So', unit: 'kg' },
-                { id: '5', name: 'Voda', unit: 'boca' }
-            ];
-            saveItems();
+        // Inicijalizacija osnovnih artikala
+        function initializeDefaultItems() {
+            if (items.length === 0) {
+                items = [
+                    { id: '1', name: 'Šećer', unit: 'kg' },
+                    { id: '2', name: 'Brasno', unit: 'kg' },
+                    { id: '3', name: 'Ulje', unit: 'l' },
+                    { id: '4', name: 'So', unit: 'kg' },
+                    { id: '5', name: 'Voda', unit: 'boca' },
+                    { id: '6', name: 'Mlijeko', unit: 'l' },
+                    { id: '7', name: 'Kafa', unit: 'kg' },
+                    { id: '8', name: 'Špageti', unit: 'kg' },
+                    { id: '9', name: 'Piletina', unit: 'kg' },
+                    { id: '10', name: 'Govedina', unit: 'kg' },
+                    { id: '11', name: 'Jaja', unit: 'komad' },
+                    { id: '12', name: 'Krompir', unit: 'kg' },
+                    { id: '13', name: 'Luk', unit: 'kg' },
+                    { id: '14', name: 'Paradajz', unit: 'kg' },
+                    { id: '15', name: 'Jabuke', unit: 'kg' }
+                ];
+                saveItems();
+            }
         }
         
         // Login sistem
@@ -642,8 +689,9 @@
         
         // Inicijalizacija aplikacije
         function initApp() {
+            initializeDefaultItems();
             setupEventListeners();
-            loadPeople();
+            loadObjekti();
             loadItems();
             updateAllTransactions();
             
@@ -661,12 +709,16 @@
             });
             
             // Forme
-            document.getElementById('personForm').addEventListener('submit', addPerson);
-            document.getElementById('itemForm').addEventListener('submit', addItem);
+            document.getElementById('objekatForm').addEventListener('submit', addObjekat);
+            document.getElementById('itemForm').addEventListener('submit', handleItemForm);
             document.getElementById('transactionForm').addEventListener('submit', addTransaction);
             
             // Pretraga
-            document.getElementById('searchPerson').addEventListener('input', filterPeople);
+            document.getElementById('searchObjekat').addEventListener('input', filterObjekti);
+            document.getElementById('searchItem').addEventListener('input', filterItems);
+            
+            // Cancel button za artikle
+            document.getElementById('itemCancelBtn').addEventListener('click', cancelItemEdit);
         }
         
         // Prikaz sekcija
@@ -688,9 +740,9 @@
             }
         }
         
-        function showAddPersonForm() {
-            showSection('addPersonForm');
-            document.getElementById('personForm').reset();
+        function showAddObjekatForm() {
+            showSection('addObjekatForm');
+            document.getElementById('objekatForm').reset();
         }
         
         function showAddTransactionForm() {
@@ -700,34 +752,35 @@
             populateItemSelect();
         }
         
-        function showPersonDetail(personId) {
-            currentPersonId = personId;
-            const person = people.find(p => p.id === personId);
-            if (!person) return;
+        function showObjekatDetail(objekatId) {
+            currentObjekatId = objekatId;
+            const objekat = objekti.find(p => p.id === objekatId);
+            if (!objekat) return;
             
-            document.getElementById('detailPersonName').textContent = person.name;
-            updatePersonDetail(personId);
-            showSection('personDetail');
+            document.getElementById('detailObjekatName').textContent = objekat.name;
+            document.getElementById('detailObjekatContact').textContent = objekat.contact ? `Kontakt: ${objekat.contact}` : '';
+            updateObjekatDetail(objekatId);
+            showSection('objekatDetail');
         }
         
         // Učitavanje podataka
-        function loadPeople() {
-            const peopleList = document.getElementById('peopleList');
-            peopleList.innerHTML = '';
+        function loadObjekti() {
+            const objektiList = document.getElementById('objektiList');
+            objektiList.innerHTML = '';
             
-            people.forEach(person => {
-                const balance = calculatePersonBalance(person.id);
+            objekti.forEach(objekat => {
+                const balance = calculateObjekatBalance(objekat.id);
                 
                 const card = document.createElement('div');
-                card.className = 'person-card';
-                card.onclick = () => showPersonDetail(person.id);
+                card.className = 'objekat-card';
+                card.onclick = () => showObjekatDetail(objekat.id);
                 
                 card.innerHTML = `
-                    <div class="person-header">
-                        <div class="person-name">${person.name}</div>
-                        <div>📞 ${person.phone || 'Nema telefon'}</div>
+                    <div class="objekat-header">
+                        <div class="objekat-name">${objekat.name}</div>
+                        <div>${objekat.contact ? `📞 ${objekat.contact}` : '📞 Nema kontakt'}</div>
                     </div>
-                    ${person.note ? `<div style="margin-bottom: 10px; color: #666;">${person.note}</div>` : ''}
+                    ${objekat.note ? `<div style="margin-bottom: 10px; color: #666;">${objekat.note}</div>` : ''}
                     <div class="balance-info">
                         <div class="balance-item they-owe">
                             <div class="balance-amount">${balance.theyOwe.toFixed(2)}</div>
@@ -740,7 +793,7 @@
                     </div>
                 `;
                 
-                peopleList.appendChild(card);
+                objektiList.appendChild(card);
             });
         }
         
@@ -753,7 +806,8 @@
                 row.innerHTML = `
                     <td>${item.name}</td>
                     <td>${item.unit}</td>
-                    <td>
+                    <td class="action-buttons">
+                        <button class="action-btn btn-warning" onclick="editItem('${item.id}')">Uredi</button>
                         <button class="action-btn btn-danger" onclick="deleteItem('${item.id}')">Obriši</button>
                     </td>
                 `;
@@ -774,12 +828,12 @@
         }
         
         // Računanje stanja
-        function calculatePersonBalance(personId) {
+        function calculateObjekatBalance(objekatId) {
             let theyOwe = 0; // Oni duguju nama
             let weOwe = 0;   // Mi dugujemo njima
             
             transactions.forEach(transaction => {
-                if (transaction.personId === personId) {
+                if (transaction.objekatId === objekatId) {
                     const quantity = parseFloat(transaction.quantity);
                     
                     if (transaction.type === 'they_borrow') {
@@ -800,24 +854,24 @@
             };
         }
         
-        function updatePersonDetail(personId) {
-            const balance = calculatePersonBalance(personId);
-            const personTransactions = transactions.filter(t => t.personId === personId);
+        function updateObjekatDetail(objekatId) {
+            const balance = calculateObjekatBalance(objekatId);
+            const objekatTransactions = transactions.filter(t => t.objekatId === objekatId);
             
             // Ažuriraj balance
             document.getElementById('theyOweAmount').textContent = balance.theyOwe.toFixed(2);
             document.getElementById('weOweAmount').textContent = balance.weOwe.toFixed(2);
             
             // Ažuriraj statistike
-            const totalBorrowed = personTransactions.filter(t => 
+            const totalBorrowed = objekatTransactions.filter(t => 
                 t.type === 'they_borrow' || t.type === 'we_borrow'
             ).length;
             
-            const totalReturned = personTransactions.filter(t => 
+            const totalReturned = objekatTransactions.filter(t => 
                 t.type === 'they_return' || t.type === 'we_return'
             ).length;
             
-            const activeLoans = personTransactions.filter(t => 
+            const activeLoans = objekatTransactions.filter(t => 
                 (t.type === 'they_borrow' || t.type === 'we_borrow') && 
                 !isReturned(t)
             ).length;
@@ -827,10 +881,10 @@
             document.getElementById('activeLoans').textContent = activeLoans;
             
             // Ažuriraj transakcije
-            const tbody = document.getElementById('personTransactions');
+            const tbody = document.getElementById('objekatTransactions');
             tbody.innerHTML = '';
             
-            personTransactions
+            objekatTransactions
                 .sort((a, b) => new Date(b.date) - new Date(a.date))
                 .forEach(transaction => {
                     const item = items.find(i => i.id === transaction.itemId);
@@ -863,14 +917,14 @@
         function isReturned(transaction) {
             if (transaction.type === 'they_borrow') {
                 return transactions.some(t => 
-                    t.personId === transaction.personId && 
+                    t.objekatId === transaction.objekatId && 
                     t.itemId === transaction.itemId && 
                     t.type === 'they_return' &&
                     parseFloat(t.quantity) >= parseFloat(transaction.quantity)
                 );
             } else if (transaction.type === 'we_borrow') {
                 return transactions.some(t => 
-                    t.personId === transaction.personId && 
+                    t.objekatId === transaction.objekatId && 
                     t.itemId === transaction.itemId && 
                     t.type === 'we_return' &&
                     parseFloat(t.quantity) >= parseFloat(transaction.quantity)
@@ -890,36 +944,54 @@
         }
         
         // Dodavanje podataka
-        function addPerson(e) {
+        function addObjekat(e) {
             e.preventDefault();
             
-            const person = {
+            const objekat = {
                 id: generateId(),
-                name: document.getElementById('personName').value,
-                phone: document.getElementById('personPhone').value,
-                note: document.getElementById('personNote').value,
+                name: document.getElementById('objekatName').value,
+                contact: document.getElementById('objekatContact').value,
+                note: document.getElementById('objekatNote').value,
                 createdAt: new Date().toISOString()
             };
             
-            people.push(person);
-            savePeople();
-            loadPeople();
-            showSection('people');
+            objekti.push(objekat);
+            saveObjekti();
+            loadObjekti();
+            showSection('objekti');
         }
         
-        function addItem(e) {
+        function handleItemForm(e) {
             e.preventDefault();
             
-            const item = {
-                id: generateId(),
-                name: document.getElementById('itemName').value,
-                unit: document.getElementById('itemUnit').value
-            };
+            const editingId = document.getElementById('editingItemId').value;
             
-            items.push(item);
-            saveItems();
-            loadItems();
-            document.getElementById('itemForm').reset();
+            if (editingId) {
+                // Edit mode
+                const itemIndex = items.findIndex(item => item.id === editingId);
+                if (itemIndex !== -1) {
+                    items[itemIndex] = {
+                        ...items[itemIndex],
+                        name: document.getElementById('itemName').value,
+                        unit: document.getElementById('itemUnit').value
+                    };
+                    saveItems();
+                    loadItems();
+                    cancelItemEdit();
+                }
+            } else {
+                // Add mode
+                const item = {
+                    id: generateId(),
+                    name: document.getElementById('itemName').value,
+                    unit: document.getElementById('itemUnit').value
+                };
+                
+                items.push(item);
+                saveItems();
+                loadItems();
+                document.getElementById('itemForm').reset();
+            }
         }
         
         function addTransaction(e) {
@@ -927,7 +999,7 @@
             
             const transaction = {
                 id: generateId(),
-                personId: currentPersonId,
+                objekatId: currentObjekatId,
                 itemId: document.getElementById('transactionItem').value,
                 type: document.getElementById('transactionType').value,
                 quantity: parseFloat(document.getElementById('transactionQuantity').value),
@@ -938,12 +1010,43 @@
             
             transactions.push(transaction);
             saveTransactions();
-            showPersonDetail(currentPersonId);
+            showObjekatDetail(currentObjekatId);
+        }
+        
+        // Edit funkcije za artikle
+        function editItem(itemId) {
+            const item = items.find(i => i.id === itemId);
+            if (!item) return;
+            
+            document.getElementById('itemFormTitle').textContent = 'Uredi Artikal';
+            document.getElementById('editingItemId').value = item.id;
+            document.getElementById('itemName').value = item.name;
+            document.getElementById('itemUnit').value = item.unit;
+            document.getElementById('itemSubmitBtn').textContent = 'Sačuvaj promjene';
+            document.getElementById('itemCancelBtn').style.display = 'inline-block';
+            
+            // Scroll to form
+            document.getElementById('itemFormContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function cancelItemEdit() {
+            document.getElementById('itemFormTitle').textContent = 'Dodaj Novi Artikal';
+            document.getElementById('editingItemId').value = '';
+            document.getElementById('itemForm').reset();
+            document.getElementById('itemSubmitBtn').textContent = 'Dodaj artikal';
+            document.getElementById('itemCancelBtn').style.display = 'none';
         }
         
         // Brisanje podataka
         function deleteItem(itemId) {
             if (confirm('Da li ste sigurni da želite obrisati ovaj artikal?')) {
+                // Provjeri da li se artikal koristi u transakcijama
+                const isUsed = transactions.some(t => t.itemId === itemId);
+                if (isUsed) {
+                    alert('Ovaj artikal se koristi u transakcijama i ne može se obrisati!');
+                    return;
+                }
+                
                 items = items.filter(item => item.id !== itemId);
                 saveItems();
                 loadItems();
@@ -954,8 +1057,8 @@
             if (confirm('Da li ste sigurni da želite obrisati ovu transakciju?')) {
                 transactions = transactions.filter(t => t.id !== transactionId);
                 saveTransactions();
-                if (currentPersonId) {
-                    updatePersonDetail(currentPersonId);
+                if (currentObjekatId) {
+                    updateObjekatDetail(currentObjekatId);
                 }
                 updateAllTransactions();
             }
@@ -968,7 +1071,7 @@
             const returnType = transaction.type === 'they_borrow' ? 'they_return' : 'we_return';
             const returnTransaction = {
                 id: generateId(),
-                personId: transaction.personId,
+                objekatId: transaction.objekatId,
                 itemId: transaction.itemId,
                 type: returnType,
                 quantity: transaction.quantity,
@@ -979,7 +1082,40 @@
             
             transactions.push(returnTransaction);
             saveTransactions();
-            updatePersonDetail(currentPersonId);
+            updateObjekatDetail(currentObjekatId);
+        }
+        
+        // Pretraga
+        function filterObjekti() {
+            const searchTerm = document.getElementById('searchObjekat').value.toLowerCase();
+            const cards = document.querySelectorAll('.objekat-card');
+            
+            cards.forEach(card => {
+                const objekatName = card.querySelector('.objekat-name').textContent.toLowerCase();
+                const objekatContact = card.querySelector('.objekat-header div:last-child').textContent.toLowerCase();
+                
+                if (objekatName.includes(searchTerm) || objekatContact.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        function filterItems() {
+            const searchTerm = document.getElementById('searchItem').value.toLowerCase();
+            const rows = document.querySelectorAll('#itemsList tr');
+            
+            rows.forEach(row => {
+                const itemName = row.cells[0].textContent.toLowerCase();
+                const itemUnit = row.cells[1].textContent.toLowerCase();
+                
+                if (itemName.includes(searchTerm) || itemUnit.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
         }
         
         // Pomocne funkcije
@@ -990,13 +1126,13 @@
             transactions
                 .sort((a, b) => new Date(b.date) - new Date(a.date))
                 .forEach(transaction => {
-                    const person = people.find(p => p.id === transaction.personId);
+                    const objekat = objekti.find(p => p.id === transaction.objekatId);
                     const item = items.find(i => i.id === transaction.itemId);
                     
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${formatDate(transaction.date)}</td>
-                        <td>${person ? person.name : 'Nepoznato'}</td>
+                        <td>${objekat ? objekat.name : 'Nepoznato'}</td>
                         <td>${item ? `${item.name} (${item.unit})` : 'Nepoznato'}</td>
                         <td>${transaction.quantity}</td>
                         <td>${getTransactionTypeLabel(transaction.type)}</td>
@@ -1011,20 +1147,6 @@
                 });
         }
         
-        function filterPeople() {
-            const searchTerm = document.getElementById('searchPerson').value.toLowerCase();
-            const cards = document.querySelectorAll('.person-card');
-            
-            cards.forEach(card => {
-                const personName = card.querySelector('.person-name').textContent.toLowerCase();
-                if (personName.includes(searchTerm)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-        
         function formatDate(dateString) {
             return new Date(dateString).toLocaleDateString('hr-HR');
         }
@@ -1034,8 +1156,8 @@
         }
         
         // Čuvanje podataka
-        function savePeople() {
-            localStorage.setItem('people', JSON.stringify(people));
+        function saveObjekti() {
+            localStorage.setItem('objekti', JSON.stringify(objekti));
         }
         
         function saveItems() {
