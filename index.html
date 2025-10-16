@@ -749,7 +749,7 @@
             showSection('addTransactionForm');
             document.getElementById('transactionForm').reset();
             document.getElementById('transactionDate').valueAsDate = new Date();
-            populateItemSelect();
+            populateItemSelect(); // OVO JE KLJUČNO - POPUNI DROPDOWN
         }
         
         function showObjekatDetail(objekatId) {
@@ -819,12 +819,23 @@
             const select = document.getElementById('transactionItem');
             select.innerHTML = '<option value="">Odaberite artikal</option>';
             
+            console.log('Populating item select with items:', items); // Debug
+            
             items.forEach(item => {
                 const option = document.createElement('option');
                 option.value = item.id;
                 option.textContent = `${item.name} (${item.unit})`;
                 select.appendChild(option);
             });
+            
+            // Ako nema artikala, pokaži poruku
+            if (items.length === 0) {
+                const option = document.createElement('option');
+                option.value = "";
+                option.textContent = "Nema dostupnih artikala - dodajte artikle prvo";
+                option.disabled = true;
+                select.appendChild(option);
+            }
         }
         
         // Računanje stanja
