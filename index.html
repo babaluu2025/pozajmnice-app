@@ -4,31 +4,735 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pozajmnice</title>
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤝</text></svg>">
     <style>
-        /* CSS OSTAJE ISTI - zbog dužine preskačem */
-        /* Kopirajte CSS iz prethodne verzije */
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #c0392b;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+        }
+        
+        .main-tabs {
+            display: flex;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .main-tab {
+            flex: 1;
+            padding: 15px;
+            background: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+        
+        .main-tab:hover {
+            background: #f8f9fa;
+        }
+        
+        .main-tab.active {
+            background: var(--secondary-color);
+            color: white;
+        }
+        
+        .content-section {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+        
+        .btn-danger:hover {
+            background-color: #a93226;
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+        }
+        
+        .btn-success:hover {
+            background-color: #219653;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+        }
+        
+        .btn-warning:hover {
+            background-color: #e67e22;
+        }
+        
+        .btn-info {
+            background-color: var(--secondary-color);
+        }
+        
+        .objekat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .objekat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        
+        .objekat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .objekat-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .balance-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .balance-item {
+            text-align: center;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .we-owe {
+            background: #ffeaa7;
+            color: #d35400;
+        }
+        
+        .they-owe {
+            background: #a29bfe;
+            color: #2d3436;
+        }
+        
+        .balance-amount {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+        
+        .balance-label {
+            font-size: 0.9rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: var(--light-color);
+            font-weight: 600;
+        }
+        
+        .transaction-row {
+            transition: background-color 0.2s;
+        }
+        
+        .transaction-row:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background-color: var(--warning-color);
+            color: #000;
+        }
+        
+        .status-completed {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .action-btn {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+        
+        .login-box {
+            background-color: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .login-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        .login-title {
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+        
+        .password-input {
+            margin-bottom: 20px;
+        }
+        
+        .login-btn {
+            width: 100%;
+        }
+        
+        .error-message {
+            color: var(--danger-color);
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .back-btn {
+            margin-bottom: 20px;
+        }
+        
+        .objekat-detail-header {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            padding-left: 40px;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        .item-search-container {
+            position: relative;
+        }
+
+        .item-search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .item-search-result {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .item-search-result:hover {
+            background-color: #f5f5f5;
+        }
+
+        .item-search-result:last-child {
+            border-bottom: none;
+        }
+
+        .selected-item {
+            background: #e8f4fd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .sync-status {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .sync-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .sync-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .main-tabs {
+                flex-direction: column;
+            }
+            
+            .balance-info {
+                grid-template-columns: 1fr;
+            }
+            
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- HTML OSTAJE ISTI - zbog dužine preskačem -->
-    <!-- Kopirajte HTML iz prethodne verzije -->
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <div class="login-icon">🤝</div>
+            <h1 class="login-title">Pozajmnice</h1>
+            <p>Unesite šifru za pristup aplikaciji</p>
+            <div class="form-group password-input">
+                <input type="password" id="passwordInput" placeholder="Šifra" autocomplete="off" value="123">
+            </div>
+            <button id="loginBtn" class="login-btn">Pristupi</button>
+            <div id="errorMessage" class="error-message">Pogrešna šifra!</div>
+            <div style="margin-top: 15px; color: #666; font-size: 0.9rem;">
+                <strong>Šifra za test: 123</strong>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Application -->
+    <div id="appContent" style="display: none;">
+        <header>
+            <div class="container">
+                <div class="header-content">
+                    <h1>🤝 Pozajmnice</h1>
+                    <div>
+                        <button id="syncBtn" class="btn-info" style="margin-right: 10px;">🔄 Sync</button>
+                        <button onclick="clearLocalData()" class="btn-warning" style="margin-right: 10px;">🗑️ Obriši Lokalne Podatke</button>
+                        <button id="logoutBtn" class="btn-danger">Odjava</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <div id="syncStatus" class="sync-status"></div>
+            
+            <!-- Main Navigation -->
+            <div class="main-tabs">
+                <button class="main-tab active" data-section="objekti">Objekti</button>
+                <button class="main-tab" data-section="transactions">Sve Transakcije</button>
+                <button class="main-tab" data-section="items">Artikli</button>
+            </div>
+            
+            <!-- Objekti Section -->
+            <div id="objekti" class="content-section active">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchObjekat" placeholder="Pretraži objekte...">
+                </div>
+                
+                <div id="objektiList">
+                    <!-- Objekti će biti dodani ovdje -->
+                </div>
+                
+                <button onclick="showAddObjekatForm()" class="btn-success" style="width: 100%; margin-top: 20px;">
+                    + Dodaj Novi Objekat
+                </button>
+            </div>
+            
+            <!-- Objekat Detail Section -->
+            <div id="objekatDetail" class="content-section">
+                <button class="back-btn" onclick="showSection('objekti')">← Nazad na objekte</button>
+                
+                <div class="objekat-detail-header">
+                    <h2 id="detailObjekatName"></h2>
+                    <div style="margin-top: 10px; font-size: 1.1rem;" id="detailObjekatContact"></div>
+                    <div class="balance-info">
+                        <div class="balance-item they-owe">
+                            <div class="balance-amount" id="theyOweAmount">0.00</div>
+                            <div class="balance-label">Duguju nama</div>
+                        </div>
+                        <div class="balance-item we-owe">
+                            <div class="balance-amount" id="weOweAmount">0.00</div>
+                            <div class="balance-label">Mi dugujemo</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalBorrowed">0</div>
+                        <div class="stat-label">Ukupno pozajmljeno</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalReturned">0</div>
+                        <div class="stat-label">Ukupno vraćeno</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="activeLoans">0</div>
+                        <div class="stat-label">Aktivne pozajmice</div>
+                    </div>
+                </div>
+                
+                <h3>Detaljna istorija</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th>Artikal</th>
+                            <th>Količina</th>
+                            <th>Tip</th>
+                            <th>Status</th>
+                            <th>Akcije</th>
+                        </tr>
+                    </thead>
+                    <tbody id="objekatTransactions">
+                        <!-- Transakcije objekta -->
+                    </tbody>
+                </table>
+                
+                <button onclick="showAddTransactionForm()" class="btn-success" style="margin-top: 20px;">
+                    + Dodaj Novu Transakciju
+                </button>
+            </div>
+            
+            <!-- All Transactions Section -->
+            <div id="transactions" class="content-section">
+                <h2>Sve Transakcije</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th>Objekat</th>
+                            <th>Artikal</th>
+                            <th>Količina</th>
+                            <th>Tip</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allTransactionsList">
+                        <!-- Sve transakcije -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Items Section -->
+            <div id="items" class="content-section">
+                <h2>Artikli</h2>
+                
+                <!-- Add/Edit Item Form -->
+                <div id="itemFormContainer" style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <h3 id="itemFormTitle">Dodaj Novi Artikal</h3>
+                    <form id="itemForm">
+                        <input type="hidden" id="editingItemId" value="">
+                        <div class="form-group">
+                            <label for="itemName">Naziv artikla:</label>
+                            <input type="text" id="itemName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="itemUnit">Jedinica mjere:</label>
+                            <select id="itemUnit" required>
+                                <option value="">Odaberite jedinicu</option>
+                                <option value="kg">kg</option>
+                                <option value="g">g</option>
+                                <option value="l">l</option>
+                                <option value="ml">ml</option>
+                                <option value="komad">komad</option>
+                                <option value="boca">boca</option>
+                                <option value="pakovanje">pakovanje</option>
+                                <option value="kutija">kutija</option>
+                                <option value="metar">metar</option>
+                                <option value="kesa">kesa</option>
+                                <option value="vreća">vreća</option>
+                                <option value="flaša">flaša</option>
+                            </select>
+                        </div>
+                        <button type="submit" id="itemSubmitBtn">Dodaj artikal</button>
+                        <button type="button" id="itemCancelBtn" class="btn-danger" style="display: none; margin-left: 10px;">Otkaži</button>
+                    </form>
+                </div>
+                
+                <!-- Items List -->
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchItem" placeholder="Pretraži artikle...">
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Naziv</th>
+                            <th>Jedinica</th>
+                            <th>Akcije</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsList">
+                        <!-- Artikli -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Add Objekat Form -->
+            <div id="addObjekatForm" class="content-section">
+                <button class="back-btn" onclick="showSection('objekti')">← Nazad</button>
+                <h2>Dodaj Novi Objekat</h2>
+                <form id="objekatForm">
+                    <div class="form-group">
+                        <label for="objekatName">Naziv objekta:</label>
+                        <input type="text" id="objekatName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="objekatContact">Kontakt osoba (opciono):</label>
+                        <input type="text" id="objekatContact">
+                    </div>
+                    <div class="form-group">
+                        <label for="objekatNote">Napomena (opciono):</label>
+                        <textarea id="objekatNote" rows="3"></textarea>
+                    </div>
+                    <button type="submit">Sačuvaj objekat</button>
+                </form>
+            </div>
+            
+            <!-- Add Transaction Form -->
+            <div id="addTransactionForm" class="content-section">
+                <button class="back-btn" onclick="showObjekatDetail(currentObjekatId)">← Nazad</button>
+                <h2>Nova Transakcija</h2>
+                <form id="transactionForm">
+                    <input type="hidden" id="selectedItemId" value="">
+                    
+                    <div class="form-group">
+                        <label for="transactionType">Tip transakcije:</label>
+                        <select id="transactionType" required>
+                            <option value="">Odaberite tip</option>
+                            <option value="we_borrow">Mi pozajmljujemo od njih</option>
+                            <option value="they_borrow">Oni pozajmljuju od nas</option>
+                            <option value="we_return">Mi vraćamo njima</option>
+                            <option value="they_return">Oni vraćaju nama</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="itemSearch">Artikal:</label>
+                        <div class="item-search-container">
+                            <input type="text" id="itemSearch" placeholder="🔍 Pretraži artikle..." autocomplete="off">
+                            <div id="itemSearchResults" class="item-search-results"></div>
+                        </div>
+                        <div id="selectedItem" class="selected-item">
+                            <strong>Odabrani artikal:</strong> <span id="selectedItemName"></span> (<span id="selectedItemUnit"></span>)
+                            <button type="button" onclick="clearSelectedItem()" class="btn-danger" style="margin-left: 10px; padding: 5px 10px;">✕</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="transactionQuantity">Količina:</label>
+                        <input type="number" id="transactionQuantity" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="transactionDate">Datum:</label>
+                        <input type="date" id="transactionDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="transactionNote">Napomena (opciono):</label>
+                        <textarea id="transactionNote" rows="3"></textarea>
+                    </div>
+                    <button type="submit">Sačuvaj transakciju</button>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <script>
+        // KONFIGURACIJA
         const APP_PASSWORD = "123";
         const SHEET_ID = "1TdAZal8V82wnjhiGIoJqNzZEzWapVQL-W3WdiqJYYQo";
         
         let currentObjekatId = null;
-        let objekti = [], items = [], transactions = [];
+        let objekti = [];
+        let items = [];
+        let transactions = [];
+        let useLocalStorage = false;
 
-        // ✅ NOVO - KORISTI GOOGLE FORMS TRICK
+        // ✅ NOVO - KORISTI GOOGLE SHEETS CSV EXPORT BEZ API KEY!
         async function loadFromGoogleSheets() {
-            showSyncStatus('Učitavam podatke...', 'info');
+            showSyncStatus('Učitavam podatke iz Google Sheets...', 'info');
             
             try {
                 // Učitaj CSV podatke direktno - BEZ API KEY!
                 const [objektiCSV, artikliCSV, transakcijeCSV] = await Promise.all([
                     fetchSheetAsCSV('Objekti'),
-                    fetchSheetAsCSV('Artikli'),
+                    fetchSheetAsCSV('Artikli'), 
                     fetchSheetAsCSV('Transakcije')
                 ]);
 
@@ -36,10 +740,15 @@
                 items = parseCSV(artikliCSV, ['id', 'name', 'unit']);
                 transactions = parseCSV(transakcijeCSV, ['id', 'objekatId', 'itemId', 'type', 'quantity', 'date', 'note', 'createdAt']);
 
-                showSyncStatus('Podaci uspješno učitani!', 'success');
+                // Ako nema podataka, inicijaliziraj prazne
+                if (objekti.length === 0 && items.length === 0) {
+                    initializeDefaultData();
+                }
+
+                showSyncStatus('Podaci uspješno učitani iz Google Sheets!', 'success');
                 return true;
             } catch (error) {
-                console.error('Greška:', error);
+                console.error('Greška pri učitavanju:', error);
                 showSyncStatus('Učitavam lokalne podatke...', 'warning');
                 return loadFromLocalStorage();
             }
@@ -63,14 +772,14 @@
             const lines = csvText.trim().split('\n');
             const result = [];
             
-            for (let i = 1; i < lines.length; i++) { // Preskoči header
+            for (let i = 1; i < lines.length; i++) { // Preskoči header red
                 const values = parseCSVLine(lines[i]);
                 if (values.length === headers.length) {
                     const obj = {};
                     headers.forEach((header, index) => {
                         let value = values[index] || '';
                         // Ukloni navodnike ako postoje
-                        value = value.replace(/^"|"$/g, '');
+                        value = value.replace(/^"|"$/g, '').trim();
                         obj[header] = value;
                         
                         // Konvertuj brojeve
@@ -107,32 +816,13 @@
             return result;
         }
 
-        // ✅ SPASSAVANJE PREKO GOOGLE FORMS
+        // ✅ SPASSAVANJE - KORISTI LOKALNO SPASSAVANJE
         async function saveToGoogleSheets() {
-            showSyncStatus('Spašavam podatke...', 'info');
-            
-            try {
-                // Form ID-evi će se kreirati automatski
-                await saveViaGoogleForms('Objekti', objekti, ['id', 'name', 'contact', 'note', 'createdAt']);
-                await saveViaGoogleForms('Artikli', items, ['id', 'name', 'unit']);
-                await saveViaGoogleForms('Transakcije', transactions, ['id', 'objekatId', 'itemId', 'type', 'quantity', 'date', 'note', 'createdAt']);
-                
-                showSyncStatus('Podaci uspješno sačuvani!', 'success');
-                return true;
-            } catch (error) {
-                console.error('Greška pri spašavanju:', error);
-                showSyncStatus('Spašavam lokalno...', 'warning');
-                return saveToLocalStorage();
-            }
-        }
-
-        async function saveViaGoogleForms(sheetName, data, headers) {
-            // Ovdje ćemo koristiti jednostavniji pristup
-            // Za sada spašavamo lokalno, a kasnije implementiramo Forms
+            showSyncStatus('Spašavam podatke lokalno...', 'info');
             return saveToLocalStorage();
         }
 
-        // Lokalno spašavanje kao fallback
+        // Lokalno spašavanje
         function loadFromLocalStorage() {
             objekti = JSON.parse(localStorage.getItem('objekti')) || [];
             items = JSON.parse(localStorage.getItem('items')) || [];
@@ -142,6 +832,7 @@
                 initializeDefaultData();
             }
             
+            showSyncStatus('Učitani lokalni podaci', 'info');
             return true;
         }
 
@@ -149,6 +840,7 @@
             localStorage.setItem('objekti', JSON.stringify(objekti));
             localStorage.setItem('items', JSON.stringify(items));
             localStorage.setItem('transactions', JSON.stringify(transactions));
+            showSyncStatus('Podaci spašeni lokalno', 'info');
             return true;
         }
 
@@ -159,23 +851,564 @@
             transactions = [];
         }
 
-        // ✅ OBRISITE LOKALNE PODATKE SADA
+        // ✅ OBRISITE LOKALNE PODATKE
         function clearLocalData() {
-            localStorage.clear();
-            objekti = [];
-            items = [];
-            transactions = [];
-            showSyncStatus('Lokalni podaci obrisani! Osvježite stranicu.', 'success');
-            setTimeout(() => {
-                location.reload();
-            }, 2000);
+            if (confirm('Da li ste sigurni da želite obrisati SVE lokalne podatke? Ovo se ne može poništiti!')) {
+                localStorage.clear();
+                objekti = [];
+                items = [];
+                transactions = [];
+                showSyncStatus('Lokalni podaci obrisani! Osvježite stranicu.', 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            }
         }
 
-        // DODAJTE OVO U header-content DIV:
-        // <button onclick="clearLocalData()" class="btn-warning" style="margin-right: 10px;">🔄 Obriši Lokalne Podatke</button>
-
-        // OSTALE FUNKCIJE OSTAJU ISTE...
-        // [Ovdje ide ostatak JavaScript koda]
+        function showSyncStatus(message, type = 'info') {
+            const statusEl = document.getElementById('syncStatus');
+            statusEl.textContent = message;
+            statusEl.className = `sync-status ${type === 'error' ? 'sync-error' : type === 'warning' ? 'sync-warning' : ''}`;
+            statusEl.style.display = 'block';
+            
+            if (type !== 'error') {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        // Login sistem
+        document.getElementById('loginBtn').addEventListener('click', login);
+        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') login();
+        });
+        
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            document.getElementById('appContent').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('passwordInput').focus();
+        });
+        
+        document.getElementById('syncBtn').addEventListener('click', async function() {
+            this.classList.add('loading');
+            await loadFromGoogleSheets();
+            refreshAllData();
+            this.classList.remove('loading');
+        });
+        
+        async function login() {
+            const password = document.getElementById('passwordInput').value;
+            if (password === APP_PASSWORD) {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('appContent').style.display = 'block';
+                await initApp();
+            } else {
+                document.getElementById('errorMessage').style.display = 'block';
+            }
+        }
+        
+        // Inicijalizacija aplikacije
+        async function initApp() {
+            setupEventListeners();
+            await loadFromGoogleSheets();
+            refreshAllData();
+            document.getElementById('transactionDate').valueAsDate = new Date();
+        }
+        
+        function refreshAllData() {
+            loadObjekti();
+            loadItems();
+            updateAllTransactions();
+        }
+        
+        function setupEventListeners() {
+            document.querySelectorAll('.main-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const section = this.getAttribute('data-section');
+                    showSection(section);
+                });
+            });
+            
+            document.getElementById('objekatForm').addEventListener('submit', addObjekat);
+            document.getElementById('itemForm').addEventListener('submit', handleItemForm);
+            document.getElementById('transactionForm').addEventListener('submit', addTransaction);
+            
+            document.getElementById('searchObjekat').addEventListener('input', filterObjekti);
+            document.getElementById('searchItem').addEventListener('input', filterItems);
+            
+            document.getElementById('itemCancelBtn').addEventListener('click', cancelItemEdit);
+            
+            document.getElementById('itemSearch').addEventListener('input', handleItemSearch);
+            document.getElementById('itemSearch').addEventListener('focus', handleItemSearch);
+        }
+        
+        function showSection(sectionName) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelectorAll('.main-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(sectionName).classList.add('active');
+            document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
+            
+            if (sectionName === 'transactions') {
+                updateAllTransactions();
+            } else if (sectionName === 'items') {
+                loadItems();
+            }
+        }
+        
+        function showAddObjekatForm() {
+            showSection('addObjekatForm');
+            document.getElementById('objekatForm').reset();
+        }
+        
+        function showAddTransactionForm() {
+            showSection('addTransactionForm');
+            document.getElementById('transactionForm').reset();
+            document.getElementById('transactionDate').valueAsDate = new Date();
+            clearSelectedItem();
+        }
+        
+        function showObjekatDetail(objekatId) {
+            currentObjekatId = objekatId;
+            const objekat = objekti.find(p => p.id === objekatId);
+            if (!objekat) return;
+            
+            document.getElementById('detailObjekatName').textContent = objekat.name;
+            document.getElementById('detailObjekatContact').textContent = objekat.contact ? `Kontakt: ${objekat.contact}` : '';
+            updateObjekatDetail(objekatId);
+            showSection('objekatDetail');
+        }
+        
+        function loadObjekti() {
+            const objektiList = document.getElementById('objektiList');
+            objektiList.innerHTML = '';
+            
+            objekti.forEach(objekat => {
+                const balance = calculateObjekatBalance(objekat.id);
+                
+                const card = document.createElement('div');
+                card.className = 'objekat-card';
+                card.onclick = () => showObjekatDetail(objekat.id);
+                
+                card.innerHTML = `
+                    <div class="objekat-header">
+                        <div class="objekat-name">${objekat.name}</div>
+                        <div>${objekat.contact ? `📞 ${objekat.contact}` : '📞 Nema kontakt'}</div>
+                    </div>
+                    ${objekat.note ? `<div style="margin-bottom: 10px; color: #666;">${objekat.note}</div>` : ''}
+                    <div class="balance-info">
+                        <div class="balance-item they-owe">
+                            <div class="balance-amount">${balance.theyOwe.toFixed(2)}</div>
+                            <div class="balance-label">Duguju nama</div>
+                        </div>
+                        <div class="balance-item we-owe">
+                            <div class="balance-amount">${balance.weOwe.toFixed(2)}</div>
+                            <div class="balance-label">Mi dugujemo</div>
+                        </div>
+                    </div>
+                `;
+                
+                objektiList.appendChild(card);
+            });
+        }
+        
+        function loadItems() {
+            const itemsList = document.getElementById('itemsList');
+            itemsList.innerHTML = '';
+            
+            items.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.unit}</td>
+                    <td class="action-buttons">
+                        <button class="action-btn btn-warning" onclick="editItem('${item.id}')">Uredi</button>
+                        <button class="action-btn btn-danger" onclick="deleteItem('${item.id}')">Obriši</button>
+                    </td>
+                `;
+                itemsList.appendChild(row);
+            });
+        }
+        
+        function handleItemSearch() {
+            const searchTerm = document.getElementById('itemSearch').value.toLowerCase();
+            const resultsContainer = document.getElementById('itemSearchResults');
+            
+            resultsContainer.innerHTML = '';
+            
+            if (searchTerm.length === 0) {
+                resultsContainer.style.display = 'none';
+                return;
+            }
+            
+            const filteredItems = items.filter(item => 
+                item.name.toLowerCase().includes(searchTerm)
+            );
+            
+            if (filteredItems.length === 0) {
+                const noResult = document.createElement('div');
+                noResult.className = 'item-search-result';
+                noResult.textContent = 'Nema pronađenih artikala';
+                noResult.style.color = '#999';
+                resultsContainer.appendChild(noResult);
+            } else {
+                filteredItems.forEach(item => {
+                    const result = document.createElement('div');
+                    result.className = 'item-search-result';
+                    result.textContent = `${item.name} (${item.unit})`;
+                    result.onclick = () => selectItem(item);
+                    resultsContainer.appendChild(result);
+                });
+            }
+            
+            resultsContainer.style.display = 'block';
+        }
+        
+        function selectItem(item) {
+            document.getElementById('selectedItemId').value = item.id;
+            document.getElementById('selectedItemName').textContent = item.name;
+            document.getElementById('selectedItemUnit').textContent = item.unit;
+            document.getElementById('selectedItem').style.display = 'block';
+            document.getElementById('itemSearch').value = '';
+            document.getElementById('itemSearchResults').style.display = 'none';
+        }
+        
+        function clearSelectedItem() {
+            document.getElementById('selectedItemId').value = '';
+            document.getElementById('selectedItem').style.display = 'none';
+            document.getElementById('itemSearch').value = '';
+        }
+        
+        function calculateObjekatBalance(objekatId) {
+            let theyOwe = 0;
+            let weOwe = 0;
+            
+            transactions.forEach(transaction => {
+                if (transaction.objekatId === objekatId) {
+                    const quantity = parseFloat(transaction.quantity);
+                    
+                    if (transaction.type === 'they_borrow') {
+                        theyOwe += quantity;
+                    } else if (transaction.type === 'we_borrow') {
+                        weOwe += quantity;
+                    } else if (transaction.type === 'they_return') {
+                        theyOwe -= quantity;
+                    } else if (transaction.type === 'we_return') {
+                        weOwe -= quantity;
+                    }
+                }
+            });
+            
+            return {
+                theyOwe: Math.max(0, theyOwe),
+                weOwe: Math.max(0, weOwe)
+            };
+        }
+        
+        function updateObjekatDetail(objekatId) {
+            const balance = calculateObjekatBalance(objekatId);
+            const objekatTransactions = transactions.filter(t => t.objekatId === objekatId);
+            
+            document.getElementById('theyOweAmount').textContent = balance.theyOwe.toFixed(2);
+            document.getElementById('weOweAmount').textContent = balance.weOwe.toFixed(2);
+            
+            const totalBorrowed = objekatTransactions.filter(t => 
+                t.type === 'they_borrow' || t.type === 'we_borrow'
+            ).length;
+            
+            const totalReturned = objekatTransactions.filter(t => 
+                t.type === 'they_return' || t.type === 'we_return'
+            ).length;
+            
+            const activeLoans = objekatTransactions.filter(t => 
+                (t.type === 'they_borrow' || t.type === 'we_borrow') && 
+                !isReturned(t)
+            ).length;
+            
+            document.getElementById('totalBorrowed').textContent = totalBorrowed;
+            document.getElementById('totalReturned').textContent = totalReturned;
+            document.getElementById('activeLoans').textContent = activeLoans;
+            
+            const tbody = document.getElementById('objekatTransactions');
+            tbody.innerHTML = '';
+            
+            objekatTransactions
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .forEach(transaction => {
+                    const item = items.find(i => i.id === transaction.itemId);
+                    const row = document.createElement('tr');
+                    row.className = 'transaction-row';
+                    
+                    row.innerHTML = `
+                        <td>${formatDate(transaction.date)}</td>
+                        <td>${item ? `${item.name} (${item.unit})` : 'Nepoznato'}</td>
+                        <td>${transaction.quantity}</td>
+                        <td>${getTransactionTypeLabel(transaction.type)}</td>
+                        <td>
+                            <span class="status-badge ${isReturned(transaction) ? 'status-completed' : 'status-active'}">
+                                ${isReturned(transaction) ? 'Završeno' : 'Aktivno'}
+                            </span>
+                        </td>
+                        <td>
+                            ${!isReturned(transaction) ? 
+                                `<button class="action-btn btn-success" onclick="markAsReturned('${transaction.id}')">Vraćeno</button>` : 
+                                ''
+                            }
+                            <button class="action-btn btn-danger" onclick="deleteTransaction('${transaction.id}')">Obriši</button>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+        }
+        
+        function isReturned(transaction) {
+            if (transaction.type === 'they_borrow') {
+                return transactions.some(t => 
+                    t.objekatId === transaction.objekatId && 
+                    t.itemId === transaction.itemId && 
+                    t.type === 'they_return' &&
+                    parseFloat(t.quantity) >= parseFloat(transaction.quantity)
+                );
+            } else if (transaction.type === 'we_borrow') {
+                return transactions.some(t => 
+                    t.objekatId === transaction.objekatId && 
+                    t.itemId === transaction.itemId && 
+                    t.type === 'we_return' &&
+                    parseFloat(t.quantity) >= parseFloat(transaction.quantity)
+                );
+            }
+            return true;
+        }
+        
+        function getTransactionTypeLabel(type) {
+            const labels = {
+                'we_borrow': 'Mi pozajmljujemo',
+                'they_borrow': 'Oni pozajmljuju',
+                'we_return': 'Mi vraćamo',
+                'they_return': 'Oni vraćaju'
+            };
+            return labels[type] || type;
+        }
+        
+        async function addObjekat(e) {
+            e.preventDefault();
+            
+            const objekat = {
+                id: generateId(),
+                name: document.getElementById('objekatName').value,
+                contact: document.getElementById('objekatContact').value,
+                note: document.getElementById('objekatNote').value,
+                createdAt: new Date().toISOString()
+            };
+            
+            objekti.push(objekat);
+            await saveToGoogleSheets();
+            loadObjekti();
+            showSection('objekti');
+        }
+        
+        async function handleItemForm(e) {
+            e.preventDefault();
+            
+            const editingId = document.getElementById('editingItemId').value;
+            
+            if (editingId) {
+                const itemIndex = items.findIndex(item => item.id === editingId);
+                if (itemIndex !== -1) {
+                    items[itemIndex] = {
+                        ...items[itemIndex],
+                        name: document.getElementById('itemName').value,
+                        unit: document.getElementById('itemUnit').value
+                    };
+                    await saveToGoogleSheets();
+                    loadItems();
+                    cancelItemEdit();
+                }
+            } else {
+                const item = {
+                    id: generateId(),
+                    name: document.getElementById('itemName').value,
+                    unit: document.getElementById('itemUnit').value
+                };
+                
+                items.push(item);
+                await saveToGoogleSheets();
+                loadItems();
+                document.getElementById('itemForm').reset();
+            }
+        }
+        
+        async function addTransaction(e) {
+            e.preventDefault();
+            
+            const selectedItemId = document.getElementById('selectedItemId').value;
+            if (!selectedItemId) {
+                alert('Molimo odaberite artikal!');
+                return;
+            }
+            
+            const transaction = {
+                id: generateId(),
+                objekatId: currentObjekatId,
+                itemId: selectedItemId,
+                type: document.getElementById('transactionType').value,
+                quantity: parseFloat(document.getElementById('transactionQuantity').value),
+                date: document.getElementById('transactionDate').value,
+                note: document.getElementById('transactionNote').value,
+                createdAt: new Date().toISOString()
+            };
+            
+            transactions.push(transaction);
+            await saveToGoogleSheets();
+            showObjekatDetail(currentObjekatId);
+        }
+        
+        function editItem(itemId) {
+            const item = items.find(i => i.id === itemId);
+            if (!item) return;
+            
+            document.getElementById('itemFormTitle').textContent = 'Uredi Artikal';
+            document.getElementById('editingItemId').value = item.id;
+            document.getElementById('itemName').value = item.name;
+            document.getElementById('itemUnit').value = item.unit;
+            document.getElementById('itemSubmitBtn').textContent = 'Sačuvaj promjene';
+            document.getElementById('itemCancelBtn').style.display = 'inline-block';
+            
+            document.getElementById('itemFormContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function cancelItemEdit() {
+            document.getElementById('itemFormTitle').textContent = 'Dodaj Novi Artikal';
+            document.getElementById('editingItemId').value = '';
+            document.getElementById('itemForm').reset();
+            document.getElementById('itemSubmitBtn').textContent = 'Dodaj artikal';
+            document.getElementById('itemCancelBtn').style.display = 'none';
+        }
+        
+        async function deleteItem(itemId) {
+            if (confirm('Da li ste sigurni da želite obrisati ovaj artikal?')) {
+                const isUsed = transactions.some(t => t.itemId === itemId);
+                if (isUsed) {
+                    alert('Ovaj artikal se koristi u transakcijama i ne može se obrisati!');
+                    return;
+                }
+                
+                items = items.filter(item => item.id !== itemId);
+                await saveToGoogleSheets();
+                loadItems();
+            }
+        }
+        
+        async function deleteTransaction(transactionId) {
+            if (confirm('Da li ste sigurni da želite obrisati ovu transakciju?')) {
+                transactions = transactions.filter(t => t.id !== transactionId);
+                await saveToGoogleSheets();
+                if (currentObjekatId) {
+                    updateObjekatDetail(currentObjekatId);
+                }
+                updateAllTransactions();
+            }
+        }
+        
+        async function markAsReturned(transactionId) {
+            const transaction = transactions.find(t => t.id === transactionId);
+            if (!transaction) return;
+            
+            const returnType = transaction.type === 'they_borrow' ? 'they_return' : 'we_return';
+            const returnTransaction = {
+                id: generateId(),
+                objekatId: transaction.objekatId,
+                itemId: transaction.itemId,
+                type: returnType,
+                quantity: transaction.quantity,
+                date: new Date().toISOString().split('T')[0],
+                note: `Automatski vraćeno - original: ${transaction.date}`,
+                createdAt: new Date().toISOString()
+            };
+            
+            transactions.push(returnTransaction);
+            await saveToGoogleSheets();
+            updateObjekatDetail(currentObjekatId);
+        }
+        
+        function filterObjekti() {
+            const searchTerm = document.getElementById('searchObjekat').value.toLowerCase();
+            const cards = document.querySelectorAll('.objekat-card');
+            
+            cards.forEach(card => {
+                const objekatName = card.querySelector('.objekat-name').textContent.toLowerCase();
+                const objekatContact = card.querySelector('.objekat-header div:last-child').textContent.toLowerCase();
+                
+                if (objekatName.includes(searchTerm) || objekatContact.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        function filterItems() {
+            const searchTerm = document.getElementById('searchItem').value.toLowerCase();
+            const rows = document.querySelectorAll('#itemsList tr');
+            
+            rows.forEach(row => {
+                const itemName = row.cells[0].textContent.toLowerCase();
+                const itemUnit = row.cells[1].textContent.toLowerCase();
+                
+                if (itemName.includes(searchTerm) || itemUnit.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        function updateAllTransactions() {
+            const tbody = document.getElementById('allTransactionsList');
+            tbody.innerHTML = '';
+            
+            transactions
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .forEach(transaction => {
+                    const objekat = objekti.find(p => p.id === transaction.objekatId);
+                    const item = items.find(i => i.id === transaction.itemId);
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${formatDate(transaction.date)}</td>
+                        <td>${objekat ? objekat.name : 'Nepoznato'}</td>
+                        <td>${item ? `${item.name} (${item.unit})` : 'Nepoznato'}</td>
+                        <td>${transaction.quantity}</td>
+                        <td>${getTransactionTypeLabel(transaction.type)}</td>
+                        <td>
+                            <span class="status-badge ${isReturned(transaction) ? 'status-completed' : 'status-active'}">
+                                ${isReturned(transaction) ? 'Završeno' : 'Aktivno'}
+                            </span>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+        }
+        
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('hr-HR');
+        }
+        
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+        
+        window.onload = function() {
+            document.getElementById('passwordInput').focus();
+        };
     </script>
 </body>
 </html>
