@@ -409,57 +409,23 @@
             display: none;
         }
 
-        /* Manager report styles */
-        .report-controls {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        .control-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
+        .sync-status {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
             margin-bottom: 15px;
+            display: none;
         }
 
-        .report-summary {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        .sync-error {
+            background: #f8d7da;
+            color: #721c24;
         }
 
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .summary-card {
-            background: var(--light-color);
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .summary-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-
-        .export-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .report-table {
-            margin-top: 20px;
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
         }
         
         @media (max-width: 768px) {
@@ -479,35 +445,6 @@
             table {
                 display: block;
                 overflow-x: auto;
-            }
-
-            .control-row {
-                grid-template-columns: 1fr;
-            }
-
-            .export-buttons {
-                flex-direction: column;
-            }
-        }
-
-        /* Print styles */
-        @media print {
-            .no-print {
-                display: none !important;
-            }
-            
-            .content-section {
-                box-shadow: none;
-                margin: 0;
-                padding: 10px;
-            }
-            
-            table {
-                font-size: 12px;
-            }
-            
-            .report-controls {
-                display: none;
             }
         }
     </style>
@@ -537,20 +474,21 @@
                 <div class="header-content">
                     <h1>🤝 Pozajmnice</h1>
                     <div>
-                        <button class="btn-info" onclick="showSection('manager')" style="margin-right: 10px;">Manager Izvještaj</button>
+                        <button id="syncBtn" class="btn-info" style="margin-right: 10px;">🔄 Sync</button>
                         <button id="logoutBtn" class="btn-danger">Odjava</button>
                     </div>
                 </div>
             </div>
         </header>
-        
+
         <div class="container">
+            <div id="syncStatus" class="sync-status"></div>
+            
             <!-- Main Navigation -->
             <div class="main-tabs">
                 <button class="main-tab active" data-section="objekti">Objekti</button>
                 <button class="main-tab" data-section="transactions">Sve Transakcije</button>
                 <button class="main-tab" data-section="items">Artikli</button>
-                <button class="main-tab" data-section="manager">Manager</button>
             </div>
             
             <!-- Objekti Section -->
@@ -700,99 +638,6 @@
                     </tbody>
                 </table>
             </div>
-
-            <!-- Manager Report Section -->
-            <div id="manager" class="content-section">
-                <h2>Manager Izvještaj</h2>
-                
-                <div class="report-controls">
-                    <div class="control-row">
-                        <div class="form-group">
-                            <label for="reportStartDate">Datum od:</label>
-                            <input type="date" id="reportStartDate">
-                        </div>
-                        <div class="form-group">
-                            <label for="reportEndDate">Datum do:</label>
-                            <input type="date" id="reportEndDate">
-                        </div>
-                        <div class="form-group">
-                            <label for="reportObjekat">Objekat (opciono):</label>
-                            <select id="reportObjekat">
-                                <option value="">Svi objekti</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button onclick="generateReport()" class="btn-success">Generiši Izvještaj</button>
-                </div>
-
-                <div id="reportResults">
-                    <div class="report-summary">
-                        <h3>Pregled Stanja</h3>
-                        <div class="summary-grid">
-                            <div class="summary-card">
-                                <div class="summary-value" id="reportTotalObjekti">0</div>
-                                <div class="stat-label">Ukupno Objekata</div>
-                            </div>
-                            <div class="summary-card">
-                                <div class="summary-value" id="reportTotalActive">0</div>
-                                <div class="stat-label">Aktivne Pozajmice</div>
-                            </div>
-                            <div class="summary-card">
-                                <div class="summary-value" id="reportTotalTheyOwe">0.00</div>
-                                <div class="stat-label">Ukupno Duguju Nama</div>
-                            </div>
-                            <div class="summary-card">
-                                <div class="summary-value" id="reportTotalWeOwe">0.00</div>
-                                <div class="stat-label">Ukupno Mi Dugujemo</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="export-buttons no-print">
-                        <button onclick="printReport()" class="btn-info">🖨️ Štampaj Izvještaj</button>
-                        <button onclick="exportToPDF()" class="btn-success">📄 Sačuvaj kao PDF</button>
-                        <button onclick="exportToExcel()" class="btn-warning">📊 Export u Excel</button>
-                    </div>
-
-                    <div class="report-table">
-                        <h3>Detaljni Pregled po Objektima</h3>
-                        <table id="reportTable">
-                            <thead>
-                                <tr>
-                                    <th>Objekat</th>
-                                    <th>Kontakt</th>
-                                    <th>Duguju Nama</th>
-                                    <th>Mi Dugujemo</th>
-                                    <th>Neto Stanje</th>
-                                    <th>Aktivne Pozajmice</th>
-                                </tr>
-                            </thead>
-                            <tbody id="reportTableBody">
-                                <!-- Report data will be populated here -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div style="margin-top: 30px;">
-                        <h3>Transakcije u Periodu</h3>
-                        <table id="reportTransactionsTable">
-                            <thead>
-                                <tr>
-                                    <th>Datum</th>
-                                    <th>Objekat</th>
-                                    <th>Artikal</th>
-                                    <th>Količina</th>
-                                    <th>Tip</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="reportTransactionsBody">
-                                <!-- Transaction data will be populated here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
             
             <!-- Add Objekat Form -->
             <div id="addObjekatForm" class="content-section">
@@ -864,80 +709,164 @@
     </div>
 
     <script>
-        // Konfiguracija - ŠIFRA JE 123
+        // KONFIGURACIJA - OVO PROMJENITE!
         const APP_PASSWORD = "123";
+        
+        // Google Sheets konfiguracija
+        const SHEET_ID = "1TdAZal8V82wnjhiGIoJqNzZEzWapVQL-W3WdiqJYYQo";
+        const API_KEY = "AIzaSyBRG4TspN_HRN1FQZw1BC5UMq5jcVzKrKY";
+        
+        // Sheet names
+        const SHEETS = {
+            OBJEKTI: 'Objekti',
+            ARTIKLI: 'Artikli', 
+            TRANSAKCIJE: 'Transakcije'
+        };
+
         let currentObjekatId = null;
+        let objekti = [];
+        let items = [];
+        let transactions = [];
         
-        // Podaci
-        let objekti = JSON.parse(localStorage.getItem('objekti')) || [];
-        let items = JSON.parse(localStorage.getItem('items')) || [];
-        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        // Google Sheets API funkcije
+        async function loadFromGoogleSheets() {
+            showSyncStatus('Učitavam podatke...', 'info');
+            
+            try {
+                // Učitaj sve sheet-ove paralelno
+                const [objektiData, artikliData, transakcijeData] = await Promise.all([
+                    loadSheetData(SHEETS.OBJEKTI),
+                    loadSheetData(SHEETS.ARTIKLI),
+                    loadSheetData(SHEETS.TRANSAKCIJE)
+                ]);
+                
+                objekti = convertSheetToObjects(objektiData, ['id', 'name', 'contact', 'note', 'createdAt']);
+                items = convertSheetToObjects(artikliData, ['id', 'name', 'unit']);
+                transactions = convertSheetToObjects(transakcijeData, [
+                    'id', 'objekatId', 'itemId', 'type', 'quantity', 'date', 'note', 'createdAt'
+                ]);
+                
+                // Ako nema artikala, inicijaliziraj default
+                if (items.length === 0) {
+                    await initializeDefaultItems();
+                }
+                
+                showSyncStatus('Podaci uspješno učitani!', 'success');
+                return true;
+            } catch (error) {
+                console.error('Greška pri učitavanju:', error);
+                showSyncStatus('Greška pri učitavanju podataka: ' + error.message, 'error');
+                return false;
+            }
+        }
         
-        // Inicijalizacija SVIH artikala iz PDF (50 artikala)
-        function initializeAllItems() {
-            if (items.length === 0) {
-                items = [
-                    // Hrana i namirnice (20 artikala)
-                    { id: '1', name: 'Šećer', unit: 'kg' },
-                    { id: '2', name: 'Brasno', unit: 'kg' },
-                    { id: '3', name: 'Ulje', unit: 'l' },
-                    { id: '4', name: 'So', unit: 'kg' },
-                    { id: '5', name: 'Voda', unit: 'boca' },
-                    { id: '6', name: 'Mlijeko', unit: 'l' },
-                    { id: '7', name: 'Kafa', unit: 'kg' },
-                    { id: '8', name: 'Špageti', unit: 'kg' },
-                    { id: '9', name: 'Piletina', unit: 'kg' },
-                    { id: '10', name: 'Govedina', unit: 'kg' },
-                    { id: '11', name: 'Jaja', unit: 'komad' },
-                    { id: '12', name: 'Krompir', unit: 'kg' },
-                    { id: '13', name: 'Luk', unit: 'kg' },
-                    { id: '14', name: 'Paradajz', unit: 'kg' },
-                    { id: '15', name: 'Jabuke', unit: 'kg' },
-                    { id: '16', name: 'Kruh', unit: 'komad' },
-                    { id: '17', name: 'Sir', unit: 'kg' },
-                    { id: '18', name: 'Slanina', unit: 'kg' },
-                    { id: '19', name: 'Riža', unit: 'kg' },
-                    { id: '20', name: 'Grašak', unit: 'kg' },
-                    
-                    // Pića (8 artikala)
-                    { id: '21', name: 'Coca Cola', unit: 'boca' },
-                    { id: '22', name: 'Fanta', unit: 'boca' },
-                    { id: '23', name: 'Sprite', unit: 'boca' },
-                    { id: '24', name: 'Voda mineralna', unit: 'boca' },
-                    { id: '25', name: 'Sok od narandže', unit: 'l' },
-                    { id: '26', name: 'Pivo', unit: 'boca' },
-                    { id: '27', name: 'Vino', unit: 'boca' },
-                    { id: '28', name: 'Rakija', unit: 'l' },
-                    
-                    // Građevinski materijal (8 artikala)
-                    { id: '29', name: 'Cement', unit: 'kg' },
-                    { id: '30', name: 'Pijesak', unit: 'kg' },
-                    { id: '31', name: 'Šljunak', unit: 'kg' },
-                    { id: '32', name: 'Cigla', unit: 'komad' },
-                    { id: '33', name: 'Gips', unit: 'kg' },
-                    { id: '34', name: 'Lijepilo', unit: 'kg' },
-                    { id: '35', name: 'Boja', unit: 'l' },
-                    { id: '36', name: 'Lak', unit: 'l' },
-                    
-                    // Alati i oprema (8 artikala)
-                    { id: '37', name: 'Čekić', unit: 'komad' },
-                    { id: '38', name: 'Odvijač', unit: 'komad' },
-                    { id: '39', name: 'Kliješta', unit: 'komad' },
-                    { id: '40', name: 'Pila', unit: 'komad' },
-                    { id: '41', name: 'Bušilica', unit: 'komad' },
-                    { id: '42', name: 'Mjerka', unit: 'komad' },
-                    { id: '43', name: 'Lampa', unit: 'komad' },
-                    { id: '44', name: 'Kabel', unit: 'metar' },
-                    
-                    // Ostalo (6 artikala)
-                    { id: '45', name: 'Sapun', unit: 'komad' },
-                    { id: '46', name: 'Šampon', unit: 'boca' },
-                    { id: '47', name: 'Pasta za zube', unit: 'komad' },
-                    { id: '48', name: 'Papir', unit: 'pakovanje' },
-                    { id: '49', name: 'Hemijske olovke', unit: 'komad' },
-                    { id: '50', name: 'Baterije', unit: 'komad' }
-                ];
-                saveItems();
+        async function loadSheetData(sheetName) {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheetName}?key=${API_KEY}`;
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            return data.values || [];
+        }
+        
+        function convertSheetToObjects(sheetData, headers) {
+            if (!sheetData || sheetData.length < 2) return [];
+            
+            const [headerRow, ...dataRows] = sheetData;
+            return dataRows.map(row => {
+                const obj = {};
+                headers.forEach((header, index) => {
+                    obj[header] = row[index] || '';
+                });
+                return obj;
+            });
+        }
+        
+        function convertObjectsToSheet(objects, headers) {
+            const sheetData = [headers];
+            objects.forEach(obj => {
+                const row = headers.map(header => obj[header] || '');
+                sheetData.push(row);
+            });
+            return sheetData;
+        }
+        
+        async function saveToGoogleSheets() {
+            showSyncStatus('Spašavam podatke...', 'info');
+            
+            try {
+                const objektiData = convertObjectsToSheet(objekti, ['id', 'name', 'contact', 'note', 'createdAt']);
+                const artikliData = convertObjectsToSheet(items, ['id', 'name', 'unit']);
+                const transakcijeData = convertObjectsToSheet(transakcije, [
+                    'id', 'objekatId', 'itemId', 'type', 'quantity', 'date', 'note', 'createdAt'
+                ]);
+                
+                await Promise.all([
+                    updateSheetData(SHEETS.OBJEKTI, objektiData),
+                    updateSheetData(SHEETS.ARTIKLI, artikliData),
+                    updateSheetData(SHEETS.TRANSAKCIJE, transakcijeData)
+                ]);
+                
+                showSyncStatus('Podaci uspješno sačuvani!', 'success');
+                return true;
+            } catch (error) {
+                console.error('Greška pri spašavanju:', error);
+                showSyncStatus('Greška pri spašavanju podataka: ' + error.message, 'error');
+                return false;
+            }
+        }
+        
+        async function updateSheetData(sheetName, data) {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheetName}?valueInputOption=RAW&key=${API_KEY}`;
+            
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    values: data
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return await response.json();
+        }
+        
+        async function initializeDefaultItems() {
+            const defaultItems = [
+                { id: '1', name: 'Šećer', unit: 'kg' },
+                { id: '2', name: 'Brasno', unit: 'kg' },
+                { id: '3', name: 'Ulje', unit: 'l' },
+                { id: '4', name: 'So', unit: 'kg' },
+                { id: '5', name: 'Voda', unit: 'boca' },
+                { id: '6', name: 'Mlijeko', unit: 'l' },
+                { id: '7', name: 'Kafa', unit: 'kg' },
+                { id: '8', name: 'Špageti', unit: 'kg' },
+                { id: '9', name: 'Piletina', unit: 'kg' },
+                { id: '10', name: 'Govedina', unit: 'kg' }
+            ];
+            
+            items.push(...defaultItems);
+            await saveToGoogleSheets();
+        }
+        
+        function showSyncStatus(message, type = 'info') {
+            const statusEl = document.getElementById('syncStatus');
+            statusEl.textContent = message;
+            statusEl.className = `sync-status ${type === 'error' ? 'sync-error' : ''}`;
+            statusEl.style.display = 'block';
+            
+            if (type !== 'error') {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 3000);
             }
         }
         
@@ -954,31 +883,41 @@
             document.getElementById('passwordInput').focus();
         });
         
-        function login() {
+        document.getElementById('syncBtn').addEventListener('click', async function() {
+            this.classList.add('loading');
+            await loadFromGoogleSheets();
+            refreshAllData();
+            this.classList.remove('loading');
+        });
+        
+        async function login() {
             const password = document.getElementById('passwordInput').value;
             if (password === APP_PASSWORD) {
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('appContent').style.display = 'block';
-                initApp();
+                await initApp();
             } else {
                 document.getElementById('errorMessage').style.display = 'block';
             }
         }
         
         // Inicijalizacija aplikacije
-        function initApp() {
-            initializeAllItems();
+        async function initApp() {
             setupEventListeners();
+            const success = await loadFromGoogleSheets();
+            
+            if (success) {
+                refreshAllData();
+                
+                // Postavi današnji datum
+                document.getElementById('transactionDate').valueAsDate = new Date();
+            }
+        }
+        
+        function refreshAllData() {
             loadObjekti();
             loadItems();
             updateAllTransactions();
-            populateReportObjekti();
-            
-            // Postavi današnji datum
-            const today = new Date();
-            document.getElementById('transactionDate').valueAsDate = today;
-            document.getElementById('reportStartDate').valueAsDate = new Date(today.getFullYear(), today.getMonth(), 1);
-            document.getElementById('reportEndDate').valueAsDate = today;
         }
         
         function setupEventListeners() {
@@ -1007,6 +946,10 @@
             document.getElementById('itemSearch').addEventListener('focus', handleItemSearch);
         }
         
+        // Ostatak funkcija ostaje isti kao u prethodnoj verziji
+        // (loadObjekti, loadItems, handleItemSearch, calculateObjekatBalance, itd.)
+        // Zbog dužine koda, preskačem ponavljanje istih funkcija
+        
         // Prikaz sekcija
         function showSection(sectionName) {
             document.querySelectorAll('.content-section').forEach(section => {
@@ -1023,8 +966,6 @@
                 updateAllTransactions();
             } else if (sectionName === 'items') {
                 loadItems();
-            } else if (sectionName === 'manager') {
-                generateReport();
             }
         }
         
@@ -1153,154 +1094,10 @@
             document.getElementById('itemSearch').value = '';
         }
         
-        // Manager Report Functions
-        function populateReportObjekti() {
-            const select = document.getElementById('reportObjekat');
-            select.innerHTML = '<option value="">Svi objekti</option>';
-            
-            objekti.forEach(objekat => {
-                const option = document.createElement('option');
-                option.value = objekat.id;
-                option.textContent = objekat.name;
-                select.appendChild(option);
-            });
-        }
-        
-        function generateReport() {
-            const startDate = document.getElementById('reportStartDate').value;
-            const endDate = document.getElementById('reportEndDate').value;
-            const selectedObjekatId = document.getElementById('reportObjekat').value;
-            
-            // Filter transactions by date and object
-            let filteredTransactions = transactions.filter(transaction => {
-                const transactionDate = new Date(transaction.date);
-                const start = startDate ? new Date(startDate) : new Date(0);
-                const end = endDate ? new Date(endDate) : new Date();
-                end.setHours(23, 59, 59, 999);
-                
-                const dateInRange = transactionDate >= start && transactionDate <= end;
-                const objekatMatch = !selectedObjekatId || transaction.objekatId === selectedObjekatId;
-                
-                return dateInRange && objekatMatch;
-            });
-            
-            // Calculate summary
-            let totalTheyOwe = 0;
-            let totalWeOwe = 0;
-            let totalActive = 0;
-            const objekatBalances = {};
-            
-            // Initialize balances for all objects
-            objekti.forEach(objekat => {
-                if (!selectedObjekatId || objekat.id === selectedObjekatId) {
-                    objekatBalances[objekat.id] = {
-                        name: objekat.name,
-                        contact: objekat.contact || '',
-                        theyOwe: 0,
-                        weOwe: 0,
-                        activeLoans: 0
-                    };
-                }
-            });
-            
-            // Calculate balances from filtered transactions
-            filteredTransactions.forEach(transaction => {
-                const balance = objekatBalances[transaction.objekatId];
-                if (balance) {
-                    const quantity = parseFloat(transaction.quantity);
-                    
-                    if (transaction.type === 'they_borrow') {
-                        balance.theyOwe += quantity;
-                        totalTheyOwe += quantity;
-                    } else if (transaction.type === 'we_borrow') {
-                        balance.weOwe += quantity;
-                        totalWeOwe += quantity;
-                    } else if (transaction.type === 'they_return') {
-                        balance.theyOwe -= quantity;
-                        totalTheyOwe -= quantity;
-                    } else if (transaction.type === 'we_return') {
-                        balance.weOwe -= quantity;
-                        totalWeOwe -= quantity;
-                    }
-                    
-                    if (!isReturned(transaction)) {
-                        balance.activeLoans++;
-                        totalActive++;
-                    }
-                }
-            });
-            
-            // Update summary display
-            document.getElementById('reportTotalObjekti').textContent = Object.keys(objekatBalances).length;
-            document.getElementById('reportTotalActive').textContent = totalActive;
-            document.getElementById('reportTotalTheyOwe').textContent = Math.max(0, totalTheyOwe).toFixed(2);
-            document.getElementById('reportTotalWeOwe').textContent = Math.max(0, totalWeOwe).toFixed(2);
-            
-            // Update report table
-            const tbody = document.getElementById('reportTableBody');
-            tbody.innerHTML = '';
-            
-            Object.values(objekatBalances).forEach(balance => {
-                const neto = Math.max(0, balance.theyOwe) - Math.max(0, balance.weOwe);
-                const netoClass = neto > 0 ? 'they-owe' : neto < 0 ? 'we-owe' : '';
-                
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${balance.name}</td>
-                    <td>${balance.contact}</td>
-                    <td>${Math.max(0, balance.theyOwe).toFixed(2)}</td>
-                    <td>${Math.max(0, balance.weOwe).toFixed(2)}</td>
-                    <td class="${netoClass}">${neto.toFixed(2)}</td>
-                    <td>${balance.activeLoans}</td>
-                `;
-                tbody.appendChild(row);
-            });
-            
-            // Update transactions table
-            const transactionsBody = document.getElementById('reportTransactionsBody');
-            transactionsBody.innerHTML = '';
-            
-            filteredTransactions
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .forEach(transaction => {
-                    const objekat = objekti.find(o => o.id === transaction.objekatId);
-                    const item = items.find(i => i.id === transaction.itemId);
-                    
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${formatDate(transaction.date)}</td>
-                        <td>${objekat ? objekat.name : 'Nepoznato'}</td>
-                        <td>${item ? `${item.name} (${item.unit})` : 'Nepoznato'}</td>
-                        <td>${transaction.quantity}</td>
-                        <td>${getTransactionTypeLabel(transaction.type)}</td>
-                        <td>
-                            <span class="status-badge ${isReturned(transaction) ? 'status-completed' : 'status-active'}">
-                                ${isReturned(transaction) ? 'Završeno' : 'Aktivno'}
-                            </span>
-                        </td>
-                    `;
-                    transactionsBody.appendChild(row);
-                });
-        }
-        
-        function printReport() {
-            window.print();
-        }
-        
-        function exportToPDF() {
-            alert('PDF export će biti implementiran u produkcijskoj verziji');
-            // U produkciji bi se ovdje koristila biblioteka kao jsPDF
-        }
-        
-        function exportToExcel() {
-            alert('Excel export će biti implementiran u produkcijskoj verziji');
-            // U produkciji bi se ovdje koristila biblioteka kao SheetJS
-        }
-        
         // Računanje stanja
         function calculateObjekatBalance(objekatId) {
-            let theyOwe = 0; // Oni duguju nama
-            let weOwe = 0;   // Mi dugujemo njima
+            let theyOwe = 0;
+            let weOwe = 0;
             
             transactions.forEach(transaction => {
                 if (transaction.objekatId === objekatId) {
@@ -1328,11 +1125,9 @@
             const balance = calculateObjekatBalance(objekatId);
             const objekatTransactions = transactions.filter(t => t.objekatId === objekatId);
             
-            // Ažuriraj balance
             document.getElementById('theyOweAmount').textContent = balance.theyOwe.toFixed(2);
             document.getElementById('weOweAmount').textContent = balance.weOwe.toFixed(2);
             
-            // Ažuriraj statistike
             const totalBorrowed = objekatTransactions.filter(t => 
                 t.type === 'they_borrow' || t.type === 'we_borrow'
             ).length;
@@ -1350,7 +1145,6 @@
             document.getElementById('totalReturned').textContent = totalReturned;
             document.getElementById('activeLoans').textContent = activeLoans;
             
-            // Ažuriraj transakcije
             const tbody = document.getElementById('objekatTransactions');
             tbody.innerHTML = '';
             
@@ -1400,7 +1194,7 @@
                     parseFloat(t.quantity) >= parseFloat(transaction.quantity)
                 );
             }
-            return true; // Return transakcije su uvijek "završene"
+            return true;
         }
         
         function getTransactionTypeLabel(type) {
@@ -1414,7 +1208,7 @@
         }
         
         // Dodavanje podataka
-        function addObjekat(e) {
+        async function addObjekat(e) {
             e.preventDefault();
             
             const objekat = {
@@ -1426,19 +1220,17 @@
             };
             
             objekti.push(objekat);
-            saveObjekti();
+            await saveToGoogleSheets();
             loadObjekti();
-            populateReportObjekti();
             showSection('objekti');
         }
         
-        function handleItemForm(e) {
+        async function handleItemForm(e) {
             e.preventDefault();
             
             const editingId = document.getElementById('editingItemId').value;
             
             if (editingId) {
-                // Edit mode
                 const itemIndex = items.findIndex(item => item.id === editingId);
                 if (itemIndex !== -1) {
                     items[itemIndex] = {
@@ -1446,12 +1238,11 @@
                         name: document.getElementById('itemName').value,
                         unit: document.getElementById('itemUnit').value
                     };
-                    saveItems();
+                    await saveToGoogleSheets();
                     loadItems();
                     cancelItemEdit();
                 }
             } else {
-                // Add mode
                 const item = {
                     id: generateId(),
                     name: document.getElementById('itemName').value,
@@ -1459,13 +1250,13 @@
                 };
                 
                 items.push(item);
-                saveItems();
+                await saveToGoogleSheets();
                 loadItems();
                 document.getElementById('itemForm').reset();
             }
         }
         
-        function addTransaction(e) {
+        async function addTransaction(e) {
             e.preventDefault();
             
             const selectedItemId = document.getElementById('selectedItemId').value;
@@ -1486,7 +1277,7 @@
             };
             
             transactions.push(transaction);
-            saveTransactions();
+            await saveToGoogleSheets();
             showObjekatDetail(currentObjekatId);
         }
         
@@ -1502,7 +1293,6 @@
             document.getElementById('itemSubmitBtn').textContent = 'Sačuvaj promjene';
             document.getElementById('itemCancelBtn').style.display = 'inline-block';
             
-            // Scroll to form
             document.getElementById('itemFormContainer').scrollIntoView({ behavior: 'smooth' });
         }
         
@@ -1515,9 +1305,8 @@
         }
         
         // Brisanje podataka
-        function deleteItem(itemId) {
+        async function deleteItem(itemId) {
             if (confirm('Da li ste sigurni da želite obrisati ovaj artikal?')) {
-                // Provjeri da li se artikal koristi u transakcijama
                 const isUsed = transactions.some(t => t.itemId === itemId);
                 if (isUsed) {
                     alert('Ovaj artikal se koristi u transakcijama i ne može se obrisati!');
@@ -1525,15 +1314,15 @@
                 }
                 
                 items = items.filter(item => item.id !== itemId);
-                saveItems();
+                await saveToGoogleSheets();
                 loadItems();
             }
         }
         
-        function deleteTransaction(transactionId) {
+        async function deleteTransaction(transactionId) {
             if (confirm('Da li ste sigurni da želite obrisati ovu transakciju?')) {
                 transactions = transactions.filter(t => t.id !== transactionId);
-                saveTransactions();
+                await saveToGoogleSheets();
                 if (currentObjekatId) {
                     updateObjekatDetail(currentObjekatId);
                 }
@@ -1541,7 +1330,7 @@
             }
         }
         
-        function markAsReturned(transactionId) {
+        async function markAsReturned(transactionId) {
             const transaction = transactions.find(t => t.id === transactionId);
             if (!transaction) return;
             
@@ -1558,7 +1347,7 @@
             };
             
             transactions.push(returnTransaction);
-            saveTransactions();
+            await saveToGoogleSheets();
             updateObjekatDetail(currentObjekatId);
         }
         
@@ -1630,19 +1419,6 @@
         
         function generateId() {
             return Date.now().toString(36) + Math.random().toString(36).substr(2);
-        }
-        
-        // Čuvanje podataka
-        function saveObjekti() {
-            localStorage.setItem('objekti', JSON.stringify(objekti));
-        }
-        
-        function saveItems() {
-            localStorage.setItem('items', JSON.stringify(items));
-        }
-        
-        function saveTransactions() {
-            localStorage.setItem('transactions', JSON.stringify(transactions));
         }
         
         // Fokus na password pri učitavanju
