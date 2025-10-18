@@ -6,6 +6,7 @@
     <title>Pozajmnice</title>
     <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤝</text></svg>">
     <style>
+        /* CSS OSTAO ISTI */
         :root {
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
@@ -724,146 +725,125 @@
         let transactions = [];
         let lastSyncTime = null;
 
-        // ✅ PAMETNA SINHRONIZACIJA - Dvosmjerna logika
+        // ✅ GOOGLE APPS SCRIPT URL - OVO JE KLJUČNO!
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWvR7QbLx9sx6pJ8K7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q/exec';
+
+        // ✅ PRAVA GOOGLE SHEETS INTEGRACIJA
+        async function saveToGoogleSheets() {
+            showSyncStatus('Šaljem podatke na Google Sheets...', 'info');
+            
+            try {
+                const payload = {
+                    action: 'SAVE_DATA',
+                    sheetId: SHEET_ID,
+                    data: {
+                        objekti: objekti,
+                        items: items,
+                        transactions: transactions,
+                        timestamp: new Date().toISOString()
+                    }
+                };
+
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSyncStatus('Podaci uspješno spašeni na Google Sheets!', 'success');
+                    return true;
+                } else {
+                    throw new Error(result.error || 'Unknown error from Google Script');
+                }
+
+            } catch (error) {
+                console.error('Greška pri spašavanju na Google Sheets:', error);
+                showSyncStatus('Greška pri spašavanju na Google Sheets. Koristim lokalne podatke.', 'error');
+                return false;
+            }
+        }
+
+        // ✅ UČITAVANJE IZ GOOGLE SHEETS
+        async function loadFromGoogleSheets() {
+            showSyncStatus('Učitavam podatke iz Google Sheets...', 'info');
+            
+            try {
+                const payload = {
+                    action: 'LOAD_DATA',
+                    sheetId: SHEET_ID
+                };
+
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    objekti = result.data.objekti || [];
+                    items = result.data.items || [];
+                    transactions = result.data.transactions || [];
+                    
+                    showSyncStatus('Podaci uspješno učitani iz Google Sheets!', 'success');
+                    return true;
+                } else {
+                    throw new Error(result.error || 'No data received');
+                }
+
+            } catch (error) {
+                console.error('Greška pri učitavanju iz Google Sheets:', error);
+                showSyncStatus('Učitavam lokalne podatke...', 'warning');
+                return loadFromLocalStorage();
+            }
+        }
+
+        // ✅ PAMETNA SINHRONIZACIJA
         async function smartSync() {
             showSyncStatus('Pokrećem pametnu sinhronizaciju...', 'info');
             
             try {
                 // 1. UČITAJ IZ GOOGLE SHEETS
-                const [remoteObjekti, remoteArtikli, remoteTransakcije] = await Promise.all([
-                    fetchSheetAsCSV('Objekti'),
-                    fetchSheetAsCSV('Artikli'),
-                    fetchSheetAsCSV('Transakcije')
-                ]);
-
-                const remoteData = {
-                    objekti: parseCSV(remoteObjekti, ['id', 'name', 'contact', 'note', 'createdAt']),
-                    items: parseCSV(remoteArtikli, ['id', 'name', 'unit']),
-                    transactions: parseCSV(remoteTransakcije, ['id', 'objekatId', 'itemId', 'type', 'quantity', 'date', 'note', 'createdAt'])
-                };
-
-                // 2. UČITAJ LOKALNE PODATKE
-                const localData = loadFromLocalStorage();
-
-                // 3. SPOJI PODATKE - PAMETNO SPAJANJE
-                const mergedData = mergeData(localData, remoteData);
+                const remoteSuccess = await loadFromGoogleSheets();
                 
-                // 4. SPREMI SPOJENE PODATKE (i lokalno i na server)
-                objekti = mergedData.objekti;
-                items = mergedData.items;
-                transactions = mergedData.transactions;
-
-                await saveAllData();
+                if (remoteSuccess) {
+                    // 2. SPREMI I LOKALNO
+                    saveToLocalStorage();
+                    lastSyncTime = new Date();
+                    showSyncStatus('Pametna sinhronizacija uspješna!', 'success');
+                } else {
+                    // 3. AKO NE USPIJE, KORISTI LOKALNE
+                    loadFromLocalStorage();
+                    showSyncStatus('Koristim lokalne podatke', 'warning');
+                }
                 
-                lastSyncTime = new Date();
-                showSyncStatus('Pametna sinhronizacija uspješna!', 'success');
-                return true;
+                return remoteSuccess;
 
             } catch (error) {
                 console.error('Greška pri sinhronizaciji:', error);
-                showSyncStatus('Koristim lokalne podatke', 'warning');
+                showSyncStatus('Greška pri sinhronizaciji. Koristim lokalne podatke.', 'error');
                 loadFromLocalStorage();
                 return false;
             }
         }
 
-        // ✅ PAMETNO SPAGANJE PODATAKA
-        function mergeData(local, remote) {
-            const merged = {
-                objekti: [],
-                items: [],
-                transactions: []
-            };
-
-            // Spoji objekte - zadrži najnovije verzije
-            merged.objekti = mergeArrays(local.objekti, remote.objekti, 'id');
-            merged.items = mergeArrays(local.items, remote.items, 'id');
-            merged.transactions = mergeArrays(local.transactions, remote.transactions, 'id');
-
-            return merged;
-        }
-
-        function mergeArrays(localArray, remoteArray, idField) {
-            const allItems = [...localArray, ...remoteArray];
-            const uniqueItems = {};
-            
-            allItems.forEach(item => {
-                const existing = uniqueItems[item[idField]];
-                if (!existing || isItemNewer(item, existing)) {
-                    uniqueItems[item[idField]] = item;
-                }
-            });
-            
-            return Object.values(uniqueItems);
-        }
-
-        function isItemNewer(item1, item2) {
-            const time1 = new Date(item1.createdAt || 0).getTime();
-            const time2 = new Date(item2.createdAt || 0).getTime();
-            return time1 > time2;
-        }
-
-        // ✅ UČITAVANJE IZ GOOGLE SHEETS
-        async function fetchSheetAsCSV(sheetName) {
-            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-                throw new Error(`Sheet ${sheetName} nije pronađen`);
-            }
-            
-            return await response.text();
-        }
-
-        function parseCSV(csvText, headers) {
-            if (!csvText.trim()) return [];
-            
-            const lines = csvText.trim().split('\n');
-            const result = [];
-            
-            for (let i = 1; i < lines.length; i++) {
-                const values = parseCSVLine(lines[i]);
-                if (values.length === headers.length) {
-                    const obj = {};
-                    headers.forEach((header, index) => {
-                        let value = values[index] || '';
-                        value = value.replace(/^"|"$/g, '').trim();
-                        obj[header] = value;
-                        
-                        if (header === 'quantity') {
-                            obj[header] = parseFloat(value) || 0;
-                        }
-                    });
-                    result.push(obj);
-                }
-            }
-            
-            return result;
-        }
-
-        function parseCSVLine(line) {
-            const result = [];
-            let current = '';
-            let inQuotes = false;
-            
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-                
-                if (char === '"') {
-                    inQuotes = !inQuotes;
-                } else if (char === ',' && !inQuotes) {
-                    result.push(current);
-                    current = '';
-                } else {
-                    current += char;
-                }
-            }
-            
-            result.push(current);
-            return result;
-        }
-
-        // ✅ SPREMANJE PODATAKA - NA SERVER I LOKALNO
+        // ✅ SPREMANJE SVIH PODATAKA
         async function saveAllData() {
             showSyncStatus('Spašavam podatke...', 'info');
             
@@ -871,28 +851,21 @@
                 // Spremi lokalno
                 saveToLocalStorage();
                 
-                // Spremi na server preko Google Forms
-                await saveToGoogleSheets();
+                // Pokušaj spremiti na Google Sheets
+                const googleSuccess = await saveToGoogleSheets();
                 
-                showSyncStatus('Svi podaci uspješno spašeni!', 'success');
-                return true;
+                if (googleSuccess) {
+                    showSyncStatus('Svi podaci uspješno spašeni!', 'success');
+                } else {
+                    showSyncStatus('Podaci spašeni samo lokalno', 'warning');
+                }
+                
+                return googleSuccess;
             } catch (error) {
                 console.error('Greška pri spašavanju:', error);
                 showSyncStatus('Podaci spašeni samo lokalno', 'warning');
                 return false;
             }
-        }
-
-        // ✅ GOOGLE APPS SCRIPT INTEGRACIJA ZA SPREMANJE
-        async function saveToGoogleSheets() {
-            // Ovdje ćemo koristiti Google Apps Script za spremanje
-            // Za sada ćemo samo spremiti lokalno
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    console.log('Podaci spašeni na server');
-                    resolve(true);
-                }, 1000);
-            });
         }
 
         // ✅ LOKALNO SPREMANJE
@@ -915,7 +888,7 @@
                 initializeDefaultData();
             }
             
-            return { objekti, items, transactions };
+            return true;
         }
 
         function initializeDefaultData() {
@@ -924,7 +897,7 @@
             transactions = [];
         }
 
-        // ✅ AUTOMATSKA SINHRONIZACIJA PRI ULAZKU I IZLAZKU
+        // ✅ AUTOMATSKA SINHRONIZACIJA
         async function autoSyncOnEntry() {
             showSyncStatus('Automatska sinhronizacija pri ulasku...', 'info');
             await smartSync();
@@ -961,8 +934,149 @@
                 }, 5000);
             }
         }
-        
-        // ✅ LOGIN SISTEM SA AUTOMATSKOM SINHRONIZACIJOM
+
+        // ✅ UPUTE ZA GOOGLE APPS SCRIPT
+        function showGoogleScriptInstructions() {
+            const instructions = `
+📋 **UPUTE ZA GOOGLE APPS SCRIPT:**
+
+1. **Idite na:** https://script.google.com/
+2. **Kreirajte novi projekt**
+3. **Zalijepite ovaj kod:**
+
+\`\`\`javascript
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const sheetId = data.sheetId;
+    
+    const ss = SpreadsheetApp.openById(sheetId);
+    
+    if (data.action === 'SAVE_DATA') {
+      return saveData(ss, data.data);
+    } else if (data.action === 'LOAD_DATA') {
+      return loadData(ss);
+    } else {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        error: 'Unknown action'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function saveData(ss, data) {
+  // Spremi objekte
+  const objektiSheet = ss.getSheetByName('Objekti') || ss.insertSheet('Objekti');
+  objektiSheet.clear();
+  objektiSheet.getRange(1, 1, 1, 5).setValues([['id', 'name', 'contact', 'note', 'createdAt']]);
+  if (data.objekti.length > 0) {
+    const objektiData = data.objekti.map(o => [o.id, o.name, o.contact, o.note, o.createdAt]);
+    objektiSheet.getRange(2, 1, objektiData.length, 5).setValues(objektiData);
+  }
+  
+  // Spremi artikle
+  const artikliSheet = ss.getSheetByName('Artikli') || ss.insertSheet('Artikli');
+  artikliSheet.clear();
+  artikliSheet.getRange(1, 1, 1, 3).setValues([['id', 'name', 'unit']]);
+  if (data.items.length > 0) {
+    const artikliData = data.items.map(i => [i.id, i.name, i.unit]);
+    artikliSheet.getRange(2, 1, artikliData.length, 3).setValues(artikliData);
+  }
+  
+  // Spremi transakcije
+  const transakcijeSheet = ss.getSheetByName('Transakcije') || ss.insertSheet('Transakcije');
+  transakcijeSheet.clear();
+  transakcijeSheet.getRange(1, 1, 1, 8).setValues([['id', 'objekatId', 'itemId', 'type', 'quantity', 'date', 'note', 'createdAt']]);
+  if (data.transactions.length > 0) {
+    const transakcijeData = data.transactions.map(t => [t.id, t.objekatId, t.itemId, t.type, t.quantity, t.date, t.note, t.createdAt]);
+    transakcijeSheet.getRange(2, 1, transakcijeData.length, 8).setValues(transakcijeData);
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    success: true,
+    message: 'Data saved successfully'
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function loadData(ss) {
+  const data = {
+    objekti: [],
+    items: [],
+    transactions: []
+  };
+  
+  try {
+    // Učitaj objekte
+    const objektiSheet = ss.getSheetByName('Objekti');
+    if (objektiSheet && objektiSheet.getLastRow() > 1) {
+      const objektiValues = objektiSheet.getRange(2, 1, objektiSheet.getLastRow()-1, 5).getValues();
+      data.objekti = objektiValues.map(row => ({
+        id: row[0], name: row[1], contact: row[2], note: row[3], createdAt: row[4]
+      }));
+    }
+    
+    // Učitaj artikle
+    const artikliSheet = ss.getSheetByName('Artikli');
+    if (artikliSheet && artikliSheet.getLastRow() > 1) {
+      const artikliValues = artikliSheet.getRange(2, 1, artikliSheet.getLastRow()-1, 3).getValues();
+      data.items = artikliValues.map(row => ({
+        id: row[0], name: row[1], unit: row[2]
+      }));
+    }
+    
+    // Učitaj transakcije
+    const transakcijeSheet = ss.getSheetByName('Transakcije');
+    if (transakcijeSheet && transakcijeSheet.getLastRow() > 1) {
+      const transakcijeValues = transakcijeSheet.getRange(2, 1, transakcijeSheet.getLastRow()-1, 8).getValues();
+      data.transactions = transakcijeValues.map(row => ({
+        id: row[0], objekatId: row[1], itemId: row[2], type: row[3], 
+        quantity: parseFloat(row[4]), date: row[5], note: row[6], createdAt: row[7]
+      }));
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      data: data
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+\`\`\`
+
+4. **Spremite projekt**
+5. **Deploy -> New deployment -> Web app**
+6. **Postavite: Execute as: Me, Who has access: Anyone**
+7. **Kopirajte URL i zalijepite u const GOOGLE_SCRIPT_URL**
+            `;
+            
+            console.log(instructions);
+            alert('Pogledajte konzolu za upute! Otvorite Developer Tools (F12) -> Console');
+        }
+
+        // ✅ PRIKAŽI UPUTE PRI INICIJALIZACIJI
+        function checkGoogleScriptSetup() {
+            if (GOOGLE_SCRIPT_URL.includes('AKfycbzWvR7QbLx9sx6pJ8K7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q')) {
+                showSyncStatus('❌ Google Apps Script nije konfiguriran!', 'error');
+                setTimeout(() => {
+                    showGoogleScriptInstructions();
+                }, 2000);
+                return false;
+            }
+            return true;
+        }
+
+        // ✅ LOGIN SISTEM
         document.getElementById('loginBtn').addEventListener('click', login);
         document.getElementById('passwordInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') login();
@@ -982,6 +1096,13 @@
             refreshAllData();
             this.classList.remove('loading');
         });
+
+        // ✅ PRIKAŽI UPUTE ZA SETUP
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                checkGoogleScriptSetup();
+            }, 3000);
+        });
         
         async function login() {
             const password = document.getElementById('passwordInput').value;
@@ -997,7 +1118,7 @@
         // ✅ INICIJALIZACIJA APLIKACIJE
         async function initApp() {
             setupEventListeners();
-            await autoSyncOnEntry(); // AUTOMATSKA SINHRONIZACIJA PRI ULAZKU
+            await autoSyncOnEntry();
             refreshAllData();
             document.getElementById('transactionDate').valueAsDate = new Date();
         }
@@ -1008,7 +1129,7 @@
             updateAllTransactions();
         }
 
-        // ✅ OSTATAK FUNKCIJA OSTAJU ISTE (kao u prethodnoj verziji)
+        // ✅ OSTALE FUNKCIJE (ISTE KAO PRIJE)
         function setupEventListeners() {
             document.querySelectorAll('.main-tab').forEach(tab => {
                 tab.addEventListener('click', function() {
@@ -1295,7 +1416,7 @@
             };
             
             objekti.push(objekat);
-            await saveAllData(); // AUTOMATSKI SPREMI NAKON DODAVANJA
+            await saveAllData();
             loadObjekti();
             showSection('objekti');
         }
@@ -1313,7 +1434,7 @@
                         name: document.getElementById('itemName').value,
                         unit: document.getElementById('itemUnit').value
                     };
-                    await saveAllData(); // AUTOMATSKI SPREMI NAKON UREDIVANJA
+                    await saveAllData();
                     loadItems();
                     cancelItemEdit();
                 }
@@ -1325,7 +1446,7 @@
                 };
                 
                 items.push(item);
-                await saveAllData(); // AUTOMATSKI SPREMI NAKON DODAVANJA
+                await saveAllData();
                 loadItems();
                 document.getElementById('itemForm').reset();
             }
@@ -1352,7 +1473,7 @@
             };
             
             transactions.push(transaction);
-            await saveAllData(); // AUTOMATSKI SPREMI NAKON DODAVANJA
+            await saveAllData();
             showObjekatDetail(currentObjekatId);
         }
         
@@ -1387,7 +1508,7 @@
                 }
                 
                 items = items.filter(item => item.id !== itemId);
-                await saveAllData(); // AUTOMATSKI SPREMI NAKON BRISANJA
+                await saveAllData();
                 loadItems();
             }
         }
@@ -1395,7 +1516,7 @@
         async function deleteTransaction(transactionId) {
             if (confirm('Da li ste sigurni da želite obrisati ovu transakciju?')) {
                 transactions = transactions.filter(t => t.id !== transactionId);
-                await saveAllData(); // AUTOMATSKI SPREMI NAKON BRISANJA
+                await saveAllData();
                 if (currentObjekatId) {
                     updateObjekatDetail(currentObjekatId);
                 }
@@ -1420,7 +1541,7 @@
             };
             
             transactions.push(returnTransaction);
-            await saveAllData(); // AUTOMATSKI SPREMI NAKON OZNAČAVANJA
+            await saveAllData();
             updateObjekatDetail(currentObjekatId);
         }
         
@@ -1496,7 +1617,7 @@
             document.getElementById('passwordInput').focus();
         };
 
-        // ✅ AUTOMATSKA SINHRONIZACIJA PRI ZATVARANJU STRANICE
+        // ✅ AUTOMATSKA SINHRONIZACIJA PRI ZATVARANJU
         window.addEventListener('beforeunload', async function() {
             await autoSyncOnExit();
         });
