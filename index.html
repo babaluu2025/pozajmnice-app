@@ -6,7 +6,6 @@
     <title>Pozajmnice</title>
     <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤝</text></svg>">
     <style>
-        /* Osnovni stilovi - skraćeno zbog dužine */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
@@ -106,6 +105,17 @@
             top: 50%; 
             transform: translateY(-50%); 
         }
+
+        /* Auto-sync indicator */
+        .auto-sync { 
+            display: inline-block; 
+            padding: 4px 8px; 
+            background: #28a745; 
+            color: white; 
+            border-radius: 12px; 
+            font-size: 0.8rem; 
+            margin-left: 10px; 
+        }
     </style>
 </head>
 <body>
@@ -131,10 +141,11 @@
         <header>
             <div class="container">
                 <div class="header-content">
-                    <h1>🤝 Pozajmnice</h1>
+                    <h1>🤝 Pozajmnice <span id="autoSyncIndicator" class="auto-sync" style="display: none;">Auto-sync</span></h1>
                     <div>
                         <button id="syncBtn" class="btn btn-info">🔄 Učitaj iz Sheets</button>
                         <button id="saveBtn" class="btn btn-success">💾 Spremi u Sheets</button>
+                        <button id="autoSyncToggle" class="btn" style="background: #6c757d; color: white;">⏸ Auto-sync</button>
                         <button id="logoutBtn" class="btn btn-danger">Odjava</button>
                     </div>
                 </div>
@@ -247,205 +258,139 @@
     <script>
         // ✅ KONFIGURACIJA - OVO JE SVE ŠTO TREBATE PROMIJENITI
         const APP_PASSWORD = "123";
-        const SHEET_ID = "1TdAZal8V82wnjhiGIoJqNzZEzWapVQL-W3WdiqJYYQo"; // Zamijenite sa vašim Sheet ID
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzXKfbp_kbrA2nlohEjVD5OMQkWRQilWIMk45S4CTlCAKSvAx-xAT1A2YaPGbLPkwqJ"; // Zamijenite sa vašim Apps Script URL
         
         // Globalne varijable
         let currentObjekatId = null;
         let objekti = [];
         let items = [];
         let transactions = [];
+        let autoSyncEnabled = false;
+        let autoSyncInterval = null;
 
-        // ✅ JEDNOSTAVNO SPREMANJE - KORISNIK KOPIRA I LIJEPI
-        function saveToSheets() {
-            showSyncStatus('Pripremam podatke za spremanje...', 'info');
+        // ✅ AUTOMATSKA SINHRONIZACIJA SA GOOGLE APPS SCRIPT
+        async function saveToSheets() {
+            showSyncStatus('Spremam podatke u Google Sheets...', 'info');
             
             try {
-                // Kreiraj tekstualni prikaz svih podataka
-                const dataText = createDataExport();
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'SAVE_DATA',
+                        data: {
+                            objekti: objekti,
+                            items: items,
+                            transactions: transactions,
+                            timestamp: new Date().toISOString()
+                        }
+                    })
+                });
                 
-                // Prikaži korisniku podatke za kopiranje
-                showDataForCopy(dataText);
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSyncStatus('Podaci uspješno spremljeni u Google Sheets!', 'success');
+                    return true;
+                } else {
+                    throw new Error(result.error || 'Nepoznata greška');
+                }
                 
             } catch (error) {
-                console.error('Greška:', error);
-                showSyncStatus('Greška pri pripremi podataka', 'error');
+                console.error('Greška pri spremanju:', error);
+                showSyncStatus('Greška pri spremanju: ' + error.message, 'error');
+                return false;
             }
         }
 
-        function createDataExport() {
-            let exportText = "🤝 POZAJMNICE - EKSPORT PODATAKA\n";
-            exportText += "Datum: " + new Date().toLocaleString() + "\n\n";
-            
-            // Objekti
-            exportText += "📋 OBJEKTI:\n";
-            exportText += "ID|Naziv|Kontakt|Napomena|Datum kreiranja\n";
-            objekti.forEach(obj => {
-                exportText += `${obj.id}|${obj.name}|${obj.contact}|${obj.note}|${obj.createdAt}\n`;
-            });
-            
-            exportText += "\n";
-            
-            // Artikli
-            exportText += "📦 ARTIKLI:\n";
-            exportText += "ID|Naziv|Jedinica\n";
-            items.forEach(item => {
-                exportText += `${item.id}|${item.name}|${item.unit}\n`;
-            });
-            
-            exportText += "\n";
-            
-            // Transakcije
-            exportText += "💰 TRANSAKCIJE:\n";
-            exportText += "ID|ID Objekta|ID Artikla|Tip|Količina|Datum|Napomena|Datum kreiranja\n";
-            transactions.forEach(trans => {
-                exportText += `${trans.id}|${trans.objekatId}|${trans.itemId}|${trans.type}|${trans.quantity}|${trans.date}|${trans.note}|${trans.createdAt}\n`;
-            });
-            
-            return exportText;
-        }
-
-        function showDataForCopy(dataText) {
-            // Kreiraj textarea za jednostavno kopiranje
-            const textarea = document.createElement('textarea');
-            textarea.value = dataText;
-            textarea.style.width = '100%';
-            textarea.style.height = '300px';
-            textarea.style.margin = '10px 0';
-            textarea.style.padding = '10px';
-            textarea.style.border = '2px solid #667eea';
-            textarea.style.borderRadius = '5px';
-            textarea.style.fontFamily = 'monospace';
-            
-            // Kreiraj modal za prikaz
-            const modal = document.createElement('div');
-            modal.style.position = 'fixed';
-            modal.style.top = '0';
-            modal.style.left = '0';
-            modal.style.width = '100%';
-            modal.style.height = '100%';
-            modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
-            modal.style.display = 'flex';
-            modal.style.justifyContent = 'center';
-            modal.style.alignItems = 'center';
-            modal.style.zIndex = '1000';
-            
-            const modalContent = document.createElement('div');
-            modalContent.style.background = 'white';
-            modalContent.style.padding = '30px';
-            modalContent.style.borderRadius = '10px';
-            modalContent.style.maxWidth = '90%';
-            modalContent.style.maxHeight = '90%';
-            modalContent.style.overflow = 'auto';
-            modalContent.style.width = '600px';
-            
-            modalContent.innerHTML = `
-                <h2 style="margin-bottom: 15px; color: #333;">📋 Podaci za spremanje</h2>
-                <p style="margin-bottom: 15px; color: #666;">
-                    <strong>Upute:</strong><br>
-                    1. Kopirajte sve donje podatke (Ctrl+A pa Ctrl+C)<br>
-                    2. Idite u vaš Google Sheet<br>
-                    3. Zalijepite u ćeliju A1<br>
-                    4. Koristite "Text to Columns" sa separatorom | da razdvojite podatke
-                </p>
-                <div style="margin: 15px 0;">
-                    <button id="copyBtn" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px;">
-                        📋 Kopiraj sve
-                    </button>
-                    <button id="closeModal" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
-                        Zatvori
-                    </button>
-                </div>
-            `;
-            
-            modalContent.appendChild(textarea);
-            modal.appendChild(modalContent);
-            document.body.appendChild(modal);
-            
-            // Event listeners za modal
-            document.getElementById('copyBtn').addEventListener('click', function() {
-                textarea.select();
-                document.execCommand('copy');
-                showSyncStatus('Podaci kopirani! Sada ih zalijepite u Google Sheets.', 'success');
-            });
-            
-            document.getElementById('closeModal').addEventListener('click', function() {
-                document.body.removeChild(modal);
-            });
-            
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    document.body.removeChild(modal);
-                }
-            });
-        }
-
-        // ✅ UČITAVANJE IZ GOOGLE SHEETS
         async function loadFromGoogleSheets() {
             showSyncStatus('Učitavam podatke iz Google Sheets...', 'info');
             
             try {
-                // Pokušaj učitati iz Google Sheets
-                const [objektiData, artikliData, transakcijeData] = await Promise.all([
-                    fetchSheetData('Objekti'),
-                    fetchSheetData('Artikli'),
-                    fetchSheetData('Transakcije')
-                ]);
-
-                // Parsiraj podatke
-                objekti = parseSheetData(objektiData, ['id', 'name', 'contact', 'note', 'createdAt']);
-                items = parseSheetData(artikliData, ['id', 'name', 'unit']);
-                transactions = parseSheetData(transakcijeData, ['id', 'objekatId', 'itemId', 'type', 'quantity', 'date', 'note', 'createdAt']);
-
-                saveToLocalStorage();
-                showSyncStatus('Podaci uspješno učitani iz Google Sheets!', 'success');
-                return true;
-
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=LOAD_DATA&timestamp=${Date.now()}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    objekti = result.data.objekti || [];
+                    items = result.data.items || [];
+                    transactions = result.data.transactions || [];
+                    
+                    saveToLocalStorage();
+                    showSyncStatus('Podaci uspješno učitani iz Google Sheets!', 'success');
+                    return true;
+                } else {
+                    throw new Error(result.error || 'Nema podataka');
+                }
+                
             } catch (error) {
                 console.error('Greška pri učitavanju:', error);
-                showSyncStatus('Nema pristupa Google Sheets-u. Učitavam lokalne podatke...', 'warning');
+                showSyncStatus('Učitavam lokalne podatke...', 'warning');
                 loadFromLocalStorage();
                 return false;
             }
         }
 
-        async function fetchSheetData(sheetName) {
-            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-            const response = await fetch(url);
+        // ✅ AUTOMATSKA SINHRONIZACIJA
+        function toggleAutoSync() {
+            autoSyncEnabled = !autoSyncEnabled;
+            const button = document.getElementById('autoSyncToggle');
+            const indicator = document.getElementById('autoSyncIndicator');
             
-            if (!response.ok) {
-                throw new Error(`Sheet ${sheetName} nije pronađen`);
+            if (autoSyncEnabled) {
+                button.innerHTML = '▶ Auto-sync';
+                button.style.background = '#28a745';
+                indicator.style.display = 'inline-block';
+                startAutoSync();
+                showSyncStatus('Automatska sinhronizacija uključena!', 'success');
+            } else {
+                button.innerHTML = '⏸ Auto-sync';
+                button.style.background = '#6c757d';
+                indicator.style.display = 'none';
+                stopAutoSync();
+                showSyncStatus('Automatska sinhronizacija isključena', 'info');
             }
-            
-            const csvText = await response.text();
-            return csvText.split('\n').slice(1); // Preskoči header
         }
 
-        function parseSheetData(rows, headers) {
-            if (!rows || rows.length === 0) return [];
+        function startAutoSync() {
+            // Sinhronizacija svakih 30 sekundi
+            autoSyncInterval = setInterval(async () => {
+                await performAutoSync();
+            }, 30000);
             
-            const result = [];
-            
-            rows.forEach(row => {
-                if (row.trim()) {
-                    const values = row.split('|');
-                    if (values.length === headers.length) {
-                        const obj = {};
-                        headers.forEach((header, index) => {
-                            let value = values[index] || '';
-                            value = value.replace(/^"|"$/g, '').trim();
-                            
-                            if (header === 'quantity') {
-                                obj[header] = parseFloat(value) || 0;
-                            } else {
-                                obj[header] = value;
-                            }
-                        });
-                        result.push(obj);
-                    }
-                }
-            });
-            
-            return result;
+            // Odmah uradi prvu sinhronizaciju
+            setTimeout(() => performAutoSync(), 1000);
+        }
+
+        function stopAutoSync() {
+            if (autoSyncInterval) {
+                clearInterval(autoSyncInterval);
+                autoSyncInterval = null;
+            }
+        }
+
+        async function performAutoSync() {
+            try {
+                // Prvo učitaj nove podatke sa servera
+                await loadFromGoogleSheets();
+                // Onda spremi lokalne promjene
+                await saveToSheets();
+                refreshAllData();
+                
+                // Prikaži trenutno vrijeme sinhronizacije
+                const now = new Date().toLocaleTimeString();
+                document.getElementById('autoSyncIndicator').textContent = `Sync: ${now}`;
+                
+            } catch (error) {
+                console.error('Auto-sync greška:', error);
+            }
         }
 
         // ✅ LOKALNO SPREMANJE (fallback)
@@ -453,6 +398,7 @@
             localStorage.setItem('objekti', JSON.stringify(objekti));
             localStorage.setItem('items', JSON.stringify(items));
             localStorage.setItem('transactions', JSON.stringify(transactions));
+            localStorage.setItem('lastSync', new Date().toISOString());
         }
 
         function loadFromLocalStorage() {
@@ -480,6 +426,7 @@
         });
         
         document.getElementById('logoutBtn').addEventListener('click', function() {
+            stopAutoSync();
             document.getElementById('appContent').style.display = 'none';
             document.getElementById('loginScreen').style.display = 'flex';
         });
@@ -491,7 +438,13 @@
             this.classList.remove('loading');
         });
         
-        document.getElementById('saveBtn').addEventListener('click', saveToSheets);
+        document.getElementById('saveBtn').addEventListener('click', async function() {
+            this.classList.add('loading');
+            await saveToSheets();
+            this.classList.remove('loading');
+        });
+        
+        document.getElementById('autoSyncToggle').addEventListener('click', toggleAutoSync);
         
         async function login() {
             const password = document.getElementById('passwordInput').value;
@@ -509,6 +462,13 @@
             setupEventListeners();
             await loadFromGoogleSheets();
             refreshAllData();
+            
+            // Automatski uključi auto-sync nakon učitavanja
+            setTimeout(() => {
+                if (!autoSyncEnabled) {
+                    toggleAutoSync();
+                }
+            }, 2000);
         }
         
         function refreshAllData() {
@@ -529,9 +489,23 @@
                 });
             });
             
-            // Form submissions
-            document.getElementById('objekatForm').addEventListener('submit', addObjekat);
-            document.getElementById('itemForm').addEventListener('submit', handleItemForm);
+            // Form submissions - automatski spremaju u Sheets kada je auto-sync uključen
+            document.getElementById('objekatForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await addObjekat(e);
+                if (autoSyncEnabled) {
+                    await saveToSheets();
+                }
+            });
+            
+            document.getElementById('itemForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await handleItemForm(e);
+                if (autoSyncEnabled) {
+                    await saveToSheets();
+                }
+            });
+            
             document.getElementById('cancelEdit').addEventListener('click', cancelItemEdit);
         }
         
@@ -598,7 +572,7 @@
         }
         
         // ✅ FUNKCIJE ZA DODAVANJE PODATAKA
-        function addObjekat(e) {
+        async function addObjekat(e) {
             e.preventDefault();
             
             const objekat = {
@@ -613,16 +587,15 @@
             saveToLocalStorage();
             loadObjekti();
             document.getElementById('objekatForm').reset();
-            showSyncStatus('Objekat dodan! Kliknite "Spremi u Sheets" da sačuvate.', 'success');
+            showSyncStatus('Objekat dodan!' + (autoSyncEnabled ? ' Automatski spremljeno.' : ''), 'success');
         }
         
-        function handleItemForm(e) {
+        async function handleItemForm(e) {
             e.preventDefault();
             
             const editingId = document.getElementById('editingItemId').value;
             
             if (editingId) {
-                // Ažuriranje postojećeg artikla
                 const itemIndex = items.findIndex(item => item.id === editingId);
                 if (itemIndex !== -1) {
                     items[itemIndex] = {
@@ -633,10 +606,9 @@
                     saveToLocalStorage();
                     loadItems();
                     cancelItemEdit();
-                    showSyncStatus('Artikal ažuriran! Kliknite "Spremi u Sheets" da sačuvate.', 'success');
+                    showSyncStatus('Artikal ažuriran!' + (autoSyncEnabled ? ' Automatski spremljeno.' : ''), 'success');
                 }
             } else {
-                // Dodavanje novog artikla
                 const item = {
                     id: generateId(),
                     name: document.getElementById('itemName').value,
@@ -647,7 +619,7 @@
                 saveToLocalStorage();
                 loadItems();
                 document.getElementById('itemForm').reset();
-                showSyncStatus('Artikal dodan! Kliknite "Spremi u Sheets" da sačuvate.', 'success');
+                showSyncStatus('Artikal dodan!' + (autoSyncEnabled ? ' Automatski spremljeno.' : ''), 'success');
             }
         }
         
@@ -667,29 +639,36 @@
             document.getElementById('cancelEdit').style.display = 'none';
         }
         
-        function deleteObjekat(objekatId) {
+        async function deleteObjekat(objekatId) {
             if (confirm('Da li ste sigurni da želite obrisati ovaj objekat?')) {
                 objekti = objekti.filter(o => o.id !== objekatId);
-                // Takođe obriši sve transakcije za ovaj objekat
                 transactions = transactions.filter(t => t.objekatId !== objekatId);
                 saveToLocalStorage();
                 loadObjekti();
-                showSyncStatus('Objekat obrisan!', 'success');
+                
+                if (autoSyncEnabled) {
+                    await saveToSheets();
+                }
+                
+                showSyncStatus('Objekat obrisan!' + (autoSyncEnabled ? ' Automatski spremljeno.' : ''), 'success');
             }
         }
         
-        function deleteItem(itemId) {
+        async function deleteItem(itemId) {
             if (confirm('Da li ste sigurni da želite obrisati ovaj artikal?')) {
                 items = items.filter(i => i.id !== itemId);
-                // Takođe obriši sve transakcije za ovaj artikal
                 transactions = transactions.filter(t => t.itemId !== itemId);
                 saveToLocalStorage();
                 loadItems();
-                showSyncStatus('Artikal obrisan!', 'success');
+                
+                if (autoSyncEnabled) {
+                    await saveToSheets();
+                }
+                
+                showSyncStatus('Artikal obrisan!' + (autoSyncEnabled ? ' Automatski spremljeno.' : ''), 'success');
             }
         }
         
-        // Funkcije koje će biti implementirane kasnije
         function showObjekatDetail(objekatId) {
             alert(`Detalji objekta ID: ${objekatId}\nOva funkcionalnost će biti implementirana.`);
         }
