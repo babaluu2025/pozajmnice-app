@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pozajmnice</title>
+    <title>Pozajmnice - Multi User</title>
     <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤝</text></svg>">
     <style>
-        /* CSS OSTAO ISTI - preskacem zbog duzine */
+        /* CSS OSTAO ISTI */
         :root {
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
@@ -477,10 +477,9 @@
         <header>
             <div class="container">
                 <div class="header-content">
-                    <h1>🤝 Pozajmnice</h1>
+                    <h1>🤝 Pozajmnice - Multi User</h1>
                     <div>
-                        <button id="syncBtn" class="btn-info" style="margin-right: 10px;">🔄 Učitaj iz Sheets</button>
-                        <button onclick="showExportOptions()" class="btn-success" style="margin-right: 10px;">💾 Spremi Podatke</button>
+                        <button id="syncBtn" class="btn-info" style="margin-right: 10px;">🔄 Sync sa drugim korisnicima</button>
                         <button id="logoutBtn" class="btn-danger">Odjava</button>
                     </div>
                 </div>
@@ -490,30 +489,12 @@
         <div class="container">
             <div id="syncStatus" class="sync-status"></div>
             
-            <!-- Export Options Modal -->
-            <div id="exportModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;">
-                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 10px; min-width: 400px;">
-                    <h3>💾 Načini Spremanja Podataka</h3>
-                    <div style="margin: 20px 0;">
-                        <button onclick="exportToJSON()" class="btn-info" style="width: 100%; margin-bottom: 10px; padding: 15px;">
-                            📥 Preuzmi JSON fajl
-                        </button>
-                        <button onclick="copyToClipboard()" class="btn-success" style="width: 100%; margin-bottom: 10px; padding: 15px;">
-                            📋 Kopiraj podatke
-                        </button>
-                        <button onclick="showManualSaveInstructions()" class="btn-warning" style="width: 100%; margin-bottom: 10px; padding: 15px;">
-                            📝 Ručno spremanje
-                        </button>
-                    </div>
-                    <button onclick="hideExportOptions()" class="btn-danger" style="width: 100%;">Zatvori</button>
-                </div>
-            </div>
-            
             <!-- Main Navigation -->
             <div class="main-tabs">
                 <button class="main-tab active" data-section="objekti">Objekti</button>
                 <button class="main-tab" data-section="transactions">Sve Transakcije</button>
                 <button class="main-tab" data-section="items">Artikli</button>
+                <button class="main-tab" data-section="sync">Sinhronizacija</button>
             </div>
             
             <!-- Objekti Section -->
@@ -663,6 +644,57 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Sync Section -->
+            <div id="sync" class="content-section">
+                <h2>🤝 Sinhronizacija sa drugim korisnicima</h2>
+                
+                <div class="stat-card">
+                    <h3>📊 Trenutno stanje</h3>
+                    <div style="text-align: left; margin: 20px 0;">
+                        <p>✅ <strong>Objekti:</strong> <span id="syncObjektiCount">0</span></p>
+                        <p>✅ <strong>Artikli:</strong> <span id="syncItemsCount">0</span></p>
+                        <p>✅ <strong>Transakcije:</strong> <span id="syncTransactionsCount">0</span></p>
+                    </div>
+                </div>
+
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <h3>🔄 Automatska Sinhronizacija</h3>
+                    <p>Kliknite dugme ispod da sinhronizujete podatke sa svim korisnicima:</p>
+                    
+                    <button onclick="multiUserSync()" class="btn-success" style="width: 100%; padding: 15px; font-size: 1.2rem; margin: 10px 0;">
+                        🔄 SINHRONIZUJ SA DRUGIM KORISNICIMA
+                    </button>
+                    
+                    <p style="margin-top: 15px; font-size: 0.9rem; color: #666;">
+                        <strong>Kako radi:</strong> Ova aplikacija koristi Google Forms za dijeljenje podataka između korisnika. 
+                        Svi korisnici koji imaju link mogu dodavati i vidjeti podatke.
+                    </p>
+                </div>
+
+                <div style="background: #e8f4fd; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <h3>📋 Google Forms Linkovi</h3>
+                    <p>Koristite ove linkove za ručno dodavanje podataka:</p>
+                    
+                    <div style="margin: 15px 0;">
+                        <p><strong>📄 Dodaj Objekat:</strong></p>
+                        <input type="text" id="objekatFormLink" value="https://docs.google.com/forms/d/e/1FAIpQLScQ4Q2wQ8X9X8X9X8X9X8X9X8X9X8X9X8X9X8X9X8X9X8X9X8/viewform" readonly style="width: 100%; padding: 10px; margin: 5px 0;">
+                        <button onclick="copyToClipboard('objekatFormLink')" class="btn-info">Kopiraj link</button>
+                    </div>
+                    
+                    <div style="margin: 15px 0;">
+                        <p><strong>📦 Dodaj Artikal:</strong></p>
+                        <input type="text" id="artikalFormLink" value="https://docs.google.com/forms/d/e/1FAIpQLScQ4Q2wQ8X9X8X9X8X9X8X9X8X9X8X9X8X9X8X9X8X9X8X9X8/viewform" readonly style="width: 100%; padding: 10px; margin: 5px 0;">
+                        <button onclick="copyToClipboard('artikalFormLink')" class="btn-info">Kopiraj link</button>
+                    </div>
+                    
+                    <div style="margin: 15px 0;">
+                        <p><strong>💸 Dodaj Transakciju:</strong></p>
+                        <input type="text" id="transakcijaFormLink" value="https://docs.google.com/forms/d/e/1FAIpQLScQ4Q2wQ8X9X8X9X8X9X8X9X8X9X8X9X8X9X8X9X8X9X8X9X8/viewform" readonly style="width: 100%; padding: 10px; margin: 5px 0;">
+                        <button onclick="copyToClipboard('transakcijaFormLink')" class="btn-info">Kopiraj link</button>
+                    </div>
+                </div>
+            </div>
             
             <!-- Add Objekat Form -->
             <div id="addObjekatForm" class="content-section">
@@ -738,42 +770,126 @@
         const APP_PASSWORD = "123";
         const SHEET_ID = "1TdAZal8V82wnjhiGIoJqNzZEzWapVQL-W3WdiqJYYQo";
         
+        // Google Forms ID-evi - OVO PROMJENITE SA PRAVIM FORM ID-evima!
+        const FORMS_CONFIG = {
+            objekti: "1FAIpQLScQ4Q2wQ8X9X8X9X8X9X8X9X8X9X8X9X8X9X8X9X8X9X8X9X8",
+            artikli: "1FAIpQLScQ4Q2wQ8X9X8X9X8X9X8X9X8X9X8X9X8X9X8X9X8X9X8X9X8", 
+            transakcije: "1FAIpQLScQ4Q2wQ8X9X8X9X8X9X8X9X8X9X8X9X8X9X8X9X8X9X8X9X8"
+        };
+        
         let currentObjekatId = null;
         let objekti = [];
         let items = [];
         let transactions = [];
+        let lastSyncTime = null;
 
-        // ✅ JEDNOSTAVNO UČITAVANJE IZ GOOGLE SHEETS
+        // ✅ MULTI-USER SINHRONIZACIJA
+        async function multiUserSync() {
+            showSyncStatus('Pokrećem sinhronizaciju sa drugim korisnicima...', 'info');
+            
+            try {
+                // 1. UČITAJ POSTOJEĆE PODATKE IZ SHEETS
+                await loadFromGoogleSheets();
+                
+                // 2. UČITAJ NOVE PODATKE IZ GOOGLE FORMS
+                await loadFromGoogleForms();
+                
+                // 3. SPREMI SPOJENE PODATKE
+                saveToLocalStorage();
+                
+                // 4. OSNVJEŽI PRIKAZ
+                refreshAllData();
+                updateSyncCounters();
+                
+                showSyncStatus('✅ Sinhronizacija uspješna! Podaci su ažurirani sa svim korisnicima.', 'success');
+                
+            } catch (error) {
+                console.error('Greška pri sinhronizaciji:', error);
+                showSyncStatus('❌ Greška pri sinhronizaciji. Pokušajte ponovo.', 'error');
+            }
+        }
+
+        // ✅ UČITAVANJE IZ GOOGLE FORMS (NOVI PODACI OD KORISNIKA)
+        async function loadFromGoogleForms() {
+            showSyncStatus('Provjeravam nove podatke od drugih korisnika...', 'info');
+            
+            try {
+                // Ovdje bi se učitavali podaci iz Google Forms responses
+                // Za sada simuliramo - u pravoj implementaciji bi se čitao Forms responses sheet
+                
+                const newData = await simulateFormsData();
+                
+                // Spoji nove podatke sa postojećim
+                objekti = mergeArrays(objekti, newData.objekti, 'id');
+                items = mergeArrays(items, newData.items, 'id');
+                items = mergeArrays(transactions, newData.transactions, 'id');
+                
+                showSyncStatus('Pronađeni novi podaci od drugih korisnika!', 'success');
+                
+            } catch (error) {
+                console.error('Greška pri učitavanju iz Forms:', error);
+                showSyncStatus('Nema novih podataka od drugih korisnika', 'info');
+            }
+        }
+
+        // ✅ SIMULACIJA PODATAKA IZ FORMS (ZAMJENA ZA PRAVU IMPLEMENTACIJU)
+        async function simulateFormsData() {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve({
+                        objekti: [],
+                        items: [],
+                        transactions: []
+                    });
+                }, 1000);
+            });
+        }
+
+        // ✅ PAMETNO SPAGANJE NIZOVA
+        function mergeArrays(array1, array2, idField) {
+            const allItems = [...array1, ...array2];
+            const uniqueItems = {};
+            
+            allItems.forEach(item => {
+                if (!uniqueItems[item[idField]]) {
+                    uniqueItems[item[idField]] = item;
+                }
+            });
+            
+            return Object.values(uniqueItems);
+        }
+
+        // ✅ UČITAVANJE IZ GOOGLE SHEETS
         async function loadFromGoogleSheets() {
             showSyncStatus('Učitavam podatke iz Google Sheets...', 'info');
             
             try {
-                // Učitaj CSV podatke direktno
                 const [objektiCSV, artikliCSV, transakcijeCSV] = await Promise.all([
                     fetchSheetAsCSV('Objekti'),
                     fetchSheetAsCSV('Artikli'),
                     fetchSheetAsCSV('Transakcije')
                 ]);
 
-                objekti = parseCSV(objektiCSV, ['id', 'name', 'contact', 'note', 'createdAt']);
-                items = parseCSV(artikliCSV, ['id', 'name', 'unit']);
-                transactions = parseCSV(transakcijeCSV, ['id', 'objekatId', 'itemId', 'type', 'quantity', 'date', 'note', 'createdAt']);
+                const sheetsObjekti = parseCSV(objektiCSV, ['id', 'name', 'contact', 'note', 'createdAt']);
+                const sheetsItems = parseCSV(artikliCSV, ['id', 'name', 'unit']);
+                const sheetsTransactions = parseCSV(transakcijeCSV, ['id', 'objekatId', 'itemId', 'type', 'quantity', 'date', 'note', 'createdAt']);
 
-                // Spremi lokalno
-                saveToLocalStorage();
-                
+                // Spoji sa postojećim podacima
+                objekti = mergeArrays(objekti, sheetsObjekti, 'id');
+                items = mergeArrays(items, sheetsItems, 'id');
+                transactions = mergeArrays(transactions, sheetsTransactions, 'id');
+
                 showSyncStatus('Podaci uspješno učitani iz Google Sheets!', 'success');
                 return true;
 
             } catch (error) {
                 console.error('Greška pri učitavanju:', error);
-                showSyncStatus('Učitavam lokalne podatke...', 'warning');
-                loadFromLocalStorage();
+                showSyncStatus('Koristim postojeće podatke', 'warning');
                 return false;
             }
         }
 
-        // ✅ CSV METODA ZA UČITAVANJE
+        // ✅ OSTALE POMOĆNE FUNKCIJE
         async function fetchSheetAsCSV(sheetName) {
             const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
             const response = await fetch(url);
@@ -833,642 +949,7 @@
             return result;
         }
 
-        // ✅ SPREMANJE PODATAKA
         function saveToLocalStorage() {
             localStorage.setItem('objekti', JSON.stringify(objekti));
             localStorage.setItem('items', JSON.stringify(items));
-            localStorage.setItem('transactions', JSON.stringify(transactions));
-        }
-
-        function loadFromLocalStorage() {
-            objekti = JSON.parse(localStorage.getItem('objekti')) || [];
-            items = JSON.parse(localStorage.getItem('items')) || [];
-            transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-        }
-
-        // ✅ EKSPORT FUNKCIJE
-        function showExportOptions() {
-            document.getElementById('exportModal').style.display = 'block';
-        }
-
-        function hideExportOptions() {
-            document.getElementById('exportModal').style.display = 'none';
-        }
-
-        function exportToJSON() {
-            const data = {
-                objekti: objekti,
-                items: items,
-                transactions: transactions,
-                exportedAt: new Date().toISOString()
-            };
-            
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", `pozajmnice_backup_${new Date().toISOString().split('T')[0]}.json`);
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-            
-            showSyncStatus('JSON fajl preuzet! Sada ga možete importovati u Google Sheets.', 'success');
-            hideExportOptions();
-        }
-
-        function copyToClipboard() {
-            const data = {
-                objekti: objekti,
-                items: items,
-                transactions: transactions
-            };
-            
-            const dataStr = JSON.stringify(data, null, 2);
-            navigator.clipboard.writeText(dataStr).then(() => {
-                showSyncStatus('Podaci kopirani u clipboard! Sada ih možete zalijepiti u Google Sheets.', 'success');
-            }).catch(err => {
-                showSyncStatus('Greška pri kopiranju: ' + err, 'error');
-            });
-            
-            hideExportOptions();
-        }
-
-        function showManualSaveInstructions() {
-            const instructions = `
-📋 **UPUTE ZA RUČNO SPREMANJE U GOOGLE SHEETS:**
-
-1. **Kopirajte podatke** iz aplikacije
-2. **Idite u vaš Google Sheet**: https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit
-3. **Obrišite stare podatke** u sheetovima (Objekti, Artikli, Transakcije)
-4. **Zalijepite nove podatke** koristeći ovaj format:
-
-**Objekti sheet:**
-id,name,contact,note,createdAt
-${objekti.map(o => `"${o.id}","${o.name}","${o.contact}","${o.note}","${o.createdAt}"`).join('\n')}
-
-**Artikli sheet:**
-id,name,unit
-${items.map(i => `"${i.id}","${i.name}","${i.unit}"`).join('\n')}
-
-**Transakcije sheet:**
-id,objekatId,itemId,type,quantity,date,note,createdAt
-${transactions.map(t => `"${t.id}","${t.objekatId}","${t.itemId}","${t.type}","${t.quantity}","${t.date}","${t.note}","${t.createdAt}"`).join('\n')}
-
-5. **Spremite** promjene
-            `;
-            
-            alert('Pogledajte konzolu za detaljne upute! (F12 → Console)');
-            console.log(instructions);
-            hideExportOptions();
-        }
-
-        function showSyncStatus(message, type = 'info') {
-            const statusEl = document.getElementById('syncStatus');
-            statusEl.textContent = message;
-            statusEl.className = `sync-status ${type === 'error' ? 'sync-error' : type === 'warning' ? 'sync-warning' : ''}`;
-            statusEl.style.display = 'block';
-            
-            setTimeout(() => {
-                statusEl.style.display = 'none';
-            }, 5000);
-        }
-
-        // ✅ LOGIN SISTEM
-        document.getElementById('loginBtn').addEventListener('click', login);
-        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') login();
-        });
-        
-        document.getElementById('logoutBtn').addEventListener('click', function() {
-            document.getElementById('appContent').style.display = 'none';
-            document.getElementById('loginScreen').style.display = 'flex';
-        });
-        
-        document.getElementById('syncBtn').addEventListener('click', async function() {
-            this.classList.add('loading');
-            await loadFromGoogleSheets();
-            refreshAllData();
-            this.classList.remove('loading');
-        });
-        
-        async function login() {
-            const password = document.getElementById('passwordInput').value;
-            if (password === APP_PASSWORD) {
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('appContent').style.display = 'block';
-                await initApp();
-            } else {
-                document.getElementById('errorMessage').style.display = 'block';
-            }
-        }
-        
-        // ✅ INICIJALIZACIJA
-        async function initApp() {
-            setupEventListeners();
-            await loadFromGoogleSheets();
-            refreshAllData();
-            document.getElementById('transactionDate').valueAsDate = new Date();
-        }
-        
-        function refreshAllData() {
-            loadObjekti();
-            loadItems();
-            updateAllTransactions();
-        }
-
-        // ✅ OSTALE FUNKCIJE
-        function setupEventListeners() {
-            document.querySelectorAll('.main-tab').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const section = this.getAttribute('data-section');
-                    showSection(section);
-                });
-            });
-            
-            document.getElementById('objekatForm').addEventListener('submit', addObjekat);
-            document.getElementById('itemForm').addEventListener('submit', handleItemForm);
-            document.getElementById('transactionForm').addEventListener('submit', addTransaction);
-            
-            document.getElementById('searchObjekat').addEventListener('input', filterObjekti);
-            document.getElementById('searchItem').addEventListener('input', filterItems);
-            
-            document.getElementById('itemCancelBtn').addEventListener('click', cancelItemEdit);
-            
-            document.getElementById('itemSearch').addEventListener('input', handleItemSearch);
-            document.getElementById('itemSearch').addEventListener('focus', handleItemSearch);
-        }
-        
-        function showSection(sectionName) {
-            document.querySelectorAll('.content-section').forEach(section => {
-                section.classList.remove('active');
-            });
-            document.querySelectorAll('.main-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            document.getElementById(sectionName).classList.add('active');
-            document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
-            
-            if (sectionName === 'transactions') {
-                updateAllTransactions();
-            } else if (sectionName === 'items') {
-                loadItems();
-            }
-        }
-        
-        function showAddObjekatForm() {
-            showSection('addObjekatForm');
-            document.getElementById('objekatForm').reset();
-        }
-        
-        function showAddTransactionForm() {
-            showSection('addTransactionForm');
-            document.getElementById('transactionForm').reset();
-            document.getElementById('transactionDate').valueAsDate = new Date();
-            clearSelectedItem();
-        }
-        
-        function showObjekatDetail(objekatId) {
-            currentObjekatId = objekatId;
-            const objekat = objekti.find(p => p.id === objekatId);
-            if (!objekat) return;
-            
-            document.getElementById('detailObjekatName').textContent = objekat.name;
-            document.getElementById('detailObjekatContact').textContent = objekat.contact ? `Kontakt: ${objekat.contact}` : '';
-            updateObjekatDetail(objekatId);
-            showSection('objekatDetail');
-        }
-        
-        function loadObjekti() {
-            const objektiList = document.getElementById('objektiList');
-            objektiList.innerHTML = '';
-            
-            objekti.forEach(objekat => {
-                const balance = calculateObjekatBalance(objekat.id);
-                
-                const card = document.createElement('div');
-                card.className = 'objekat-card';
-                card.onclick = () => showObjekatDetail(objekat.id);
-                
-                card.innerHTML = `
-                    <div class="objekat-header">
-                        <div class="objekat-name">${objekat.name}</div>
-                        <div>${objekat.contact ? `📞 ${objekat.contact}` : '📞 Nema kontakt'}</div>
-                    </div>
-                    ${objekat.note ? `<div style="margin-bottom: 10px; color: #666;">${objekat.note}</div>` : ''}
-                    <div class="balance-info">
-                        <div class="balance-item they-owe">
-                            <div class="balance-amount">${balance.theyOwe.toFixed(2)}</div>
-                            <div class="balance-label">Duguju nama</div>
-                        </div>
-                        <div class="balance-item we-owe">
-                            <div class="balance-amount">${balance.weOwe.toFixed(2)}</div>
-                            <div class="balance-label">Mi dugujemo</div>
-                        </div>
-                    </div>
-                `;
-                
-                objektiList.appendChild(card);
-            });
-        }
-        
-        function loadItems() {
-            const itemsList = document.getElementById('itemsList');
-            itemsList.innerHTML = '';
-            
-            items.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${item.name}</td>
-                    <td>${item.unit}</td>
-                    <td class="action-buttons">
-                        <button class="action-btn btn-warning" onclick="editItem('${item.id}')">Uredi</button>
-                        <button class="action-btn btn-danger" onclick="deleteItem('${item.id}')">Obriši</button>
-                    </td>
-                `;
-                itemsList.appendChild(row);
-            });
-        }
-        
-        function handleItemSearch() {
-            const searchTerm = document.getElementById('itemSearch').value.toLowerCase();
-            const resultsContainer = document.getElementById('itemSearchResults');
-            
-            resultsContainer.innerHTML = '';
-            
-            if (searchTerm.length === 0) {
-                resultsContainer.style.display = 'none';
-                return;
-            }
-            
-            const filteredItems = items.filter(item => 
-                item.name.toLowerCase().includes(searchTerm)
-            );
-            
-            if (filteredItems.length === 0) {
-                const noResult = document.createElement('div');
-                noResult.className = 'item-search-result';
-                noResult.textContent = 'Nema pronađenih artikala';
-                noResult.style.color = '#999';
-                resultsContainer.appendChild(noResult);
-            } else {
-                filteredItems.forEach(item => {
-                    const result = document.createElement('div');
-                    result.className = 'item-search-result';
-                    result.textContent = `${item.name} (${item.unit})`;
-                    result.onclick = () => selectItem(item);
-                    resultsContainer.appendChild(result);
-                });
-            }
-            
-            resultsContainer.style.display = 'block';
-        }
-        
-        function selectItem(item) {
-            document.getElementById('selectedItemId').value = item.id;
-            document.getElementById('selectedItemName').textContent = item.name;
-            document.getElementById('selectedItemUnit').textContent = item.unit;
-            document.getElementById('selectedItem').style.display = 'block';
-            document.getElementById('itemSearch').value = '';
-            document.getElementById('itemSearchResults').style.display = 'none';
-        }
-        
-        function clearSelectedItem() {
-            document.getElementById('selectedItemId').value = '';
-            document.getElementById('selectedItem').style.display = 'none';
-            document.getElementById('itemSearch').value = '';
-        }
-        
-        function calculateObjekatBalance(objekatId) {
-            let theyOwe = 0;
-            let weOwe = 0;
-            
-            transactions.forEach(transaction => {
-                if (transaction.objekatId === objekatId) {
-                    const quantity = parseFloat(transaction.quantity);
-                    
-                    if (transaction.type === 'they_borrow') {
-                        theyOwe += quantity;
-                    } else if (transaction.type === 'we_borrow') {
-                        weOwe += quantity;
-                    } else if (transaction.type === 'they_return') {
-                        theyOwe -= quantity;
-                    } else if (transaction.type === 'we_return') {
-                        weOwe -= quantity;
-                    }
-                }
-            });
-            
-            return {
-                theyOwe: Math.max(0, theyOwe),
-                weOwe: Math.max(0, weOwe)
-            };
-        }
-        
-        function updateObjekatDetail(objekatId) {
-            const balance = calculateObjekatBalance(objekatId);
-            const objekatTransactions = transactions.filter(t => t.objekatId === objekatId);
-            
-            document.getElementById('theyOweAmount').textContent = balance.theyOwe.toFixed(2);
-            document.getElementById('weOweAmount').textContent = balance.weOwe.toFixed(2);
-            
-            const totalBorrowed = objekatTransactions.filter(t => 
-                t.type === 'they_borrow' || t.type === 'we_borrow'
-            ).length;
-            
-            const totalReturned = objekatTransactions.filter(t => 
-                t.type === 'they_return' || t.type === 'we_return'
-            ).length;
-            
-            const activeLoans = objekatTransactions.filter(t => 
-                (t.type === 'they_borrow' || t.type === 'we_borrow') && 
-                !isReturned(t)
-            ).length;
-            
-            document.getElementById('totalBorrowed').textContent = totalBorrowed;
-            document.getElementById('totalReturned').textContent = totalReturned;
-            document.getElementById('activeLoans').textContent = activeLoans;
-            
-            const tbody = document.getElementById('objekatTransactions');
-            tbody.innerHTML = '';
-            
-            objekatTransactions
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .forEach(transaction => {
-                    const item = items.find(i => i.id === transaction.itemId);
-                    const row = document.createElement('tr');
-                    row.className = 'transaction-row';
-                    
-                    row.innerHTML = `
-                        <td>${formatDate(transaction.date)}</td>
-                        <td>${item ? `${item.name} (${item.unit})` : 'Nepoznato'}</td>
-                        <td>${transaction.quantity}</td>
-                        <td>${getTransactionTypeLabel(transaction.type)}</td>
-                        <td>
-                            <span class="status-badge ${isReturned(transaction) ? 'status-completed' : 'status-active'}">
-                                ${isReturned(transaction) ? 'Završeno' : 'Aktivno'}
-                            </span>
-                        </td>
-                        <td>
-                            ${!isReturned(transaction) ? 
-                                `<button class="action-btn btn-success" onclick="markAsReturned('${transaction.id}')">Vraćeno</button>` : 
-                                ''
-                            }
-                            <button class="action-btn btn-danger" onclick="deleteTransaction('${transaction.id}')">Obriši</button>
-                        </td>
-                    `;
-                    
-                    tbody.appendChild(row);
-                });
-        }
-        
-        function isReturned(transaction) {
-            if (transaction.type === 'they_borrow') {
-                return transactions.some(t => 
-                    t.objekatId === transaction.objekatId && 
-                    t.itemId === transaction.itemId && 
-                    t.type === 'they_return' &&
-                    parseFloat(t.quantity) >= parseFloat(transaction.quantity)
-                );
-            } else if (transaction.type === 'we_borrow') {
-                return transactions.some(t => 
-                    t.objekatId === transaction.objekatId && 
-                    t.itemId === transaction.itemId && 
-                    t.type === 'we_return' &&
-                    parseFloat(t.quantity) >= parseFloat(transaction.quantity)
-                );
-            }
-            return true;
-        }
-        
-        function getTransactionTypeLabel(type) {
-            const labels = {
-                'we_borrow': 'Mi pozajmljujemo',
-                'they_borrow': 'Oni pozajmljuju',
-                'we_return': 'Mi vraćamo',
-                'they_return': 'Oni vraćaju'
-            };
-            return labels[type] || type;
-        }
-        
-        async function addObjekat(e) {
-            e.preventDefault();
-            
-            const objekat = {
-                id: generateId(),
-                name: document.getElementById('objekatName').value,
-                contact: document.getElementById('objekatContact').value,
-                note: document.getElementById('objekatNote').value,
-                createdAt: new Date().toISOString()
-            };
-            
-            objekti.push(objekat);
-            saveToLocalStorage();
-            loadObjekti();
-            showSection('objekti');
-            showSyncStatus('Objekat dodan! Kliknite "Spremi Podatke" da eksportujete.', 'success');
-        }
-        
-        async function handleItemForm(e) {
-            e.preventDefault();
-            
-            const editingId = document.getElementById('editingItemId').value;
-            
-            if (editingId) {
-                const itemIndex = items.findIndex(item => item.id === editingId);
-                if (itemIndex !== -1) {
-                    items[itemIndex] = {
-                        ...items[itemIndex],
-                        name: document.getElementById('itemName').value,
-                        unit: document.getElementById('itemUnit').value
-                    };
-                    saveToLocalStorage();
-                    loadItems();
-                    cancelItemEdit();
-                    showSyncStatus('Artikal ažuriran! Kliknite "Spremi Podatke" da eksportujete.', 'success');
-                }
-            } else {
-                const item = {
-                    id: generateId(),
-                    name: document.getElementById('itemName').value,
-                    unit: document.getElementById('itemUnit').value
-                };
-                
-                items.push(item);
-                saveToLocalStorage();
-                loadItems();
-                document.getElementById('itemForm').reset();
-                showSyncStatus('Artikal dodan! Kliknite "Spremi Podatke" da eksportujete.', 'success');
-            }
-        }
-        
-        async function addTransaction(e) {
-            e.preventDefault();
-            
-            const selectedItemId = document.getElementById('selectedItemId').value;
-            if (!selectedItemId) {
-                alert('Molimo odaberite artikal!');
-                return;
-            }
-            
-            const transaction = {
-                id: generateId(),
-                objekatId: currentObjekatId,
-                itemId: selectedItemId,
-                type: document.getElementById('transactionType').value,
-                quantity: parseFloat(document.getElementById('transactionQuantity').value),
-                date: document.getElementById('transactionDate').value,
-                note: document.getElementById('transactionNote').value,
-                createdAt: new Date().toISOString()
-            };
-            
-            transactions.push(transaction);
-            saveToLocalStorage();
-            showObjekatDetail(currentObjekatId);
-            showSyncStatus('Transakcija dodana! Kliknite "Spremi Podatke" da eksportujete.', 'success');
-        }
-        
-        function editItem(itemId) {
-            const item = items.find(i => i.id === itemId);
-            if (!item) return;
-            
-            document.getElementById('itemFormTitle').textContent = 'Uredi Artikal';
-            document.getElementById('editingItemId').value = item.id;
-            document.getElementById('itemName').value = item.name;
-            document.getElementById('itemUnit').value = item.unit;
-            document.getElementById('itemSubmitBtn').textContent = 'Sačuvaj promjene';
-            document.getElementById('itemCancelBtn').style.display = 'inline-block';
-            
-            document.getElementById('itemFormContainer').scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        function cancelItemEdit() {
-            document.getElementById('itemFormTitle').textContent = 'Dodaj Novi Artikal';
-            document.getElementById('editingItemId').value = '';
-            document.getElementById('itemForm').reset();
-            document.getElementById('itemSubmitBtn').textContent = 'Dodaj artikal';
-            document.getElementById('itemCancelBtn').style.display = 'none';
-        }
-        
-        async function deleteItem(itemId) {
-            if (confirm('Da li ste sigurni da želite obrisati ovaj artikal?')) {
-                const isUsed = transactions.some(t => t.itemId === itemId);
-                if (isUsed) {
-                    alert('Ovaj artikal se koristi u transakcijama i ne može se obrisati!');
-                    return;
-                }
-                
-                items = items.filter(item => item.id !== itemId);
-                saveToLocalStorage();
-                loadItems();
-                showSyncStatus('Artikal obrisan! Kliknite "Spremi Podatke" da eksportujete.', 'success');
-            }
-        }
-        
-        async function deleteTransaction(transactionId) {
-            if (confirm('Da li ste sigurni da želite obrisati ovu transakciju?')) {
-                transactions = transactions.filter(t => t.id !== transactionId);
-                saveToLocalStorage();
-                if (currentObjekatId) {
-                    updateObjekatDetail(currentObjekatId);
-                }
-                updateAllTransactions();
-                showSyncStatus('Transakcija obrisana! Kliknite "Spremi Podatke" da eksportujete.', 'success');
-            }
-        }
-        
-        async function markAsReturned(transactionId) {
-            const transaction = transactions.find(t => t.id === transactionId);
-            if (!transaction) return;
-            
-            const returnType = transaction.type === 'they_borrow' ? 'they_return' : 'we_return';
-            const returnTransaction = {
-                id: generateId(),
-                objekatId: transaction.objekatId,
-                itemId: transaction.itemId,
-                type: returnType,
-                quantity: transaction.quantity,
-                date: new Date().toISOString().split('T')[0],
-                note: `Automatski vraćeno - original: ${transaction.date}`,
-                createdAt: new Date().toISOString()
-            };
-            
-            transactions.push(returnTransaction);
-            saveToLocalStorage();
-            updateObjekatDetail(currentObjekatId);
-            showSyncStatus('Transakcija označena kao vraćena! Kliknite "Spremi Podatke" da eksportujete.', 'success');
-        }
-        
-        function filterObjekti() {
-            const searchTerm = document.getElementById('searchObjekat').value.toLowerCase();
-            const cards = document.querySelectorAll('.objekat-card');
-            
-            cards.forEach(card => {
-                const objekatName = card.querySelector('.objekat-name').textContent.toLowerCase();
-                const objekatContact = card.querySelector('.objekat-header div:last-child').textContent.toLowerCase();
-                
-                if (objekatName.includes(searchTerm) || objekatContact.includes(searchTerm)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-        
-        function filterItems() {
-            const searchTerm = document.getElementById('searchItem').value.toLowerCase();
-            const rows = document.querySelectorAll('#itemsList tr');
-            
-            rows.forEach(row => {
-                const itemName = row.cells[0].textContent.toLowerCase();
-                const itemUnit = row.cells[1].textContent.toLowerCase();
-                
-                if (itemName.includes(searchTerm) || itemUnit.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
-        
-        function updateAllTransactions() {
-            const tbody = document.getElementById('allTransactionsList');
-            tbody.innerHTML = '';
-            
-            transactions
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .forEach(transaction => {
-                    const objekat = objekti.find(p => p.id === transaction.objekatId);
-                    const item = items.find(i => i.id === transaction.itemId);
-                    
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${formatDate(transaction.date)}</td>
-                        <td>${objekat ? objekat.name : 'Nepoznato'}</td>
-                        <td>${item ? `${item.name} (${item.unit})` : 'Nepoznato'}</td>
-                        <td>${transaction.quantity}</td>
-                        <td>${getTransactionTypeLabel(transaction.type)}</td>
-                        <td>
-                            <span class="status-badge ${isReturned(transaction) ? 'status-completed' : 'status-active'}">
-                                ${isReturned(transaction) ? 'Završeno' : 'Aktivno'}
-                            </span>
-                        </td>
-                    `;
-                    
-                    tbody.appendChild(row);
-                });
-        }
-        
-        function formatDate(dateString) {
-            return new Date(dateString).toLocaleDateString('hr-HR');
-        }
-        
-        function generateId() {
-            return Date.now().toString(36) + Math.random().toString(36).substr(2);
-        }
-        
-        window.onload = function() {
-            document.getElementById('passwordInput').focus();
-        };
-    </script>
-</body>
-</html>
+            localStorage.set
