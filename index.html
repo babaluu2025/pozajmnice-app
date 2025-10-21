@@ -12,6 +12,8 @@ table { width: 100%; border-collapse: collapse; margin-top: 10px;}
 th, td { border: 1px solid #ddd; padding: 8px; text-align: left;}
 th { background: #f0f0f0;}
 button { padding: 5px 10px; margin:2px; }
+form { margin-top: 10px; display:flex; gap:5px; flex-wrap:wrap;}
+form input { flex:1; padding:5px; }
 </style>
 </head>
 <body>
@@ -30,9 +32,31 @@ button { padding: 5px 10px; margin:2px; }
 <input type="text" id="objekatName" placeholder="Naziv objekta" required>
 <input type="text" id="objekatContact" placeholder="Kontakt">
 <input type="text" id="objekatNote" placeholder="Napomena">
-<button type="submit">Dodaj objekat</button>
+<button type="submit">Dodaj</button>
 </form>
+
+<h2>Artikli</h2>
+<table id="itemsTable">
+<thead>
+<tr><th>Naziv</th><th>Jedinica</th><th>Akcije</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+<form id="itemForm">
+<input type="text" id="itemName" placeholder="Naziv" required>
+<input type="text" id="itemUnit" placeholder="Jedinica" required>
+<button type="submit">Dodaj</button>
+</form>
+
+<h2>Transakcije</h2>
+<table id="transactionsTable">
+<thead>
+<tr><th>Datum</th><th>Objekat</th><th>Artikal</th><th>Tip</th><th>Količina</th><th>Napomena</th></tr>
+</thead>
+<tbody></tbody>
+</table>
 </div>
+
 <script src="script.js"></script>
 </body>
 </html>
