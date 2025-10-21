@@ -1,5 +1,5 @@
 /* URL ka tvom Google Apps Script API-u */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyET8tHBydsILVPkkmxnFdkkQ24Niom5GPBA8GmKYc/dev";
+const SCRIPT_URL = const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyp3buzp-dD8hXMTk70EEsqzpA4_sInP5vKsDgKUvLFK8UgkBXJCJcgXoQf6w56T-fM/exec";
 
 /* Primeri podataka (struktura tabele) */
 let objekti = [];
