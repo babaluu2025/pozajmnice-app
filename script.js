@@ -1,40 +1,52 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyp3buzp-dD8hXMTk70EEsqzpA4_sInP5vKsDgKUvLFK8UgkBXJCJcgXoQf6w56T-fM/exec";
 
 let objekti = [];
+let items = [];
+let transactions = [];
 
-// --- Učitavanje sa Sheet-a ---
-async function loadObjekti() {
+// --- Učitavanje podataka sa Sheet-a ---
+async function loadData(sheetName) {
     try {
-        const response = await fetch(`${SCRIPT_URL}?sheet=Objekti`);
-        const data = await response.json();
-        objekti = data;
-        renderObjekti();
-    } catch(e) {
-        console.error("Greška pri učitavanju:", e);
-        alert("Ne mogu učitati podatke sa Sheet-a");
+        const res = await fetch(`${SCRIPT_URL}?sheet=${sheetName}`);
+        const data = await res.json();
+        return data || [];
+    } catch(e){
+        console.error("Greška učitavanja:", e);
+        return [];
     }
 }
 
-// --- Prikaz u tabeli ---
-function renderObjekti() {
+// --- Spremanje podataka na Sheet ---
+async function saveData(sheetName, data){
+    try {
+        await fetch(SCRIPT_URL, {
+            method:"POST",
+            body: JSON.stringify({sheet:sheetName, data:data}),
+            headers: {"Content-Type":"application/json"}
+        });
+    } catch(e){
+        console.error("Greška spremanja:", e);
+    }
+}
+
+// --- Objekti ---
+function renderObjekti(){
     const tbody = document.querySelector("#objektiTable tbody");
     tbody.innerHTML = "";
-    objekti.forEach(obj => {
+    objekti.forEach(o=>{
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td>${obj.name}</td>
-            <td>${obj.contact}</td>
-            <td>${obj.note}</td>
+            <td>${o.name}</td>
+            <td>${o.contact}</td>
+            <td>${o.note}</td>
             <td>
-                <button onclick="deleteObjekat('${obj.id}')">Obriši</button>
+                <button onclick="deleteObjekat('${o.id}')">Obriši</button>
             </td>
         `;
         tbody.appendChild(tr);
     });
 }
-
-// --- Dodavanje objekta ---
-document.getElementById("objekatForm").addEventListener("submit", async function(e){
+document.getElementById("objekatForm").addEventListener("submit", async e=>{
     e.preventDefault();
     const newObj = {
         id: Date.now().toString(),
@@ -44,34 +56,90 @@ document.getElementById("objekatForm").addEventListener("submit", async function
     };
     objekti.push(newObj);
     renderObjekti();
-    await saveObjekti();
-    this.reset();
+    await saveData("Objekti", objekti);
+    e.target.reset();
 });
-
-// --- Brisanje objekta ---
 async function deleteObjekat(id){
     if(confirm("Obrisati objekat?")){
-        objekti = objekti.filter(o => o.id !== id);
+        objekti = objekti.filter(o=>o.id!==id);
         renderObjekti();
-        await saveObjekti();
+        await saveData("Objekti", objekti);
     }
 }
 
-// --- Čuvanje na Sheet ---
-async function saveObjekti(){
-    try {
-        await fetch(SCRIPT_URL, {
-            method: "POST",
-            body: JSON.stringify({sheet:"Objekti", data:objekti}),
-            headers: {"Content-Type":"application/json"}
-        });
-    } catch(e){
-        console.error("Greška pri spremanju:", e);
+// --- Artikli ---
+function renderItems(){
+    const tbody = document.querySelector("#itemsTable tbody");
+    tbody.innerHTML = "";
+    items.forEach(i=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${i.name}</td>
+            <td>${i.unit}</td>
+            <td>
+                <button onclick="deleteItem('${i.id}')">Obriši</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+document.getElementById("itemForm").addEventListener("submit", async e=>{
+    e.preventDefault();
+    const newItem = {
+        id: Date.now().toString(),
+        name: document.getElementById("itemName").value,
+        unit: document.getElementById("itemUnit").value
+    };
+    items.push(newItem);
+    renderItems();
+    await saveData("Artikli", items);
+    e.target.reset();
+});
+async function deleteItem(id){
+    if(confirm("Obrisati artikal?")){
+        items = items.filter(i=>i.id!==id);
+        renderItems();
+        await saveData("Artikli", items);
     }
 }
 
-// --- Spremi kada se zatvori stranica ---
-window.addEventListener("beforeunload", saveObjekti);
+// --- Transakcije ---
+function renderTransactions(){
+    const tbody = document.querySelector("#transactionsTable tbody");
+    tbody.innerHTML = "";
+    transactions.forEach(t=>{
+        const obj = objekti.find(o=>o.id===t.objekatId)?.name || "Nepoznato";
+        const item = items.find(i=>i.id===t.itemId)?.name || "Nepoznato";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${t.date}</td>
+            <td>${obj}</td>
+            <td>${item}</td>
+            <td>${t.type}</td>
+            <td>${t.quantity}</td>
+            <td>${t.note}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
 
-// --- Pokreni učitavanje na startu ---
-loadObjekti();
+// --- Inicijalno učitavanje ---
+async function init(){
+    objekti = await loadData("Objekti");
+    items = await loadData("Artikli");
+    transactions = await loadData("Transakcije");
+
+    renderObjekti();
+    renderItems();
+    renderTransactions();
+}
+
+// --- Automatsko spremanje pri zatvaranju ---
+window.addEventListener("beforeunload", async ()=>{
+    await saveData("Objekti", objekti);
+    await saveData("Artikli", items);
+    await saveData("Transakcije", transactions);
+});
+
+// --- Start ---
+init();
