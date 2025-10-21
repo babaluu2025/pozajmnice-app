@@ -1,93 +1,77 @@
-/* URL ka tvom Google Apps Script API-u */
-const SCRIPT_URL = const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyp3buzp-dD8hXMTk70EEsqzpA4_sInP5vKsDgKUvLFK8UgkBXJCJcgXoQf6w56T-fM/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyp3buzp-dD8hXMTk70EEsqzpA4_sInP5vKsDgKUvLFK8UgkBXJCJcgXoQf6w56T-fM/exec";
 
-/* Primeri podataka (struktura tabele) */
 let objekti = [];
-let items = [];
-let transactions = [];
 
-/* Statusna poruka */
-function showSyncStatus(msg, type = 'info') {
-  const el = document.getElementById('syncStatus');
-  el.textContent = msg;
-  el.className = `status ${type}`;
+// --- Učitavanje sa Sheet-a ---
+async function loadObjekti() {
+    try {
+        const response = await fetch(`${SCRIPT_URL}?sheet=Objekti`);
+        const data = await response.json();
+        objekti = data;
+        renderObjekti();
+    } catch(e) {
+        console.error("Greška pri učitavanju:", e);
+        alert("Ne mogu učitati podatke sa Sheet-a");
+    }
 }
 
-/* ✅ Učitavanje iz Google Sheets-a */
-async function loadFromGoogleSheets() {
-  try {
-    showSyncStatus('🔄 Učitavam podatke iz Google Sheet-a...', 'info');
-
-    const [objektiRes, itemsRes, transRes] = await Promise.all([
-      fetch(`${SCRIPT_URL}?sheet=Objekti`),
-      fetch(`${SCRIPT_URL}?sheet=Artikli`),
-      fetch(`${SCRIPT_URL}?sheet=Transakcije`)
-    ]);
-
-    objekti = await objektiRes.json();
-    items = await itemsRes.json();
-    transactions = await transRes.json();
-
-    localStorage.setItem('objekti', JSON.stringify(objekti));
-    localStorage.setItem('items', JSON.stringify(items));
-    localStorage.setItem('transactions', JSON.stringify(transactions));
-
-    showSyncStatus('✅ Podaci uspešno učitani iz Google Sheet-a', 'success');
-  } catch (err) {
-    console.error(err);
-    showSyncStatus('⚠️ Greška pri učitavanju iz Google Sheet-a', 'error');
-    loadFromLocalStorage();
-  }
+// --- Prikaz u tabeli ---
+function renderObjekti() {
+    const tbody = document.querySelector("#objektiTable tbody");
+    tbody.innerHTML = "";
+    objekti.forEach(obj => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${obj.name}</td>
+            <td>${obj.contact}</td>
+            <td>${obj.note}</td>
+            <td>
+                <button onclick="deleteObjekat('${obj.id}')">Obriši</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
 }
 
-/* 💾 Snimanje u Google Sheets */
-async function saveToSheets() {
-  try {
-    showSyncStatus('💾 Snimam podatke u Google Sheet...', 'info');
-
-    await Promise.all([
-      fetch(`${SCRIPT_URL}?sheet=Objekti`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(objekti)
-      }),
-      fetch(`${SCRIPT_URL}?sheet=Artikli`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(items)
-      }),
-      fetch(`${SCRIPT_URL}?sheet=Transakcije`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(transactions)
-      })
-    ]);
-
-    showSyncStatus('✅ Podaci uspešno snimljeni u Google Sheet', 'success');
-  } catch (err) {
-    console.error(err);
-    showSyncStatus('❌ Greška pri snimanju u Google Sheet', 'error');
-  }
-}
-
-/* Lokalna kopija (ako Sheets nije dostupan) */
-function loadFromLocalStorage() {
-  try {
-    objekti = JSON.parse(localStorage.getItem('objekti')) || [];
-    items = JSON.parse(localStorage.getItem('items')) || [];
-    transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-    showSyncStatus('📦 Podaci učitani iz lokalne memorije', 'info');
-  } catch {
-    showSyncStatus('⚠️ Nema lokalnih podataka', 'error');
-  }
-}
-
-/* 🔁 Automatsko učitavanje pri otvaranju */
-window.addEventListener('load', () => {
-  loadFromGoogleSheets();
+// --- Dodavanje objekta ---
+document.getElementById("objekatForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+    const newObj = {
+        id: Date.now().toString(),
+        name: document.getElementById("objekatName").value,
+        contact: document.getElementById("objekatContact").value,
+        note: document.getElementById("objekatNote").value
+    };
+    objekti.push(newObj);
+    renderObjekti();
+    await saveObjekti();
+    this.reset();
 });
 
-/* 💾 Automatsko snimanje pri zatvaranju */
-window.addEventListener('beforeunload', () => {
-  saveToSheets();
-});
+// --- Brisanje objekta ---
+async function deleteObjekat(id){
+    if(confirm("Obrisati objekat?")){
+        objekti = objekti.filter(o => o.id !== id);
+        renderObjekti();
+        await saveObjekti();
+    }
+}
+
+// --- Čuvanje na Sheet ---
+async function saveObjekti(){
+    try {
+        await fetch(SCRIPT_URL, {
+            method: "POST",
+            body: JSON.stringify({sheet:"Objekti", data:objekti}),
+            headers: {"Content-Type":"application/json"}
+        });
+    } catch(e){
+        console.error("Greška pri spremanju:", e);
+    }
+}
+
+// --- Spremi kada se zatvori stranica ---
+window.addEventListener("beforeunload", saveObjekti);
+
+// --- Pokreni učitavanje na startu ---
+loadObjekti();
