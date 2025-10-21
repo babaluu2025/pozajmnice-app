@@ -2,131 +2,194 @@
 <html lang="hr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pozajmnice Auto Sync</title>
 <style>
-body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
 h1 { color: #333; }
-table { border-collapse: collapse; width: 100%; margin-bottom: 20px; background: white; }
-th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-th { background: #f0f0f0; }
-#status { margin-bottom: 20px; font-weight: bold; }
+.tab-buttons { margin-bottom: 10px; }
+.tab-buttons button { padding: 6px 12px; margin-right: 5px; cursor: pointer; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+button.save { margin-top: 10px; }
+#status { margin-top: 10px; font-weight: bold; }
 </style>
 </head>
 <body>
+
 <h1>Pozajmnice Auto Sync</h1>
-<div id="status">Učitavanje podataka...</div>
+<div class="tab-buttons">
+    <button data-tab="objekti" class="active">Objekti</button>
+    <button data-tab="items">Artikli</button>
+    <button data-tab="transactions">Transakcije</button>
+</div>
 
-<h2>Objekti</h2>
-<table id="objektiTable">
-<thead><tr><th>Naziv</th><th>Kontakt</th><th>Napomena</th></tr></thead>
-<tbody></tbody>
-</table>
+<div id="status">Učitavam podatke...</div>
 
-<h2>Artikli</h2>
-<table id="itemsTable">
-<thead><tr><th>Naziv</th><th>Jedinica</th></tr></thead>
-<tbody></tbody>
-</table>
+<!-- Sekcija Objekti -->
+<div id="objekti" class="tab-content active">
+    <table>
+        <thead><tr><th>Naziv</th><th>Kontakt</th><th>Napomena</th></tr></thead>
+        <tbody></tbody>
+    </table>
+    <button class="save">💾 Spremi Objekte</button>
+</div>
 
-<h2>Transakcije</h2>
-<table id="transactionsTable">
-<thead><tr><th>Datum</th><th>Objekat</th><th>Artikal</th><th>Tip</th><th>Količina</th><th>Napomena</th></tr></thead>
-<tbody></tbody>
-</table>
+<!-- Sekcija Artikli -->
+<div id="items" class="tab-content">
+    <table>
+        <thead><tr><th>Naziv</th><th>Jedinica</th></tr></thead>
+        <tbody></tbody>
+    </table>
+    <button class="save">💾 Spremi Artikle</button>
+</div>
+
+<!-- Sekcija Transakcije -->
+<div id="transactions" class="tab-content">
+    <table>
+        <thead><tr><th>Datum</th><th>Objekat</th><th>Artikal</th><th>Tip</th><th>Količina</th><th>Napomena</th></tr></thead>
+        <tbody></tbody>
+    </table>
+</div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPG0r25ZJL2PxENEuMl4tKOWkX_ezz-X6AHdtsm5WT8xM/exec";
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw25zcOAYw3z8F_kNFxKIcO-6etdxKlVQF2LkBHCiI/dev';
 
 let objekti = [], items = [], transactions = [];
 
-// Učitaj sve sheet-ove
-async function loadAllSheets() {
+// Tab navigacija
+document.querySelectorAll('.tab-buttons button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-buttons button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.remove('active'));
+        document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+});
+
+// Fetch podataka
+async function loadData() {
+    document.getElementById('status').textContent = '🔄 Učitavam podatke...';
     try {
-        [objekti, items, transactions] = await Promise.all([
-            fetchSheet("Objekti"),
-            fetchSheet("Artikli"),
-            fetchSheet("Transakcije")
+        const [objRes, itemsRes, transRes] = await Promise.all([
+            fetch(`${SCRIPT_URL}?sheet=Objekti`),
+            fetch(`${SCRIPT_URL}?sheet=Artikli`),
+            fetch(`${SCRIPT_URL}?sheet=Transakcije`)
         ]);
-        renderAllTables();
-        document.getElementById('status').innerText = "Podaci učitani!";
-    } catch(err) {
-        document.getElementById('status').innerText = "Greška pri učitavanju podataka: " + err;
-        console.error(err);
+        if(!objRes.ok || !itemsRes.ok || !transRes.ok) throw new Error('Fetch failed');
+
+        objekti = await objRes.json();
+        items = await itemsRes.json();
+        transactions = await transRes.json();
+
+        renderObjekti();
+        renderItems();
+        renderTransactions();
+
+        document.getElementById('status').textContent = '✅ Podaci učitani';
+    } catch(e) {
+        console.error(e);
+        document.getElementById('status').textContent = '❌ Greška pri učitavanju podataka';
     }
 }
 
-// Fetch funkcija za jedan sheet
-async function fetchSheet(sheetName) {
-    const res = await fetch(SCRIPT_URL + '?sheet=' + sheetName);
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    return data;
-}
-
-// Render svih tabela
-function renderAllTables() {
-    renderTable(objekti, "#objektiTable", ["Naziv", "Kontakt", "Napomena"]);
-    renderTable(items, "#itemsTable", ["Naziv", "Jedinica"]);
-    renderTransactions();
-}
-
-function renderTable(data, selector, columns) {
-    const tbody = document.querySelector(selector + " tbody");
-    tbody.innerHTML = "";
-    data.forEach(row => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = columns.map(col => `<td>${row[col] || row[col.toLowerCase()] || ""}</td>`).join("");
+// Render funkcije
+function renderObjekti() {
+    const tbody = document.querySelector('#objekti tbody');
+    tbody.innerHTML = '';
+    objekti.forEach((o,i)=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td contenteditable="true" data-index="${i}" data-field="name">${o.name||''}</td>
+            <td contenteditable="true" data-index="${i}" data-field="contact">${o.contact||''}</td>
+            <td contenteditable="true" data-index="${i}" data-field="note">${o.note||''}</td>
+        `;
         tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('td[contenteditable]').forEach(td=>{
+        td.addEventListener('input', e=>{
+            const index = td.dataset.index;
+            const field = td.dataset.field;
+            objekti[index][field] = td.textContent;
+        });
     });
 }
 
-// Posebno za transakcije jer trebamo imena objekta i artikla
-function renderTransactions() {
-    const tbody = document.querySelector("#transactionsTable tbody");
-    tbody.innerHTML = "";
-    transactions.forEach(t => {
-        const objekat = objekti.find(o => o.Naziv === t.Objekat || o.name === t.objekatId) || {Naziv:"Nepoznato"};
-        const item = items.find(i => i.Naziv === t.Artikal || i.name === t.itemId) || {Naziv:"Nepoznato"};
-        const tr = document.createElement("tr");
+function renderItems() {
+    const tbody = document.querySelector('#items tbody');
+    tbody.innerHTML = '';
+    items.forEach((i,index)=>{
+        const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${t.Datum || t.date || ""}</td>
-            <td>${objekat.Naziv}</td>
-            <td>${item.Naziv}</td>
-            <td>${t.Tip || t.type || ""}</td>
-            <td>${t.Količina || t.quantity || ""}</td>
-            <td>${t.Napomena || t.note || ""}</td>
+            <td contenteditable="true" data-index="${index}" data-field="name">${i.name||''}</td>
+            <td contenteditable="true" data-index="${index}" data-field="unit">${i.unit||''}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('td[contenteditable]').forEach(td=>{
+        td.addEventListener('input', e=>{
+            const index = td.dataset.index;
+            const field = td.dataset.field;
+            items[index][field] = td.textContent;
+        });
+    });
+}
+
+function renderTransactions() {
+    const tbody = document.querySelector('#transactions tbody');
+    tbody.innerHTML = '';
+    transactions.forEach(t=>{
+        const objName = objekti.find(o=>o.name===t.objekatId)?.name || t.objekatId || 'Nepoznato';
+        const itemName = items.find(i=>i.name===t.itemId)?.name || t.itemId || 'Nepoznato';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${t.date||''}</td>
+            <td>${objName}</td>
+            <td>${itemName}</td>
+            <td>${t.type||''}</td>
+            <td>${t.quantity||''}</td>
+            <td>${t.note||''}</td>
         `;
         tbody.appendChild(tr);
     });
 }
 
-// Spremi sve sheet-ove
-async function saveAllSheets() {
+// Save funkcija
+async function saveData(sheetName, data) {
+    document.getElementById('status').textContent = `💾 Spremam ${sheetName}...`;
     try {
-        await Promise.all([
-            saveSheet("Objekti", objekti),
-            saveSheet("Artikli", items),
-            saveSheet("Transakcije", transactions)
-        ]);
-        console.log("Podaci spremljeni na Sheet.");
-    } catch(err) {
-        console.error("Greška pri spremanju:", err);
+        const res = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({sheet: sheetName, data}),
+            headers: {'Content-Type': 'application/json'}
+        });
+        const result = await res.json();
+        if(result.success) document.getElementById('status').textContent = `✅ ${sheetName} spremljeno`;
+        else throw new Error('Save failed');
+    } catch(e) {
+        console.error(e);
+        document.getElementById('status').textContent = `❌ Greška pri spremanju ${sheetName}`;
     }
 }
 
-// POST funkcija za sheet
-async function saveSheet(sheetName, data) {
-    await fetch(SCRIPT_URL, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({sheet: sheetName, data})
+// Button event
+document.querySelectorAll('button.save').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+        if(btn.parentElement.id==='objekti') saveData('Objekti', objekti);
+        else if(btn.parentElement.id==='items') saveData('Artikli', items);
     });
-}
+});
 
-// Auto učitavanje
-window.addEventListener('load', loadAllSheets);
-// Auto spremanje prije zatvaranja
-window.addEventListener('beforeunload', saveAllSheets);
+// Auto-save on unload
+window.addEventListener('beforeunload', ()=>{
+    saveData('Objekti', objekti);
+    saveData('Artikli', items);
+});
+
+// Pokreni učitavanje
+loadData();
 </script>
 </body>
 </html>
