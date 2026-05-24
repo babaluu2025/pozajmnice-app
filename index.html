@@ -31,12 +31,17 @@
         
         header { background: white; padding: 15px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; margin: 2px; color: white; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; margin: 2px; color: white; font-weight: bold; white-space: nowrap; }
         .btn-success { background: #28a745; }
         .btn-info { background: #17a2b8; }
         .btn-danger { background: #dc3545; }
         .btn-warning { background: #ffc107; color: black; }
-        .btn-sm { padding: 4px 10px; font-size: 12px; }
+        .btn-sm { padding: 5px 12px; font-size: 13px; }
+        
+        /* DUPLO ŠIRA DUGMAD ZA POZAJMICE */
+        .btn-pozajmica { padding: 12px 24px; font-size: 15px; min-width: 160px; border-radius: 10px; font-weight: bold; }
+        .btn-duguju-nama { background: #0d6efd; color: white; }
+        .btn-mi-dugujemo { background: #fd7e14; color: white; }
         
         .tabs { display: flex; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab { padding: 10px 20px; background: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
@@ -51,23 +56,32 @@
         
         .search-input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; }
         .item-list { max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; }
-        .item-option { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .item-option { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 15px; }
         .item-option:hover { background: #f0f0f0; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #f8f9fa; font-weight: bold; }
+        th { background: #f8f9fa; font-weight: bold; position: sticky; top: 0; }
         
-        .badge { padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+        .badge { padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; display: inline-block; }
         .badge-aktivno { background: #fff3cd; color: #856404; }
         .badge-vraceno { background: #d4edda; color: #155724; }
-        .badge-duguju-nama { background: #d1ecf1; color: #0c5460; }
-        .badge-mi-dugujemo { background: #f8d7da; color: #721c24; }
+        .badge-duguju-nama { background: #cfe2ff; color: #084298; }
+        .badge-mi-dugujemo { background: #ffe5d0; color: #a1440a; }
+        
+        /* VRACENO - precrtano i druga boja */
+        .row-vraceno { background: #f8fff8; opacity: 0.85; }
+        .row-vraceno td { text-decoration: line-through; color: #6c757d; }
+        .row-vraceno td:last-child { text-decoration: none; }
+        
+        /* Aktivne pozajmice - novije na vrhu */
+        .aktivne-lista { display: flex; flex-direction: column-reverse; }
         
         @media (max-width: 768px) {
             .header-content { flex-direction: column; }
             table { font-size: 12px; }
             th, td { padding: 6px; }
+            .btn-pozajmica { min-width: 140px; font-size: 14px; padding: 10px 16px; }
         }
     </style>
 </head>
@@ -113,10 +127,10 @@
                 <div class="card">
                     <h3>Sve transakcije</h3>
                     <div style="margin:10px 0;">
-                        <select id="logFilter" onchange="renderLogovi()" style="padding:8px;">
-                            <option value="sve">Sve</option>
-                            <option value="aktivno">Aktivne</option>
-                            <option value="vraceno">Vraćene</option>
+                        <select id="logFilter" onchange="renderLogovi()" style="padding:8px;font-size:14px;">
+                            <option value="sve">📋 Sve</option>
+                            <option value="aktivno">⏳ Aktivne</option>
+                            <option value="vraceno">✅ Vraćene</option>
                         </select>
                     </div>
                     <div style="overflow-x:auto;">
@@ -194,9 +208,7 @@
         });
         
         document.getElementById('passwordInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('loginBtn').click();
-            }
+            if (e.key === 'Enter') document.getElementById('loginBtn').click();
         });
         
         document.getElementById('logoutBtn').addEventListener('click', function() {
@@ -232,33 +244,36 @@
                 card.innerHTML = `
                     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
                         <div style="flex:1;min-width:200px;">
-                            <h3>${obj.name}</h3>
+                            <h3 style="font-size:18px;">${obj.name}</h3>
                             ${obj.contact ? `<p style="color:#666;">📞 ${obj.contact}</p>` : ''}
                             <div style="margin-top:8px;">
                                 ${aktivne.length > 0 ? `
-                                    <span class="badge badge-duguju-nama">📤 Duguju nama: ${dugujuNama}</span>
-                                    <span class="badge badge-mi-dugujemo">📥 Mi dugujemo: ${miDugujemo}</span>
-                                ` : '<span style="color:#28a745;">✅ Sve razduženo</span>'}
+                                    <span class="badge badge-duguju-nama" style="font-size:13px;">📤 Duguju nama: ${dugujuNama}</span>
+                                    <span class="badge badge-mi-dugujemo" style="font-size:13px;margin-left:5px;">📥 Mi dugujemo: ${miDugujemo}</span>
+                                ` : '<span style="color:#28a745;font-weight:bold;">✅ Sve razduženo</span>'}
                             </div>
                         </div>
-                        <div style="display:flex;gap:5px;flex-wrap:wrap;">
-                            <button class="btn btn-info btn-sm" onclick="openTransaction('${obj.id}','duguju_nama')">📤 Oni duguju</button>
-                            <button class="btn btn-warning btn-sm" onclick="openTransaction('${obj.id}','mi_dugujemo')">📥 Mi dugujemo</button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteObjekat('${obj.id}')">🗑</button>
+                        <!-- DUPLO ŠIRA DUGMAD -->
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <button class="btn btn-pozajmica btn-duguju-nama" onclick="openTransaction('${obj.id}','duguju_nama')">📤 Oni duguju</button>
+                            <button class="btn btn-pozajmica btn-mi-dugujemo" onclick="openTransaction('${obj.id}','mi_dugujemo')">📥 Mi dugujemo</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteObjekat('${obj.id}')" style="margin-top:5px;">🗑</button>
                         </div>
                     </div>
                     ${aktivne.length > 0 ? `
-                        <div style="margin-top:10px;border-top:1px solid #eee;padding-top:10px;">
-                            <strong>Aktivne pozajmice:</strong>
-                            ${aktivne.map(t => {
+                        <div style="margin-top:15px;border-top:2px solid #eee;padding-top:10px;">
+                            <strong style="font-size:14px;">Aktivne pozajmice (najnovije na vrhu):</strong>
+                            <div class="aktivne-liste">
+                            ${[...aktivne].reverse().map(t => {
                                 const item = items.find(i => i.id === t.itemId);
-                                return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;gap:10px;flex-wrap:wrap;">
-                                    <span>${item?.name||'Nepoznato'} ×${t.quantity} ${item?.unit||''}</span>
+                                return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;gap:10px;flex-wrap:wrap;border-bottom:1px dashed #eee;">
+                                    <span style="font-weight:bold;">${item?.name||'Nepoznato'} ×${t.quantity} ${item?.unit||''}</span>
                                     <span style="font-size:11px;color:#666;">📅 ${t.dateBorrowed}</span>
                                     <span class="badge ${t.type==='duguju_nama'?'badge-duguju-nama':'badge-mi-dugujemo'}">${t.type==='duguju_nama'?'Oni duguju':'Mi dugujemo'}</span>
                                     <button class="btn btn-success btn-sm" onclick="vrati('${t.id}')">✅ Vrati</button>
                                 </div>`;
                             }).join('')}
+                            </div>
                         </div>
                     ` : ''}
                 `;
@@ -276,10 +291,11 @@
             if (filter === 'aktivno') filtered = filtered.filter(t => t.status === 'aktivno');
             if (filter === 'vraceno') filtered = filtered.filter(t => t.status === 'vraceno');
             
+            // Najnovije na vrhu
             filtered.sort((a, b) => (b.dateBorrowed || '').localeCompare(a.dateBorrowed || ''));
             
             if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;">Nema transakcija.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:20px;">Nema transakcija.</td></tr>';
                 return;
             }
             
@@ -287,14 +303,20 @@
                 const obj = objekti.find(o => o.id === t.objekatId);
                 const item = items.find(i => i.id === t.itemId);
                 const row = document.createElement('tr');
+                
+                // Vraćene transakcije su precrtane i druge boje
+                if (t.status === 'vraceno') {
+                    row.className = 'row-vraceno';
+                }
+                
                 row.innerHTML = `
                     <td>${obj?.name||'?'}</td>
                     <td>${item?.name||'?'}</td>
                     <td>${t.type==='duguju_nama'?'📤 Duguju nama':'📥 Mi dugujemo'}</td>
                     <td>${t.quantity} ${item?.unit||''}</td>
                     <td>${t.dateBorrowed||'?'}</td>
-                    <td>${t.dateReturned||'-'}</td>
-                    <td><span class="badge ${t.status==='aktivno'?'badge-aktivno':'badge-vraceno'}">${t.status==='aktivno'?'Aktivno':'Vraćeno'}</span></td>
+                    <td>${t.dateReturned || '<span style="color:#dc3545;">-</span>'}</td>
+                    <td><span class="badge ${t.status==='aktivno'?'badge-aktivno':'badge-vraceno'}">${t.status==='aktivno'?'⏳ Aktivno':'✅ Vraćeno'}</span></td>
                 `;
                 tbody.appendChild(row);
             });
@@ -324,12 +346,12 @@
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
-                    <h4>${obj.name}</h4>
+                    <h4 style="font-size:16px;">${obj.name}</h4>
                     ${Object.values(sabrano).map(s => `
-                        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eee;">
-                            <span>${s.item?.name||'?'} (${s.item?.unit||''})</span>
-                            <span class="badge ${s.type==='duguju_nama'?'badge-duguju-nama':'badge-mi-dugujemo'}">${s.type==='duguju_nama'?'📤 Duguju nama':'📥 Mi dugujemo'}</span>
-                            <strong>×${s.quantity}</strong>
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #eee;">
+                            <span style="font-weight:bold;">${s.item?.name||'?'} (${s.item?.unit||''})</span>
+                            <span class="badge ${s.type==='duguju_nama'?'badge-duguju-nama':'badge-mi-dugujemo'}" style="font-size:13px;">${s.type==='duguju_nama'?'📤 Duguju nama':'📥 Mi dugujemo'}</span>
+                            <strong style="font-size:16px;">×${s.quantity}</strong>
                         </div>
                     `).join('')}
                 `;
@@ -337,21 +359,25 @@
             });
             
             if (!imaPodataka) {
-                container.innerHTML = '<p style="text-align:center;color:#28a745;padding:20px;">✅ Sve je razduženo - nema aktivnih pozajmica.</p>';
+                container.innerHTML = '<p style="text-align:center;color:#28a745;padding:20px;font-size:16px;">✅ Sve je razduženo - nema aktivnih pozajmica.</p>';
             }
         }
         
         // ==================== TRANSAKCIJE ====================
         function openTransaction(objekatId, type) {
-            document.getElementById('modalTitle').textContent = type==='duguju_nama'?'📤 Pozajmica – oni nama duguju':'📥 Pozajmica – mi njima dugujemo';
+            const obj = objekti.find(o => o.id === objekatId);
+            document.getElementById('modalTitle').textContent = type==='duguju_nama' 
+                ? `📤 Pozajmica – ${obj?.name||'Objekat'} duguje nama` 
+                : `📥 Pozajmica – mi dugujemo: ${obj?.name||'Objektu'}`;
+            
             document.getElementById('modalBody').innerHTML = `
                 <input type="text" id="itemSearch" placeholder="🔍 Pretraži artikal..." class="search-input" oninput="filterItems()">
                 <div class="item-list" id="itemListContainer"></div>
                 <div style="margin-top:15px;display:flex;gap:10px;align-items:center;">
-                    <label>Količina:</label>
-                    <input type="number" id="quantity" value="1" min="1" style="width:80px;padding:8px;">
+                    <label style="font-weight:bold;">Količina:</label>
+                    <input type="number" id="quantity" value="1" min="1" style="width:100px;padding:10px;font-size:16px;">
                 </div>
-                <button onclick="saveTransaction('${objekatId}','${type}')" class="btn btn-success" style="margin-top:10px;width:100%;">✅ Sačuvaj pozajmicu</button>
+                <button onclick="saveTransaction('${objekatId}','${type}')" class="btn btn-success" style="margin-top:15px;width:100%;padding:12px;font-size:16px;">✅ Sačuvaj pozajmicu</button>
             `;
             window._objekatId = objekatId;
             window._type = type;
@@ -380,6 +406,7 @@
                     selectedItemId = item.id;
                     document.querySelectorAll('.item-option').forEach(el => el.style.background = '');
                     this.style.background = '#d4edda';
+                    this.style.fontWeight = 'bold';
                 };
                 container.appendChild(div);
             });
@@ -421,7 +448,7 @@
         }
         
         function vrati(transactionId) {
-            if (confirm('✅ Potvrdi razduženje?')) {
+            if (confirm('✅ Potvrdi razduženje – ova stavka će biti označena kao vraćena.')) {
                 const trans = transactions.find(t => t.id === transactionId);
                 if (trans) {
                     trans.status = 'vraceno';
@@ -443,15 +470,8 @@
         
         function addObjekat() {
             const name = document.getElementById('newObjekatName').value.trim();
-            if (!name) {
-                alert('Unesite naziv objekta!');
-                return;
-            }
-            objekti.push({
-                id: Date.now().toString(36),
-                name,
-                contact: document.getElementById('newObjekatContact').value.trim()
-            });
+            if (!name) { alert('Unesite naziv objekta!'); return; }
+            objekti.push({ id: Date.now().toString(36), name, contact: document.getElementById('newObjekatContact').value.trim() });
             document.getElementById('newObjekatName').value = '';
             document.getElementById('newObjekatContact').value = '';
             saveData();
@@ -462,22 +482,14 @@
         function addItem() {
             const name = document.getElementById('newItemName').value.trim();
             const unit = document.getElementById('newItemUnit').value.trim();
-            if (!name || !unit) {
-                alert('Unesite naziv i jedinicu mere!');
-                return;
-            }
-            items.push({
-                id: Date.now().toString(36),
-                name,
-                unit
-            });
+            if (!name || !unit) { alert('Unesite naziv i jedinicu mere!'); return; }
+            items.push({ id: Date.now().toString(36), name, unit });
             document.getElementById('newItemName').value = '';
             document.getElementById('newItemUnit').value = '';
             saveData();
             closeModal('itemFormModal');
         }
         
-        // ==================== POMOĆNE ====================
         function switchTab(event, tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
@@ -487,14 +499,8 @@
             if (tab === 'stanje') renderStanje();
         }
         
-        function showModal(id) {
-            document.getElementById(id).classList.add('active');
-        }
-        
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
-            selectedItemId = null;
-        }
+        function showModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); selectedItemId = null; }
         
         window.onclick = function(event) {
             if (event.target.classList.contains('modal')) {
@@ -503,10 +509,7 @@
             }
         };
         
-        // Fokus na input pri učitavanju
-        window.onload = function() {
-            document.getElementById('passwordInput').focus();
-        };
+        window.onload = function() { document.getElementById('passwordInput').focus(); };
     </script>
 </body>
 </html>
