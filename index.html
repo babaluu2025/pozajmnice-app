@@ -245,8 +245,8 @@
                             ${obj.contact ? `<p style="color:#666;">📞 ${obj.contact}</p>` : ''}
                             <div style="margin-top:8px;">
                                 ${aktivne.length > 0 ? `
-                                    <span class="badge badge-duguju-nama" style="font-size:13px;">📤 Duguju nama: ${dugujuNama}</span>
-                                    <span class="badge badge-mi-dugujemo" style="font-size:13px;margin-left:5px;">📥 Mi dugujemo: ${miDugujemo}</span>
+                                    <span class="badge badge-duguju-nama" style="font-size:13px;">📤 Duguju nama: ${dugujuNama.toFixed(2)}</span>
+                                    <span class="badge badge-mi-dugujemo" style="font-size:13px;margin-left:5px;">📥 Mi dugujemo: ${miDugujemo.toFixed(2)}</span>
                                 ` : '<span style="color:#28a745;font-weight:bold;">✅ Sve razduženo</span>'}
                             </div>
                         </div>
@@ -262,7 +262,7 @@
                             ${[...aktivne].reverse().map(t => {
                                 const item = items.find(i => i.id === t.itemId);
                                 return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;gap:10px;flex-wrap:wrap;border-bottom:1px dashed #eee;">
-                                    <span style="font-weight:bold;">${item?.name||'Nepoznato'} ×${t.quantity} ${item?.unit||''}</span>
+                                    <span style="font-weight:bold;">${item?.name||'Nepoznato'} ×${t.quantity.toFixed(2)} ${item?.unit||''}</span>
                                     <span style="font-size:11px;color:#666;">📅 ${t.dateBorrowed}</span>
                                     <span class="badge ${t.type==='duguju_nama'?'badge-duguju-nama':'badge-mi-dugujemo'}">${t.type==='duguju_nama'?'Oni duguju':'Mi dugujemo'}</span>
                                     <button class="btn btn-success btn-sm" onclick="vrati('${t.id}')">✅ Vrati</button>
@@ -306,7 +306,7 @@
                     <td>${obj?.name||'?'}</td>
                     <td>${item?.name||'?'}</td>
                     <td>${t.type==='duguju_nama'?'📤 Duguju nama':'📥 Mi dugujemo'}</td>
-                    <td>${t.quantity} ${item?.unit||''}</td>
+                    <td>${t.quantity.toFixed(2)} ${item?.unit||''}</td>
                     <td>${t.dateBorrowed||'?'}</td>
                     <td>${t.dateReturned || '<span style="color:#dc3545;">-</span>'}</td>
                     <td><span class="badge ${t.status==='aktivno'?'badge-aktivno':'badge-vraceno'}">${t.status==='aktivno'?'⏳ Aktivno':'✅ Vraćeno'}</span></td>
@@ -344,7 +344,7 @@
                         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #eee;">
                             <span style="font-weight:bold;">${s.item?.name||'?'} (${s.item?.unit||''})</span>
                             <span class="badge ${s.type==='duguju_nama'?'badge-duguju-nama':'badge-mi-dugujemo'}" style="font-size:13px;">${s.type==='duguju_nama'?'📤 Duguju nama':'📥 Mi dugujemo'}</span>
-                            <strong style="font-size:16px;">×${s.quantity}</strong>
+                            <strong style="font-size:16px;">×${s.quantity.toFixed(2)}</strong>
                         </div>
                     `).join('')}
                 `;
@@ -356,7 +356,7 @@
             }
         }
         
-        // ==================== TRANSAKCIJE (VIŠE NE SABIRA AUTOMATSKI) ====================
+        // ==================== TRANSAKCIJE (PODRŠKA ZA DECIMALE) ====================
         function openTransaction(objekatId, type) {
             const obj = objekti.find(o => o.id === objekatId);
             document.getElementById('modalTitle').textContent = type==='duguju_nama' 
@@ -368,7 +368,8 @@
                 <div class="item-list" id="itemListContainer"></div>
                 <div style="margin-top:15px;display:flex;gap:10px;align-items:center;">
                     <label style="font-weight:bold;">Količina:</label>
-                    <input type="number" id="quantity" value="1" min="1" style="width:100px;padding:10px;font-size:16px;">
+                    <input type="number" id="quantity" value="1" min="0.01" step="any" style="width:120px;padding:10px;font-size:16px;">
+                    <small style="color:#666;">(npr. 1,5 ili 0.75)</small>
                 </div>
                 <button onclick="saveTransaction('${objekatId}','${type}')" class="btn btn-success" style="margin-top:15px;width:100%;padding:12px;font-size:16px;">✅ Sačuvaj pozajmicu</button>
             `;
@@ -410,15 +411,23 @@
                 alert('⚠️ Odaberi artikal sa liste!');
                 return;
             }
-            const quantity = parseInt(document.getElementById('quantity').value) || 1;
             
-            // Uvek dodaj NOVU transakciju, ne sabiraj sa starom
+            // Podrška za decimalne brojeve sa zarezom ili tačkom
+            let qtyStr = document.getElementById('quantity').value.replace(',', '.');
+            const quantity = parseFloat(qtyStr);
+            
+            if (isNaN(quantity) || quantity <= 0) {
+                alert('⚠️ Unesite ispravnu količinu (npr. 1,5 ili 0.75)!');
+                return;
+            }
+            
+            // Uvek dodaj NOVU transakciju
             transactions.push({
                 id: Date.now().toString(36),
                 objekatId,
                 itemId: selectedItemId,
                 type,
-                quantity,
+                quantity: quantity, // čuva se kao broj
                 dateBorrowed: new Date().toLocaleString('hr'),
                 dateReturned: null,
                 status: 'aktivno'
