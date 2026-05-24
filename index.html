@@ -6,7 +6,6 @@
     <title>Pozajmnice ☁️</title>
     <meta name="theme-color" content="#667eea">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤝</text></svg>">
-
     <script>
         const blob = new Blob([JSON.stringify({
             name: "Pozajmnice ☁️", short_name: "Pozajmnice", start_url: "/", display: "standalone",
@@ -16,6 +15,7 @@
         document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${URL.createObjectURL(blob)}">`);
     </script>
 
+    <!-- Supabase biblioteka -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
@@ -175,7 +175,12 @@
         const SUPABASE_URL = 'https://itoyvqqssqmeyxawvulq.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_nbUWlCIXbB48NoBRhH4ucg_PfCAmau1';
 
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let supabaseClient = null;
+        try {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch(e) {
+            console.warn('Supabase nije dostupan, radi offline');
+        }
 
         // ==================== PODACI ====================
         let objekti = [];
@@ -184,42 +189,67 @@
         let selectedItemId = null;
         let channel = null;
 
+        // ==================== OFFLINE BACKUP ====================
+        function loadLocal() {
+            const saved = localStorage.getItem('pozajmnice_backup');
+            if (saved) {
+                const d = JSON.parse(saved);
+                objekti = d.objekti || [];
+                items = d.items || [];
+                transactions = d.transactions || [];
+            }
+        }
+
+        function saveLocal() {
+            localStorage.setItem('pozajmnice_backup', JSON.stringify({ objekti, items, transactions }));
+        }
+
         // ==================== INICIJALIZACIJA I REAL‑TIME SINHRONIZACIJA ====================
         async function loadFromSupabase() {
-            const { data, error } = await supabase
-                .from('podaci')
-                .select('*')
-                .eq('id', 1)
-                .single();
+            if (!supabaseClient) {
+                loadLocal();
+                updateSyncStatus(false);
+                return;
+            }
+            try {
+                const { data, error } = await supabaseClient
+                    .from('podaci')
+                    .select('*')
+                    .eq('id', 1)
+                    .single();
 
-            if (data) {
-                objekti = data.objekti || [];
-                items = data.items || [];
-                transactions = data.transactions || [];
-                updateSyncStatus(true);
-            } else if (error) {
-                console.log('Nema podataka, kreiram prazan zapis...');
-                await supabase.from('podaci').upsert({ id: 1, objekti: [], items: [], transactions: [] });
+                if (data) {
+                    objekti = data.objekti || [];
+                    items = data.items || [];
+                    transactions = data.transactions || [];
+                    updateSyncStatus(true);
+                } else if (error) {
+                    console.log('Kreiram prazan zapis u bazi...');
+                    await supabaseClient.from('podaci').upsert({ id: 1, objekti: [], items: [], transactions: [] });
+                    updateSyncStatus(true);
+                }
+            } catch(e) {
+                console.warn('Offline – koristim lokalne podatke');
+                loadLocal();
                 updateSyncStatus(false);
             }
         }
 
         async function saveToSupabase() {
-            const { error } = await supabase
-                .from('podaci')
-                .upsert({ id: 1, objekti, items, transactions });
-
-            if (!error) {
+            saveLocal();
+            if (!supabaseClient) return;
+            try {
+                await supabaseClient.from('podaci').upsert({ id: 1, objekti, items, transactions });
                 updateSyncStatus(true);
-                localStorage.setItem('pozajmnice_backup', JSON.stringify({ objekti, items, transactions }));
-            } else {
+            } catch(e) {
+                console.warn('Spremam lokalno');
                 updateSyncStatus(false);
-                localStorage.setItem('pozajmnice_backup', JSON.stringify({ objekti, items, transactions }));
             }
         }
 
         function subscribeToChanges() {
-            channel = supabase
+            if (!supabaseClient) return;
+            channel = supabaseClient
                 .channel('podaci-changes')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'podaci' }, (payload) => {
                     if (payload.new && payload.new.id === 1) {
@@ -259,7 +289,7 @@
         });
 
         document.getElementById('logoutBtn').addEventListener('click', function() {
-            if (channel) supabase.removeChannel(channel);
+            if (channel && supabaseClient) supabaseClient.removeChannel(channel);
             document.getElementById('appContent').style.display = 'none';
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('passwordInput').value = '';
