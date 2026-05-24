@@ -3,24 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pozajmnice</title>
+    <title>Pozajmnice ☁️</title>
     <meta name="theme-color" content="#667eea">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤝</text></svg>">
-    
+
     <script>
         const blob = new Blob([JSON.stringify({
-            name: "Pozajmnice", short_name: "Pozajmnice", start_url: "/", display: "standalone",
+            name: "Pozajmnice ☁️", short_name: "Pozajmnice", start_url: "/", display: "standalone",
             background_color: "#f5f5f5", theme_color: "#667eea",
             icons: [{src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤝</text></svg>",sizes:"512x512",type:"image/svg+xml",purpose:"any maskable"}]
         })], {type:'application/json'});
         document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${URL.createObjectURL(blob)}">`);
     </script>
-    
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; }
         .container { max-width: 1000px; margin: 0 auto; padding: 15px; }
-        
+
         .login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
         .login-box { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; width: 90%; max-width: 400px; }
         .login-icon { font-size: 4rem; margin-bottom: 20px; }
@@ -28,7 +30,7 @@
         .password-input input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; }
         .login-btn { background: #667eea; color: white; border: none; padding: 12px 30px; border-radius: 5px; font-size: 16px; cursor: pointer; width: 100%; }
         .error-msg { color: red; margin-top: 10px; display: none; }
-        
+
         header { background: white; padding: 15px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; margin: 2px; color: white; font-weight: bold; white-space: nowrap; }
@@ -37,43 +39,45 @@
         .btn-danger { background: #dc3545; }
         .btn-warning { background: #ffc107; color: black; }
         .btn-sm { padding: 5px 12px; font-size: 13px; }
-        
+
         .btn-pozajmica { padding: 12px 24px; font-size: 15px; min-width: 160px; border-radius: 10px; font-weight: bold; }
         .btn-duguju-nama { background: #0d6efd; color: white; }
         .btn-mi-dugujemo { background: #fd7e14; color: white; }
-        
+
+        .sync-indicator { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+        .sync-online { background: #28a745; }
+        .sync-offline { background: #dc3545; }
+
         .tabs { display: flex; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab { padding: 10px 20px; background: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .tab.active { background: #667eea; color: white; }
-        
+
         .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 5px rgba(0,0,0,0.1); }
-        
+
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
         .modal.active { display: flex; }
         .modal-content { background: white; padding: 25px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        
+
         .search-input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; }
         .item-list { max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; }
         .item-option { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 15px; }
         .item-option:hover { background: #f0f0f0; }
-        
+
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
         th { background: #f8f9fa; font-weight: bold; position: sticky; top: 0; }
-        
+
         .badge { padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; display: inline-block; }
         .badge-aktivno { background: #fff3cd; color: #856404; }
         .badge-vraceno { background: #d4edda; color: #155724; }
         .badge-duguju-nama { background: #cfe2ff; color: #084298; }
         .badge-mi-dugujemo { background: #ffe5d0; color: #a1440a; }
-        
+
         .row-vraceno { background: #f8fff8; opacity: 0.85; }
         .row-vraceno td { text-decoration: line-through; color: #6c757d; }
         .row-vraceno td:last-child { text-decoration: none; }
-        
-        .aktivne-lista { display: flex; flex-direction: column; }
-        
+
         @media (max-width: 768px) {
             .header-content { flex-direction: column; }
             table { font-size: 12px; }
@@ -87,7 +91,7 @@
     <div id="loginScreen" class="login-container">
         <div class="login-box">
             <div class="login-icon">🤝</div>
-            <h1>Pozajmnice</h1>
+            <h1>Pozajmnice ☁️</h1>
             <p>Unesite šifru za pristup</p>
             <div class="password-input">
                 <input type="password" id="passwordInput" placeholder="Šifra" autocomplete="off">
@@ -97,12 +101,12 @@
             <div style="margin-top: 15px; color: #666;">Šifra za test: <strong>123</strong></div>
         </div>
     </div>
-    
+
     <!-- APLIKACIJA -->
     <div id="appContent" style="display: none;">
         <header>
             <div class="container header-content">
-                <h1>🤝 Pozajmnice</h1>
+                <h1>🤝 Pozajmnice <span id="syncDot" class="sync-indicator sync-offline" title="Sinhronizacija"></span></h1>
                 <div>
                     <button onclick="showModal('objekatFormModal')" class="btn btn-success">+ Objekat</button>
                     <button onclick="showModal('itemFormModal')" class="btn btn-info">+ Artikal</button>
@@ -110,38 +114,36 @@
                 </div>
             </div>
         </header>
-        
+
         <div class="container">
             <div class="tabs">
                 <button class="tab active" onclick="switchTab(event, 'objekti')">🏢 Objekti</button>
                 <button class="tab" onclick="switchTab(event, 'logovi')">📋 Logovi</button>
                 <button class="tab" onclick="switchTab(event, 'stanje')">📊 Stanje</button>
             </div>
-            
+
             <div id="tab-objekti" class="tab-content"><div id="objektiContainer"></div></div>
-            
+
             <div id="tab-logovi" class="tab-content" style="display:none;">
                 <div class="card">
                     <h3>Sve transakcije</h3>
-                    <div style="margin:10px 0;">
-                        <select id="logFilter" onchange="renderLogovi()" style="padding:8px;font-size:14px;">
-                            <option value="sve">📋 Sve</option>
-                            <option value="aktivno">⏳ Aktivne</option>
-                            <option value="vraceno">✅ Vraćene</option>
-                        </select>
-                    </div>
+                    <select id="logFilter" onchange="renderLogovi()" style="padding:8px;font-size:14px;">
+                        <option value="sve">📋 Sve</option>
+                        <option value="aktivno">⏳ Aktivne</option>
+                        <option value="vraceno">✅ Vraćene</option>
+                    </select>
                     <div style="overflow-x:auto;">
                         <table id="logoviTable"><thead><tr><th>Objekat</th><th>Artikal</th><th>Tip</th><th>Kol</th><th>Pozajmljeno</th><th>Vraćeno</th><th>Status</th></tr></thead><tbody></tbody></table>
                     </div>
                 </div>
             </div>
-            
+
             <div id="tab-stanje" class="tab-content" style="display:none;">
                 <div class="card"><h3>📊 Sabrano stanje po objektima</h3><div id="stanjeContainer"></div></div>
             </div>
         </div>
     </div>
-    
+
     <!-- MODALI -->
     <div id="transactionModal" class="modal">
         <div class="modal-content">
@@ -149,7 +151,7 @@
             <div id="modalBody"></div>
         </div>
     </div>
-    
+
     <div id="objekatFormModal" class="modal">
         <div class="modal-content">
             <div class="modal-header"><h3>Dodaj objekat</h3><button onclick="closeModal('objekatFormModal')" style="font-size:24px;background:none;border:none;cursor:pointer;">&times;</button></div>
@@ -158,7 +160,7 @@
             <button onclick="addObjekat()" class="btn btn-success">Sačuvaj objekat</button>
         </div>
     </div>
-    
+
     <div id="itemFormModal" class="modal">
         <div class="modal-content">
             <div class="modal-header"><h3>Dodaj artikal</h3><button onclick="closeModal('itemFormModal')" style="font-size:24px;background:none;border:none;cursor:pointer;">&times;</button></div>
@@ -169,73 +171,122 @@
     </div>
 
     <script>
-        // ==================== PODACI U LOCAL STORAGE ====================
-        const STORAGE_KEY = 'pozajmnice_data';
-        
+        // ==================== SUPABASE KONFIGURACIJA ====================
+        const SUPABASE_URL = 'https://itoyvqqssqmeyxawvulq.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_nbUWlCIXbB48NoBRhH4ucg_PfCAmau1';
+
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ==================== PODACI ====================
         let objekti = [];
         let items = [];
         let transactions = [];
         let selectedItemId = null;
-        
-        function loadData() {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                const data = JSON.parse(saved);
+        let channel = null;
+
+        // ==================== INICIJALIZACIJA I REAL‑TIME SINHRONIZACIJA ====================
+        async function loadFromSupabase() {
+            const { data, error } = await supabase
+                .from('podaci')
+                .select('*')
+                .eq('id', 1)
+                .single();
+
+            if (data) {
                 objekti = data.objekti || [];
                 items = data.items || [];
                 transactions = data.transactions || [];
+                updateSyncStatus(true);
+            } else if (error) {
+                console.log('Nema podataka, kreiram prazan zapis...');
+                await supabase.from('podaci').upsert({ id: 1, objekti: [], items: [], transactions: [] });
+                updateSyncStatus(false);
             }
         }
-        
-        function saveData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({ objekti, items, transactions }));
+
+        async function saveToSupabase() {
+            const { error } = await supabase
+                .from('podaci')
+                .upsert({ id: 1, objekti, items, transactions });
+
+            if (!error) {
+                updateSyncStatus(true);
+                localStorage.setItem('pozajmnice_backup', JSON.stringify({ objekti, items, transactions }));
+            } else {
+                updateSyncStatus(false);
+                localStorage.setItem('pozajmnice_backup', JSON.stringify({ objekti, items, transactions }));
+            }
         }
-        
+
+        function subscribeToChanges() {
+            channel = supabase
+                .channel('podaci-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'podaci' }, (payload) => {
+                    if (payload.new && payload.new.id === 1) {
+                        objekti = payload.new.objekti || [];
+                        items = payload.new.items || [];
+                        transactions = payload.new.transactions || [];
+                        renderAll();
+                    }
+                })
+                .subscribe();
+        }
+
+        function updateSyncStatus(online) {
+            const dot = document.getElementById('syncDot');
+            if (dot) {
+                dot.className = 'sync-indicator ' + (online ? 'sync-online' : 'sync-offline');
+                dot.title = online ? '☁️ Sinhronizovano' : '📱 Lokalno (offline)';
+            }
+        }
+
         // ==================== LOGIN ====================
-        document.getElementById('loginBtn').addEventListener('click', function() {
+        document.getElementById('loginBtn').addEventListener('click', async function() {
             const password = document.getElementById('passwordInput').value;
             if (password === '123') {
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('appContent').style.display = 'block';
-                loadData();
+                await loadFromSupabase();
                 renderAll();
+                subscribeToChanges();
             } else {
                 document.getElementById('errorMsg').style.display = 'block';
             }
         });
-        
+
         document.getElementById('passwordInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') document.getElementById('loginBtn').click();
         });
-        
+
         document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (channel) supabase.removeChannel(channel);
             document.getElementById('appContent').style.display = 'none';
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('passwordInput').value = '';
             document.getElementById('errorMsg').style.display = 'none';
         });
-        
+
         // ==================== RENDER ====================
         function renderAll() {
             renderObjekti();
             renderLogovi();
             renderStanje();
         }
-        
+
         function renderObjekti() {
             const container = document.getElementById('objektiContainer');
             container.innerHTML = '';
-            
+
             if (objekti.length === 0) {
                 container.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">Nema objekata. Kliknite "+ Objekat" da dodate.</p>';
                 return;
             }
-            
+
             objekti.forEach(obj => {
                 const aktivne = transactions.filter(t => t.objekatId === obj.id && t.status === 'aktivno');
                 const dugujuNama = aktivne.filter(t => t.type === 'duguju_nama').reduce((s, t) => s + t.quantity, 0);
                 const miDugujemo = aktivne.filter(t => t.type === 'mi_dugujemo').reduce((s, t) => s + t.quantity, 0);
-                
+
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
@@ -274,34 +325,30 @@
                 container.appendChild(card);
             });
         }
-        
+
         function renderLogovi() {
             const filter = document.getElementById('logFilter')?.value || 'sve';
             const tbody = document.querySelector('#logoviTable tbody');
             if (!tbody) return;
             tbody.innerHTML = '';
-            
+
             let filtered = [...transactions];
             if (filter === 'aktivno') filtered = filtered.filter(t => t.status === 'aktivno');
             if (filter === 'vraceno') filtered = filtered.filter(t => t.status === 'vraceno');
-            
-            // Najnovije na vrhu
+
             filtered.sort((a, b) => (b.dateBorrowed || '').localeCompare(a.dateBorrowed || ''));
-            
+
             if (filtered.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:20px;">Nema transakcija.</td></tr>';
                 return;
             }
-            
+
             filtered.forEach(t => {
                 const obj = objekti.find(o => o.id === t.objekatId);
                 const item = items.find(i => i.id === t.itemId);
                 const row = document.createElement('tr');
-                
-                if (t.status === 'vraceno') {
-                    row.className = 'row-vraceno';
-                }
-                
+                if (t.status === 'vraceno') row.className = 'row-vraceno';
+
                 row.innerHTML = `
                     <td>${obj?.name||'?'}</td>
                     <td>${item?.name||'?'}</td>
@@ -314,18 +361,17 @@
                 tbody.appendChild(row);
             });
         }
-        
+
         function renderStanje() {
             const container = document.getElementById('stanjeContainer');
             container.innerHTML = '';
-            
+
             let imaPodataka = false;
-            
             objekti.forEach(obj => {
                 const objTrans = transactions.filter(t => t.objekatId === obj.id && t.status === 'aktivno');
                 if (objTrans.length === 0) return;
                 imaPodataka = true;
-                
+
                 const sabrano = {};
                 objTrans.forEach(t => {
                     const key = t.itemId + '_' + t.type;
@@ -335,7 +381,7 @@
                     }
                     sabrano[key].quantity += t.quantity;
                 });
-                
+
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
@@ -350,19 +396,19 @@
                 `;
                 container.appendChild(card);
             });
-            
+
             if (!imaPodataka) {
                 container.innerHTML = '<p style="text-align:center;color:#28a745;padding:20px;font-size:16px;">✅ Sve je razduženo - nema aktivnih pozajmica.</p>';
             }
         }
-        
-        // ==================== TRANSAKCIJE (PODRŠKA ZA DECIMALE) ====================
+
+        // ==================== TRANSAKCIJE ====================
         function openTransaction(objekatId, type) {
             const obj = objekti.find(o => o.id === objekatId);
             document.getElementById('modalTitle').textContent = type==='duguju_nama' 
                 ? `📤 Pozajmica – ${obj?.name||'Objekat'} duguje nama` 
                 : `📥 Pozajmica – mi dugujemo: ${obj?.name||'Objektu'}`;
-            
+
             document.getElementById('modalBody').innerHTML = `
                 <input type="text" id="itemSearch" placeholder="🔍 Pretraži artikal..." class="search-input" oninput="filterItems()">
                 <div class="item-list" id="itemListContainer"></div>
@@ -379,19 +425,19 @@
             filterItems();
             showModal('transactionModal');
         }
-        
+
         function filterItems() {
             const search = document.getElementById('itemSearch')?.value.toLowerCase() || '';
             const filtered = items.filter(item => item.name.toLowerCase().includes(search));
             const container = document.getElementById('itemListContainer');
             if (!container) return;
             container.innerHTML = '';
-            
+
             if (filtered.length === 0) {
                 container.innerHTML = '<p style="padding:15px;color:#999;">Nema artikala. Prvo dodajte artikal.</p>';
                 return;
             }
-            
+
             filtered.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'item-option';
@@ -405,82 +451,68 @@
                 container.appendChild(div);
             });
         }
-        
-        function saveTransaction(objekatId, type) {
-            if (!selectedItemId) {
-                alert('⚠️ Odaberi artikal sa liste!');
-                return;
-            }
-            
-            // Podrška za decimalne brojeve sa zarezom ili tačkom
+
+        async function saveTransaction(objekatId, type) {
+            if (!selectedItemId) { alert('⚠️ Odaberi artikal sa liste!'); return; }
             let qtyStr = document.getElementById('quantity').value.replace(',', '.');
             const quantity = parseFloat(qtyStr);
-            
-            if (isNaN(quantity) || quantity <= 0) {
-                alert('⚠️ Unesite ispravnu količinu (npr. 1,5 ili 0.75)!');
-                return;
-            }
-            
-            // Uvek dodaj NOVU transakciju
+            if (isNaN(quantity) || quantity <= 0) { alert('⚠️ Unesite ispravnu količinu!'); return; }
+
             transactions.push({
                 id: Date.now().toString(36),
-                objekatId,
-                itemId: selectedItemId,
-                type,
-                quantity: quantity, // čuva se kao broj
+                objekatId, itemId: selectedItemId, type, quantity,
                 dateBorrowed: new Date().toLocaleString('hr'),
-                dateReturned: null,
-                status: 'aktivno'
+                dateReturned: null, status: 'aktivno'
             });
-            
-            saveData();
+
+            await saveToSupabase();
             renderAll();
             closeModal('transactionModal');
         }
-        
-        function vrati(transactionId) {
-            if (confirm('✅ Potvrdi razduženje – ova stavka će biti označena kao vraćena.')) {
+
+        async function vrati(transactionId) {
+            if (confirm('✅ Potvrdi razduženje?')) {
                 const trans = transactions.find(t => t.id === transactionId);
                 if (trans) {
                     trans.status = 'vraceno';
                     trans.dateReturned = new Date().toLocaleString('hr');
-                    saveData();
+                    await saveToSupabase();
                     renderAll();
                 }
             }
         }
-        
-        function deleteObjekat(objekatId) {
-            if (confirm('🗑 Sigurno želiš obrisati ovaj objekat i sve njegove transakcije?')) {
+
+        async function deleteObjekat(objekatId) {
+            if (confirm('🗑 Obrisati objekat i sve transakcije?')) {
                 objekti = objekti.filter(o => o.id !== objekatId);
                 transactions = transactions.filter(t => t.objekatId !== objekatId);
-                saveData();
+                await saveToSupabase();
                 renderAll();
             }
         }
-        
-        function addObjekat() {
+
+        async function addObjekat() {
             const name = document.getElementById('newObjekatName').value.trim();
-            if (!name) { alert('Unesite naziv objekta!'); return; }
+            if (!name) { alert('Unesite naziv!'); return; }
             objekti.push({ id: Date.now().toString(36), name, contact: document.getElementById('newObjekatContact').value.trim() });
             document.getElementById('newObjekatName').value = '';
             document.getElementById('newObjekatContact').value = '';
-            saveData();
+            await saveToSupabase();
             renderAll();
             closeModal('objekatFormModal');
         }
-        
-        function addItem() {
+
+        async function addItem() {
             const name = document.getElementById('newItemName').value.trim();
             const unit = document.getElementById('newItemUnit').value.trim();
-            if (!name || !unit) { alert('Unesite naziv i jedinicu mere!'); return; }
+            if (!name || !unit) { alert('Unesite naziv i jedinicu!'); return; }
             items.push({ id: Date.now().toString(36), name, unit });
             document.getElementById('newItemName').value = '';
             document.getElementById('newItemUnit').value = '';
-            saveData();
+            await saveToSupabase();
             closeModal('itemFormModal');
         }
-        
+
         function switchTab(event, tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
@@ -489,17 +521,17 @@
             if (tab === 'logovi') renderLogovi();
             if (tab === 'stanje') renderStanje();
         }
-        
+
         function showModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); selectedItemId = null; }
-        
+
         window.onclick = function(event) {
             if (event.target.classList.contains('modal')) {
                 event.target.classList.remove('active');
                 selectedItemId = null;
             }
         };
-        
+
         window.onload = function() { document.getElementById('passwordInput').focus(); };
     </script>
 </body>
