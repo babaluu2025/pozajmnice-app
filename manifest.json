@@ -1,7 +1,7 @@
 {
   "name": "Minibar Sync",
   "short_name": "Minibar",
-  "start_url": "index.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#f5f7fa",
   "theme_color": "#1a73e8",
@@ -10,7 +10,8 @@
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2920/2920365.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
