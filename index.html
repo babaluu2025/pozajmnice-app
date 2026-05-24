@@ -1,12 +1,32 @@
 <!DOCTYPE html>
 <html lang="hr">
 <head>
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#1a73e8">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pozajmnice</title>
-    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤝</text></svg>">
+    <meta name="theme-color" content="#667eea">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤝</text></svg>">
+    
+    <!-- MANIFEST UGRADEN DIREKTNO -->
+    <script>
+        const blob = new Blob([JSON.stringify({
+            name: "Pozajmnice",
+            short_name: "Pozajmnice",
+            start_url: "/",
+            display: "standalone",
+            background_color: "#f5f5f5",
+            theme_color: "#667eea",
+            description: "Aplikacija za praćenje pozajmica između objekata.",
+            icons: [{
+                src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤝</text></svg>",
+                sizes: "512x512",
+                type: "image/svg+xml",
+                purpose: "any maskable"
+            }]
+        })], {type: 'application/json'});
+        document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${URL.createObjectURL(blob)}">`);
+    </script>
+    
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; }
@@ -51,8 +71,8 @@
         .error-message { color: red; margin-top: 10px; display: none; }
         
         header { background: white; padding: 15px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header-content { display: flex; justify-content: space-between; align-items: center; }
-        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px; font-size: 14px; }
         .btn-success { background: #28a745; color: white; }
         .btn-info { background: #17a2b8; color: white; }
         .btn-danger { background: #dc3545; color: white; }
@@ -65,6 +85,7 @@
             border: none; 
             cursor: pointer; 
             border-bottom: 3px solid transparent; 
+            font-size: 16px;
         }
         .main-tab.active { border-bottom-color: #667eea; color: #667eea; font-weight: bold; }
         
@@ -119,9 +140,17 @@
             font-size: 0.8rem; 
             margin-left: 10px; 
         }
+        
+        @media (max-width: 768px) {
+            .header-content { flex-direction: column; text-align: center; }
+            .btn { margin: 5px; }
+            table { font-size: 12px; }
+            th, td { padding: 6px; }
+        }
     </style>
 </head>
 <body>
+    <!-- LOGIN SCREEN -->
     <div id="loginScreen" class="login-container">
         <div class="login-box">
             <div class="login-icon">🤝</div>
@@ -138,6 +167,7 @@
         </div>
     </div>
     
+    <!-- APLIKACIJA -->
     <div id="appContent" style="display: none;">
         <header>
             <div class="container">
@@ -157,7 +187,7 @@
         <div class="container">
             <div id="syncStatus" class="sync-status"></div>
             
-            <!-- Configuration Panel -->
+            <!-- PODEŠAVANJE -->
             <div id="configPanel" class="config-panel" style="display: none;">
                 <h3>⚙️ Podešavanje Automatske Sinhronizacije</h3>
                 
@@ -189,12 +219,14 @@
                 <div id="configStatus" style="margin-top: 15px;"></div>
             </div>
             
+            <!-- TABOVI -->
             <div class="main-tabs">
                 <button class="main-tab active" data-section="objekti">Objekti</button>
                 <button class="main-tab" data-section="transactions">Sve Transakcije</button>
                 <button class="main-tab" data-section="items">Artikli</button>
             </div>
             
+            <!-- OBJEKTI -->
             <div id="objekti" class="content-section active">
                 <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                     <h3>Dodaj novi objekat</h3>
@@ -231,6 +263,7 @@
                 </div>
             </div>
             
+            <!-- ARTIKLI -->
             <div id="items" class="content-section">
                 <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                     <h3>Dodaj novi artikal</h3>
@@ -264,6 +297,7 @@
                 </div>
             </div>
             
+            <!-- TRANSAKCIJE -->
             <div id="transactions" class="content-section">
                 <div style="background: white; padding: 20px; border-radius: 8px;">
                     <h3>Sve transakcije</h3>
@@ -320,16 +354,13 @@
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
-    
     if (data.action === 'SAVE_ALL_DATA') {
       return saveAllData(data.data);
     }
-    
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       error: 'Nepoznata akcija'
     })).setMimeType(ContentService.MimeType.JSON);
-    
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
@@ -343,12 +374,10 @@ function doGet(e) {
     if (e.parameter.action === 'LOAD_ALL_DATA') {
       return loadAllData();
     }
-    
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       error: 'Nepoznata akcija'
     })).setMimeType(ContentService.MimeType.JSON);
-    
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
@@ -359,16 +388,13 @@ function doGet(e) {
 
 function saveAllData(data) {
   const scriptProperties = PropertiesService.getScriptProperties();
-  
   const allData = {
     objekti: data.objekti || [],
     items: data.items || [],
     transactions: data.transactions || [],
     lastUpdated: new Date().toISOString()
   };
-  
   scriptProperties.setProperty('POZAJMNICE_DATA', JSON.stringify(allData));
-  
   return ContentService.createTextOutput(JSON.stringify({
     success: true,
     message: 'Svi podaci uspješno spremljeni',
@@ -379,36 +405,26 @@ function saveAllData(data) {
 function loadAllData() {
   const scriptProperties = PropertiesService.getScriptProperties();
   const storedData = scriptProperties.getProperty('POZAJMNICE_DATA');
-  
   if (!storedData) {
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
-      data: {
-        objekti: [],
-        items: [],
-        transactions: []
-      }
+      data: { objekti: [], items: [], transactions: [] }
     })).setMimeType(ContentService.MimeType.JSON);
   }
-  
   try {
     const data = JSON.parse(storedData);
-    
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
       data: data,
       lastUpdated: data.lastUpdated
     })).setMimeType(ContentService.MimeType.JSON);
-    
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       error: 'Greška pri čitanju podataka'
     })).setMimeType(ContentService.MimeType.JSON);
   }
-}
-            `;
-            
+}`;
             console.log('📝 KOPIRAJTE OVAJ KOD U GOOGLE APPS SCRIPT:\n', scriptCode);
             alert('Apps Script kod je ispisan u konzoli (F12 → Console)');
         }
@@ -419,12 +435,9 @@ function loadAllData() {
                 showConfigStatus('❌ Unesite Apps Script URL!', 'error');
                 return;
             }
-
             showConfigStatus('🔍 Testiram konekciju...', 'info');
-            
             try {
                 const response = await fetch(`${url}?action=LOAD_ALL_DATA&timestamp=${Date.now()}`);
-                
                 if (response.ok) {
                     const result = await response.json();
                     if (result.success) {
@@ -447,21 +460,17 @@ function loadAllData() {
             statusEl.style.fontWeight = 'bold';
         }
 
-        // ✅ AUTOMATSKA SHEETS INTEGRACIJA
+        // ✅ SINHRONIZACIJA
         async function saveToSheets() {
             if (!APPS_SCRIPT_URL) {
                 showSyncStatus('❌ Nije postavljen Apps Script URL. Idite u Podešavanje.', 'error');
                 return false;
             }
-
             showSyncStatus('💾 Spremanje podataka...', 'info');
-            
             try {
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         action: 'SAVE_ALL_DATA',
                         data: {
@@ -472,16 +481,13 @@ function loadAllData() {
                         }
                     })
                 });
-                
                 const result = await response.json();
-                
                 if (result.success) {
                     showSyncStatus('✅ Svi podaci uspješno spremljeni!', 'success');
                     return true;
                 } else {
                     throw new Error(result.error || 'Nepoznata greška');
                 }
-                
             } catch (error) {
                 console.error('Greška pri spremanju:', error);
                 showSyncStatus('❌ Greška pri spremanju: ' + error.message, 'error');
@@ -495,30 +501,21 @@ function loadAllData() {
                 loadFromLocalStorage();
                 return false;
             }
-
             showSyncStatus('🔄 Učitavam podatke...', 'info');
-            
             try {
                 const response = await fetch(`${APPS_SCRIPT_URL}?action=LOAD_ALL_DATA&timestamp=${Date.now()}`);
-                
-                if (!response.ok) {
-                    throw new Error('Server error');
-                }
-                
+                if (!response.ok) throw new Error('Server error');
                 const result = await response.json();
-                
                 if (result.success && result.data) {
                     objekti = result.data.objekti || [];
                     items = result.data.items || [];
                     transactions = result.data.transactions || [];
-                    
                     saveToLocalStorage();
                     showSyncStatus('✅ Podaci uspješno učitani!', 'success');
                     return true;
                 } else {
                     throw new Error(result.error || 'Nema podataka');
                 }
-                
             } catch (error) {
                 console.log('Učitavam lokalne podatke...', error);
                 loadFromLocalStorage();
@@ -527,12 +524,10 @@ function loadAllData() {
             }
         }
 
-        // ✅ AUTOMATSKA SINHRONIZACIJA
         function toggleAutoSync() {
             autoSyncEnabled = !autoSyncEnabled;
             const button = document.getElementById('autoSyncBtn');
             const indicator = document.getElementById('autoSyncIndicator');
-            
             if (autoSyncEnabled) {
                 button.innerHTML = '⏸ Auto Sync';
                 button.style.background = '#28a745';
@@ -549,12 +544,9 @@ function loadAllData() {
         }
 
         function startAutoSync() {
-            // Sinhronizacija svakih 30 sekundi
             autoSyncInterval = setInterval(async () => {
                 await performAutoSync();
             }, 30000);
-            
-            // Odmah uradi prvu sinhronizaciju
             performAutoSync();
         }
 
@@ -593,10 +585,7 @@ function loadAllData() {
             statusEl.textContent = message;
             statusEl.className = `sync-status ${type === 'error' ? 'sync-error' : type === 'warning' ? 'sync-warning' : 'sync-success'}`;
             statusEl.style.display = 'block';
-            
-            setTimeout(() => {
-                statusEl.style.display = 'none';
-            }, 5000);
+            setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
         }
 
         // ✅ EVENT LISTENERI
@@ -648,7 +637,6 @@ function loadAllData() {
             }
         }
         
-        // ✅ INICIJALIZACIJA
         async function initApp() {
             loadConfig();
             setupEventListeners();
@@ -667,7 +655,6 @@ function loadAllData() {
                 tab.addEventListener('click', function() {
                     document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
                     document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-                    
                     this.classList.add('active');
                     document.getElementById(this.dataset.section).classList.add('active');
                 });
@@ -676,27 +663,22 @@ function loadAllData() {
             document.getElementById('objekatForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 await addObjekat(e);
-                if (autoSyncEnabled) {
-                    await saveToSheets();
-                }
+                if (autoSyncEnabled) await saveToSheets();
             });
             
             document.getElementById('itemForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 await handleItemForm(e);
-                if (autoSyncEnabled) {
-                    await saveToSheets();
-                }
+                if (autoSyncEnabled) await saveToSheets();
             });
             
             document.getElementById('cancelEdit').addEventListener('click', cancelItemEdit);
         }
         
-        // ✅ OSTALE FUNKCIJE
+        // ✅ FUNKCIJE ZA PRIKAZ
         function loadObjekti() {
             const tbody = document.querySelector('#objektiTable tbody');
             tbody.innerHTML = '';
-            
             objekti.forEach(objekat => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -706,8 +688,7 @@ function loadAllData() {
                     <td>
                         <button onclick="showObjekatDetail('${objekat.id}')" class="btn btn-info">Detalji</button>
                         <button onclick="deleteObjekat('${objekat.id}')" class="btn btn-danger">Obriši</button>
-                    </td>
-                `;
+                    </td>`;
                 tbody.appendChild(row);
             });
         }
@@ -715,7 +696,6 @@ function loadAllData() {
         function loadItems() {
             const tbody = document.querySelector('#itemsTable tbody');
             tbody.innerHTML = '';
-            
             items.forEach(item => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -724,8 +704,7 @@ function loadAllData() {
                     <td>
                         <button onclick="editItem('${item.id}')" class="btn btn-info">Uredi</button>
                         <button onclick="deleteItem('${item.id}')" class="btn btn-danger">Obriši</button>
-                    </td>
-                `;
+                    </td>`;
                 tbody.appendChild(row);
             });
         }
@@ -733,11 +712,9 @@ function loadAllData() {
         function loadAllTransactions() {
             const tbody = document.querySelector('#allTransactionsTable tbody');
             tbody.innerHTML = '';
-            
             transactions.forEach(trans => {
                 const objekat = objekti.find(o => o.id === trans.objekatId) || {name: 'Nepoznato'};
                 const item = items.find(i => i.id === trans.itemId) || {name: 'Nepoznato'};
-                
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${trans.date}</td>
@@ -745,8 +722,7 @@ function loadAllData() {
                     <td>${item.name}</td>
                     <td>${trans.type === 'pozajmica' ? '📤 Pozajmica' : '📥 Vraćeno'}</td>
                     <td>${trans.quantity} ${item.unit}</td>
-                    <td>${trans.note}</td>
-                `;
+                    <td>${trans.note}</td>`;
                 tbody.appendChild(row);
             });
         }
@@ -757,7 +733,6 @@ function loadAllData() {
         
         async function addObjekat(e) {
             e.preventDefault();
-            
             const objekat = {
                 id: generateId(),
                 name: document.getElementById('objekatName').value,
@@ -765,7 +740,6 @@ function loadAllData() {
                 note: document.getElementById('objekatNote').value,
                 createdAt: new Date().toISOString()
             };
-            
             objekti.push(objekat);
             saveToLocalStorage();
             loadObjekti();
@@ -775,9 +749,7 @@ function loadAllData() {
         
         async function handleItemForm(e) {
             e.preventDefault();
-            
             const editingId = document.getElementById('editingItemId').value;
-            
             if (editingId) {
                 const itemIndex = items.findIndex(item => item.id === editingId);
                 if (itemIndex !== -1) {
@@ -797,7 +769,6 @@ function loadAllData() {
                     name: document.getElementById('itemName').value,
                     unit: document.getElementById('itemUnit').value
                 };
-                
                 items.push(item);
                 saveToLocalStorage();
                 loadItems();
@@ -828,11 +799,7 @@ function loadAllData() {
                 transactions = transactions.filter(t => t.objekatId !== objekatId);
                 saveToLocalStorage();
                 loadObjekti();
-                
-                if (autoSyncEnabled) {
-                    await saveToSheets();
-                }
-                
+                if (autoSyncEnabled) await saveToSheets();
                 showSyncStatus('Objekat obrisan!' + (autoSyncEnabled ? ' Automatski spremljeno.' : ''), 'success');
             }
         }
@@ -843,17 +810,16 @@ function loadAllData() {
                 transactions = transactions.filter(t => t.itemId !== itemId);
                 saveToLocalStorage();
                 loadItems();
-                
-                if (autoSyncEnabled) {
-                    await saveToSheets();
-                }
-                
+                if (autoSyncEnabled) await saveToSheets();
                 showSyncStatus('Artikal obrisan!' + (autoSyncEnabled ? ' Automatski spremljeno.' : ''), 'success');
             }
         }
         
         function showObjekatDetail(objekatId) {
-            alert(`Detalji objekta ID: ${objekatId}`);
+            const objekat = objekti.find(o => o.id === objekatId);
+            if (objekat) {
+                alert(`📋 ${objekat.name}\n📞 ${objekat.contact}\n📝 ${objekat.note}`);
+            }
         }
         
         window.onload = function() {
