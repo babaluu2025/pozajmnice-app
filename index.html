@@ -27,800 +27,362 @@
         document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${URL.createObjectURL(blob)}">`);
     </script>
     
+    <!-- InstantDB biblioteka -->
+    <script src="https://cdn.jsdelivr.net/npm/@instantdb/react@latest/dist/standalone.js"></script>
+    
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 15px; }
         
         .login-container { 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
+            display: flex; justify-content: center; align-items: center; height: 100vh; 
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         .login-box { 
-            background: white; 
-            padding: 40px; 
-            border-radius: 10px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
-            text-align: center; 
-            width: 90%; 
-            max-width: 400px; 
+            background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+            text-align: center; width: 90%; max-width: 400px; 
         }
         .login-icon { font-size: 4rem; margin-bottom: 20px; }
-        .login-title { color: #333; margin-bottom: 10px; }
         .password-input { margin: 20px 0; }
-        .password-input input { 
-            width: 100%; 
-            padding: 12px; 
-            border: 2px solid #ddd; 
-            border-radius: 5px; 
-            font-size: 16px; 
-        }
-        .login-btn { 
-            background: #667eea; 
-            color: white; 
-            border: none; 
-            padding: 12px 30px; 
-            border-radius: 5px; 
-            font-size: 16px; 
-            cursor: pointer; 
-            width: 100%; 
-        }
+        .password-input input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; }
+        .login-btn { background: #667eea; color: white; border: none; padding: 12px 30px; border-radius: 5px; font-size: 16px; cursor: pointer; width: 100%; }
         .error-message { color: red; margin-top: 10px; display: none; }
         
-        header { background: white; padding: 15px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        header { background: white; padding: 15px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px; font-size: 14px; }
+        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; margin: 2px; }
         .btn-success { background: #28a745; color: white; }
         .btn-info { background: #17a2b8; color: white; }
         .btn-danger { background: #dc3545; color: white; }
         .btn-warning { background: #ffc107; color: black; }
+        .btn-primary { background: #667eea; color: white; }
         
-        .main-tabs { display: flex; margin: 20px 0; border-bottom: 2px solid #ddd; }
-        .main-tab { 
-            padding: 12px 24px; 
-            background: none; 
-            border: none; 
-            cursor: pointer; 
-            border-bottom: 3px solid transparent; 
-            font-size: 16px;
-        }
-        .main-tab.active { border-bottom-color: #667eea; color: #667eea; font-weight: bold; }
+        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 5px rgba(0,0,0,0.1); }
+        .objekat-card { cursor: pointer; transition: all 0.2s; }
+        .objekat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         
-        .content-section { display: none; }
-        .content-section.active { display: block; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 25px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .close { font-size: 24px; cursor: pointer; border: none; background: none; }
         
-        .sync-status { 
-            padding: 10px; 
-            margin: 10px 0; 
-            border-radius: 5px; 
-            display: none; 
-        }
-        .sync-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .sync-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .sync-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .search-input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; }
+        .item-list { max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; }
+        .item-option { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .item-option:hover { background: #f0f0f0; }
         
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input, .form-group select, .form-group textarea { 
-            width: 100%; 
-            padding: 8px; 
-            border: 1px solid #ddd; 
-            border-radius: 4px; 
-        }
-        table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #f8f9fa; font-weight: bold; }
-        
-        .loading { opacity: 0.7; pointer-events: none; position: relative; }
-        .loading::after { 
-            content: "⏳"; 
-            position: absolute; 
-            right: 10px; 
-            top: 50%; 
-            transform: translateY(-50%); 
-        }
-
-        .config-panel {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border: 2px solid #667eea;
-        }
-
-        .auto-sync { 
-            display: inline-block; 
-            padding: 4px 8px; 
-            background: #28a745; 
-            color: white; 
-            border-radius: 12px; 
-            font-size: 0.8rem; 
-            margin-left: 10px; 
-        }
+        .transaction-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
+        .badge { padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .badge-active { background: #ffeaa7; color: #856404; }
+        .badge-returned { background: #d4edda; color: #155724; }
         
         @media (max-width: 768px) {
-            .header-content { flex-direction: column; text-align: center; }
-            .btn { margin: 5px; }
-            table { font-size: 12px; }
-            th, td { padding: 6px; }
+            .header-content { flex-direction: column; }
         }
     </style>
 </head>
 <body>
-    <!-- LOGIN SCREEN -->
+    <!-- LOGIN -->
     <div id="loginScreen" class="login-container">
         <div class="login-box">
             <div class="login-icon">🤝</div>
-            <h1 class="login-title">Pozajmnice</h1>
-            <p>Unesite šifru za pristup aplikaciji</p>
-            <div class="form-group password-input">
+            <h1>Pozajmnice</h1>
+            <p>Unesite šifru za pristup</p>
+            <div class="password-input">
                 <input type="password" id="passwordInput" placeholder="Šifra" autocomplete="off" value="123">
             </div>
             <button id="loginBtn" class="login-btn">Pristupi</button>
             <div id="errorMessage" class="error-message">Pogrešna šifra!</div>
-            <div style="margin-top: 15px; color: #666; font-size: 0.9rem;">
-                <strong>Šifra za test: 123</strong>
-            </div>
         </div>
     </div>
     
     <!-- APLIKACIJA -->
     <div id="appContent" style="display: none;">
         <header>
-            <div class="container">
-                <div class="header-content">
-                    <h1>🤝 Pozajmnice <span id="autoSyncIndicator" class="auto-sync" style="display: none;">Auto-sync</span></h1>
-                    <div>
-                        <button id="syncBtn" class="btn btn-info">🔄 Učitaj</button>
-                        <button id="saveBtn" class="btn btn-success">💾 Spremi</button>
-                        <button id="autoSyncBtn" class="btn btn-warning">⚡ Auto Sync</button>
-                        <button id="configBtn" class="btn btn-warning">⚙️ Podešavanje</button>
-                        <button id="logoutBtn" class="btn btn-danger">Odjava</button>
-                    </div>
+            <div class="container header-content">
+                <h1>🤝 Pozajmnice</h1>
+                <div>
+                    <button id="addObjekatBtn" class="btn btn-success">+ Novi objekat</button>
+                    <button id="addItemBtn" class="btn btn-info">+ Novi artikal</button>
+                    <button id="logoutBtn" class="btn btn-danger">Odjava</button>
                 </div>
             </div>
         </header>
-
+        
         <div class="container">
-            <div id="syncStatus" class="sync-status"></div>
-            
-            <!-- PODEŠAVANJE -->
-            <div id="configPanel" class="config-panel" style="display: none;">
-                <h3>⚙️ Podešavanje Automatske Sinhronizacije</h3>
-                
-                <div class="form-group">
-                    <label>Google Apps Script URL:</label>
-                    <input type="text" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/..." style="font-family: monospace; width: 100%;">
-                    <small>Dobijete nakon što deploy-ate Apps Script</small>
-                </div>
-                
-                <div style="background: #e7f3ff; padding: 15px; border-radius: 5px; margin: 15px 0;">
-                    <h4>📝 Kako podesiti:</h4>
-                    <ol style="margin-left: 20px;">
-                        <li>Idite na <a href="https://script.google.com" target="_blank">script.google.com</a></li>
-                        <li>Kreirajte novi projekt</li>
-                        <li>Zalijepite kod iz konzole (F12 → Console)</li>
-                        <li>Deploy → New deployment → Web app</li>
-                        <li>Postavite: "Execute as me", "Anyone"</li>
-                        <li>Kopirajte URL i zalijepite ovdje</li>
-                    </ol>
-                    <button id="showScriptCode" class="btn btn-info">Prikaži Apps Script Kod</button>
-                </div>
-                
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <button id="testConnection" class="btn btn-info">Testiraj konekciju</button>
-                    <button id="saveConfig" class="btn btn-success">Spremi URL</button>
-                    <button id="closeConfig" class="btn btn-danger">Zatvori</button>
-                </div>
-                
-                <div id="configStatus" style="margin-top: 15px;"></div>
+            <div id="objektiList" class="card">
+                <h2>Objekti</h2>
+                <div id="objektiContainer"></div>
             </div>
-            
-            <!-- TABOVI -->
-            <div class="main-tabs">
-                <button class="main-tab active" data-section="objekti">Objekti</button>
-                <button class="main-tab" data-section="transactions">Sve Transakcije</button>
-                <button class="main-tab" data-section="items">Artikli</button>
+        </div>
+    </div>
+    
+    <!-- MODAL ZA POZAJMICU -->
+    <div id="transactionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Pozajmica</h3>
+                <button class="close" onclick="closeModal('transactionModal')">&times;</button>
             </div>
-            
-            <!-- OBJEKTI -->
-            <div id="objekti" class="content-section active">
-                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                    <h3>Dodaj novi objekat</h3>
-                    <form id="objekatForm">
-                        <div class="form-group">
-                            <label>Naziv objekta:</label>
-                            <input type="text" id="objekatName" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Kontakt:</label>
-                            <input type="text" id="objekatContact">
-                        </div>
-                        <div class="form-group">
-                            <label>Napomena:</label>
-                            <textarea id="objekatNote" rows="2"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-success">Dodaj objekat</button>
-                    </form>
-                </div>
-
-                <div style="background: white; padding: 20px; border-radius: 8px;">
-                    <h3>Lista objekata</h3>
-                    <table id="objektiTable">
-                        <thead>
-                            <tr>
-                                <th>Naziv</th>
-                                <th>Kontakt</th>
-                                <th>Napomena</th>
-                                <th>Akcije</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+    
+    <!-- MODAL ZA DODAVANJE OBJEKTA -->
+    <div id="objekatFormModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Dodaj objekat</h3>
+                <button class="close" onclick="closeModal('objekatFormModal')">&times;</button>
             </div>
-            
-            <!-- ARTIKLI -->
-            <div id="items" class="content-section">
-                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                    <h3>Dodaj novi artikal</h3>
-                    <form id="itemForm">
-                        <input type="hidden" id="editingItemId" value="">
-                        <div class="form-group">
-                            <label>Naziv artikla:</label>
-                            <input type="text" id="itemName" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Jedinica mjere:</label>
-                            <input type="text" id="itemUnit" placeholder="npr. komad, kg, litra..." required>
-                        </div>
-                        <button type="submit" class="btn btn-success">Dodaj artikal</button>
-                        <button type="button" id="cancelEdit" class="btn btn-danger" style="display: none;">Otkaži</button>
-                    </form>
-                </div>
-
-                <div style="background: white; padding: 20px; border-radius: 8px;">
-                    <h3>Lista artikala</h3>
-                    <table id="itemsTable">
-                        <thead>
-                            <tr>
-                                <th>Naziv</th>
-                                <th>Jedinica</th>
-                                <th>Akcije</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+            <input type="text" id="newObjekatName" placeholder="Naziv objekta" class="search-input">
+            <input type="text" id="newObjekatContact" placeholder="Kontakt" class="search-input">
+            <button onclick="addObjekat()" class="btn btn-success">Sačuvaj</button>
+        </div>
+    </div>
+    
+    <!-- MODAL ZA DODAVANJE ARTIKLA -->
+    <div id="itemFormModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Dodaj artikal</h3>
+                <button class="close" onclick="closeModal('itemFormModal')">&times;</button>
             </div>
-            
-            <!-- TRANSAKCIJE -->
-            <div id="transactions" class="content-section">
-                <div style="background: white; padding: 20px; border-radius: 8px;">
-                    <h3>Sve transakcije</h3>
-                    <table id="allTransactionsTable">
-                        <thead>
-                            <tr>
-                                <th>Datum</th>
-                                <th>Objekat</th>
-                                <th>Artikal</th>
-                                <th>Tip</th>
-                                <th>Količina</th>
-                                <th>Napomena</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
+            <input type="text" id="newItemName" placeholder="Naziv artikla" class="search-input">
+            <input type="text" id="newItemUnit" placeholder="Jedinica mere (kom, kg...)" class="search-input">
+            <button onclick="addItem()" class="btn btn-success">Sačuvaj</button>
         </div>
     </div>
 
     <script>
-        // ✅ KONFIGURACIJA
-        const APP_PASSWORD = "123";
+        // ==================== INSTANT DB INICIJALIZACIJA ====================
+        const APP_ID = '32af104c-3da3-4c9a-8ab0-b690ce1f9336';  // Tvoj App ID
+        const db = instantdb.init({ appId: APP_ID });
         
-        // Globalne varijable
-        let currentObjekatId = null;
+        // ==================== GLOBALNI PODACI (LOKALNI KEŠ) ====================
         let objekti = [];
         let items = [];
         let transactions = [];
-        let APPS_SCRIPT_URL = "";
-        let autoSyncEnabled = false;
-        let autoSyncInterval = null;
-
-        // ✅ KONFIGURACIJA APPS SCRIPT-A
-        function loadConfig() {
-            APPS_SCRIPT_URL = localStorage.getItem('appsScriptUrl') || '';
-            document.getElementById('scriptUrlInput').value = APPS_SCRIPT_URL;
-        }
-
-        function saveConfig() {
-            APPS_SCRIPT_URL = document.getElementById('scriptUrlInput').value.trim();
-            if (!APPS_SCRIPT_URL) {
-                showConfigStatus('❌ Unesite Apps Script URL!', 'error');
-                return;
-            }
-            
-            localStorage.setItem('appsScriptUrl', APPS_SCRIPT_URL);
-            showConfigStatus('✅ URL spremljen!', 'success');
-        }
-
-        function showAppsScriptCode() {
-            const scriptCode = `
-function doPost(e) {
-  try {
-    const data = JSON.parse(e.postData.contents);
-    if (data.action === 'SAVE_ALL_DATA') {
-      return saveAllData(data.data);
-    }
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      error: 'Nepoznata akcija'
-    })).setMimeType(ContentService.MimeType.JSON);
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      error: error.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function doGet(e) {
-  try {
-    if (e.parameter.action === 'LOAD_ALL_DATA') {
-      return loadAllData();
-    }
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      error: 'Nepoznata akcija'
-    })).setMimeType(ContentService.MimeType.JSON);
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      error: error.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function saveAllData(data) {
-  const scriptProperties = PropertiesService.getScriptProperties();
-  const allData = {
-    objekti: data.objekti || [],
-    items: data.items || [],
-    transactions: data.transactions || [],
-    lastUpdated: new Date().toISOString()
-  };
-  scriptProperties.setProperty('POZAJMNICE_DATA', JSON.stringify(allData));
-  return ContentService.createTextOutput(JSON.stringify({
-    success: true,
-    message: 'Svi podaci uspješno spremljeni',
-    timestamp: new Date().toISOString()
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
-function loadAllData() {
-  const scriptProperties = PropertiesService.getScriptProperties();
-  const storedData = scriptProperties.getProperty('POZAJMNICE_DATA');
-  if (!storedData) {
-    return ContentService.createTextOutput(JSON.stringify({
-      success: true,
-      data: { objekti: [], items: [], transactions: [] }
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-  try {
-    const data = JSON.parse(storedData);
-    return ContentService.createTextOutput(JSON.stringify({
-      success: true,
-      data: data,
-      lastUpdated: data.lastUpdated
-    })).setMimeType(ContentService.MimeType.JSON);
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      error: 'Greška pri čitanju podataka'
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-}`;
-            console.log('📝 KOPIRAJTE OVAJ KOD U GOOGLE APPS SCRIPT:\n', scriptCode);
-            alert('Apps Script kod je ispisan u konzoli (F12 → Console)');
-        }
-
-        async function testConnection() {
-            const url = document.getElementById('scriptUrlInput').value.trim();
-            if (!url) {
-                showConfigStatus('❌ Unesite Apps Script URL!', 'error');
-                return;
-            }
-            showConfigStatus('🔍 Testiram konekciju...', 'info');
-            try {
-                const response = await fetch(`${url}?action=LOAD_ALL_DATA&timestamp=${Date.now()}`);
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) {
-                        showConfigStatus('✅ Konekcija uspješna! Script radi.', 'success');
-                    } else {
-                        throw new Error(result.error);
-                    }
-                } else {
-                    throw new Error('Server error');
-                }
-            } catch (error) {
-                showConfigStatus('❌ Greška: ' + error.message, 'error');
-            }
-        }
-
-        function showConfigStatus(message, type) {
-            const statusEl = document.getElementById('configStatus');
-            statusEl.textContent = message;
-            statusEl.style.color = type === 'error' ? '#dc3545' : type === 'success' ? '#28a745' : '#17a2b8';
-            statusEl.style.fontWeight = 'bold';
-        }
-
-        // ✅ SINHRONIZACIJA
-        async function saveToSheets() {
-            if (!APPS_SCRIPT_URL) {
-                showSyncStatus('❌ Nije postavljen Apps Script URL. Idite u Podešavanje.', 'error');
-                return false;
-            }
-            showSyncStatus('💾 Spremanje podataka...', 'info');
-            try {
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'SAVE_ALL_DATA',
-                        data: {
-                            objekti: objekti,
-                            items: items,
-                            transactions: transactions,
-                            timestamp: new Date().toISOString()
-                        }
-                    })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    showSyncStatus('✅ Svi podaci uspješno spremljeni!', 'success');
-                    return true;
-                } else {
-                    throw new Error(result.error || 'Nepoznata greška');
-                }
-            } catch (error) {
-                console.error('Greška pri spremanju:', error);
-                showSyncStatus('❌ Greška pri spremanju: ' + error.message, 'error');
-                return false;
-            }
-        }
-
-        async function loadFromGoogleSheets() {
-            if (!APPS_SCRIPT_URL) {
-                showSyncStatus('ℹ️ Nema Apps Script URL-a. Koristim lokalne podatke.', 'warning');
-                loadFromLocalStorage();
-                return false;
-            }
-            showSyncStatus('🔄 Učitavam podatke...', 'info');
-            try {
-                const response = await fetch(`${APPS_SCRIPT_URL}?action=LOAD_ALL_DATA&timestamp=${Date.now()}`);
-                if (!response.ok) throw new Error('Server error');
-                const result = await response.json();
-                if (result.success && result.data) {
-                    objekti = result.data.objekti || [];
-                    items = result.data.items || [];
-                    transactions = result.data.transactions || [];
-                    saveToLocalStorage();
-                    showSyncStatus('✅ Podaci uspješno učitani!', 'success');
-                    return true;
-                } else {
-                    throw new Error(result.error || 'Nema podataka');
-                }
-            } catch (error) {
-                console.log('Učitavam lokalne podatke...', error);
-                loadFromLocalStorage();
-                showSyncStatus('ℹ️ Koristim lokalne podatke', 'warning');
-                return false;
-            }
-        }
-
-        function toggleAutoSync() {
-            autoSyncEnabled = !autoSyncEnabled;
-            const button = document.getElementById('autoSyncBtn');
-            const indicator = document.getElementById('autoSyncIndicator');
-            if (autoSyncEnabled) {
-                button.innerHTML = '⏸ Auto Sync';
-                button.style.background = '#28a745';
-                indicator.style.display = 'inline-block';
-                startAutoSync();
-                showSyncStatus('✅ Automatska sinhronizacija uključena!', 'success');
-            } else {
-                button.innerHTML = '⚡ Auto Sync';
-                button.style.background = '#ffc107';
-                indicator.style.display = 'none';
-                stopAutoSync();
-                showSyncStatus('⏸ Automatska sinhronizacija isključena', 'info');
-            }
-        }
-
-        function startAutoSync() {
-            autoSyncInterval = setInterval(async () => {
-                await performAutoSync();
-            }, 30000);
-            performAutoSync();
-        }
-
-        function stopAutoSync() {
-            if (autoSyncInterval) {
-                clearInterval(autoSyncInterval);
-                autoSyncInterval = null;
-            }
-        }
-
-        async function performAutoSync() {
-            try {
-                await saveToSheets();
-                const now = new Date().toLocaleTimeString();
-                document.getElementById('autoSyncIndicator').textContent = `Sync: ${now}`;
-            } catch (error) {
-                console.error('Auto-sync greška:', error);
-            }
-        }
-
-        // ✅ LOKALNO SPREMANJE
-        function saveToLocalStorage() {
-            localStorage.setItem('objekti', JSON.stringify(objekti));
-            localStorage.setItem('items', JSON.stringify(items));
-            localStorage.setItem('transactions', JSON.stringify(transactions));
-        }
-
-        function loadFromLocalStorage() {
-            objekti = JSON.parse(localStorage.getItem('objekti')) || [];
-            items = JSON.parse(localStorage.getItem('items')) || [];
-            transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-        }
-
-        function showSyncStatus(message, type = 'info') {
-            const statusEl = document.getElementById('syncStatus');
-            statusEl.textContent = message;
-            statusEl.className = `sync-status ${type === 'error' ? 'sync-error' : type === 'warning' ? 'sync-warning' : 'sync-success'}`;
-            statusEl.style.display = 'block';
-            setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
-        }
-
-        // ✅ EVENT LISTENERI
+        let currentUser = null;
+        
+        // ==================== AUTENTIFIKACIJA ====================
+        const APP_PASSWORD = "123";
+        
         document.getElementById('loginBtn').addEventListener('click', login);
         document.getElementById('passwordInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') login();
         });
         
-        document.getElementById('logoutBtn').addEventListener('click', function() {
-            stopAutoSync();
-            document.getElementById('appContent').style.display = 'none';
-            document.getElementById('loginScreen').style.display = 'flex';
-        });
-        
-        document.getElementById('syncBtn').addEventListener('click', async function() {
-            this.classList.add('loading');
-            await loadFromGoogleSheets();
-            refreshAllData();
-            this.classList.remove('loading');
-        });
-        
-        document.getElementById('saveBtn').addEventListener('click', async function() {
-            this.classList.add('loading');
-            await saveToSheets();
-            this.classList.remove('loading');
-        });
-        
-        document.getElementById('autoSyncBtn').addEventListener('click', toggleAutoSync);
-        document.getElementById('configBtn').addEventListener('click', function() {
-            const panel = document.getElementById('configPanel');
-            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        });
-        
-        document.getElementById('saveConfig').addEventListener('click', saveConfig);
-        document.getElementById('testConnection').addEventListener('click', testConnection);
-        document.getElementById('showScriptCode').addEventListener('click', showAppsScriptCode);
-        document.getElementById('closeConfig').addEventListener('click', function() {
-            document.getElementById('configPanel').style.display = 'none';
-        });
-        
-        async function login() {
+        function login() {
             const password = document.getElementById('passwordInput').value;
             if (password === APP_PASSWORD) {
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('appContent').style.display = 'block';
-                await initApp();
+                currentUser = 'user';
+                initApp();
             } else {
                 document.getElementById('errorMessage').style.display = 'block';
             }
         }
         
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            document.getElementById('appContent').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+            currentUser = null;
+        });
+        
+        // ==================== INICIJALIZACIJA I SINHRONIZACIJA ====================
         async function initApp() {
-            loadConfig();
-            setupEventListeners();
-            await loadFromGoogleSheets();
-            refreshAllData();
-        }
-        
-        function refreshAllData() {
-            loadObjekti();
-            loadItems();
-            loadAllTransactions();
-        }
-
-        function setupEventListeners() {
-            document.querySelectorAll('.main-tab').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
-                    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-                    this.classList.add('active');
-                    document.getElementById(this.dataset.section).classList.add('active');
-                });
-            });
-            
-            document.getElementById('objekatForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                await addObjekat(e);
-                if (autoSyncEnabled) await saveToSheets();
-            });
-            
-            document.getElementById('itemForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                await handleItemForm(e);
-                if (autoSyncEnabled) await saveToSheets();
-            });
-            
-            document.getElementById('cancelEdit').addEventListener('click', cancelItemEdit);
-        }
-        
-        // ✅ FUNKCIJE ZA PRIKAZ
-        function loadObjekti() {
-            const tbody = document.querySelector('#objektiTable tbody');
-            tbody.innerHTML = '';
-            objekti.forEach(objekat => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${objekat.name}</td>
-                    <td>${objekat.contact}</td>
-                    <td>${objekat.note}</td>
-                    <td>
-                        <button onclick="showObjekatDetail('${objekat.id}')" class="btn btn-info">Detalji</button>
-                        <button onclick="deleteObjekat('${objekat.id}')" class="btn btn-danger">Obriši</button>
-                    </td>`;
-                tbody.appendChild(row);
-            });
-        }
-        
-        function loadItems() {
-            const tbody = document.querySelector('#itemsTable tbody');
-            tbody.innerHTML = '';
-            items.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${item.name}</td>
-                    <td>${item.unit}</td>
-                    <td>
-                        <button onclick="editItem('${item.id}')" class="btn btn-info">Uredi</button>
-                        <button onclick="deleteItem('${item.id}')" class="btn btn-danger">Obriši</button>
-                    </td>`;
-                tbody.appendChild(row);
-            });
-        }
-        
-        function loadAllTransactions() {
-            const tbody = document.querySelector('#allTransactionsTable tbody');
-            tbody.innerHTML = '';
-            transactions.forEach(trans => {
-                const objekat = objekti.find(o => o.id === trans.objekatId) || {name: 'Nepoznato'};
-                const item = items.find(i => i.id === trans.itemId) || {name: 'Nepoznato'};
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${trans.date}</td>
-                    <td>${objekat.name}</td>
-                    <td>${item.name}</td>
-                    <td>${trans.type === 'pozajmica' ? '📤 Pozajmica' : '📥 Vraćeno'}</td>
-                    <td>${trans.quantity} ${item.unit}</td>
-                    <td>${trans.note}</td>`;
-                tbody.appendChild(row);
-            });
-        }
-        
-        function generateId() {
-            return Date.now().toString(36) + Math.random().toString(36).substr(2);
-        }
-        
-        async function addObjekat(e) {
-            e.preventDefault();
-            const objekat = {
-                id: generateId(),
-                name: document.getElementById('objekatName').value,
-                contact: document.getElementById('objekatContact').value,
-                note: document.getElementById('objekatNote').value,
-                createdAt: new Date().toISOString()
-            };
-            objekti.push(objekat);
-            saveToLocalStorage();
-            loadObjekti();
-            document.getElementById('objekatForm').reset();
-            showSyncStatus('Objekat dodan!' + (autoSyncEnabled ? ' Automatski spremljeno.' : ''), 'success');
-        }
-        
-        async function handleItemForm(e) {
-            e.preventDefault();
-            const editingId = document.getElementById('editingItemId').value;
-            if (editingId) {
-                const itemIndex = items.findIndex(item => item.id === editingId);
-                if (itemIndex !== -1) {
-                    items[itemIndex] = {
-                        ...items[itemIndex],
-                        name: document.getElementById('itemName').value,
-                        unit: document.getElementById('itemUnit').value
-                    };
-                    saveToLocalStorage();
-                    loadItems();
-                    cancelItemEdit();
-                    showSyncStatus('Artikal ažuriran!' + (autoSyncEnabled ? ' Automatski spremljeno.' : ''), 'success');
+            db.subscribeQuery({ globalData: {} }, (data) => {
+                if (data && data.globalData && data.globalData.length > 0) {
+                    const gd = data.globalData[0].data;
+                    objekti = gd.objekti || [];
+                    items = gd.items || [];
+                    transactions = gd.transactions || [];
+                    renderObjekti();
                 }
-            } else {
-                const item = {
-                    id: generateId(),
-                    name: document.getElementById('itemName').value,
-                    unit: document.getElementById('itemUnit').value
-                };
-                items.push(item);
-                saveToLocalStorage();
-                loadItems();
-                document.getElementById('itemForm').reset();
-                showSyncStatus('Artikal dodan!' + (autoSyncEnabled ? ' Automatski spremljeno.' : ''), 'success');
+            });
+            
+            const snapshot = await db.queryOnce({ globalData: {} });
+            if (!snapshot || snapshot.globalData.length === 0) {
+                await db.transact(db.tx.globalData['main'].update({
+                    data: { objekti: [], items: [], transactions: [] }
+                }));
             }
         }
         
-        function editItem(itemId) {
-            const item = items.find(i => i.id === itemId);
-            if (item) {
-                document.getElementById('editingItemId').value = item.id;
-                document.getElementById('itemName').value = item.name;
-                document.getElementById('itemUnit').value = item.unit;
-                document.getElementById('cancelEdit').style.display = 'inline-block';
+        async function updateDatabase() {
+            await db.transact(db.tx.globalData['main'].update({
+                data: { objekti, items, transactions }
+            }));
+        }
+        
+        // ==================== RENDER OBJEKATA ====================
+        function renderObjekti() {
+            const container = document.getElementById('objektiContainer');
+            container.innerHTML = '';
+            objekti.forEach(obj => {
+                const aktivne = transactions.filter(t => t.objekatId === obj.id && t.status === 'aktivno');
+                const dugujuNama = aktivne.filter(t => t.type === 'pozajmica_od_njih').reduce((sum, t) => sum + (t.quantity || 1), 0);
+                const dugujemoMi = aktivne.filter(t => t.type === 'pozajmica_od_nas').reduce((sum, t) => sum + (t.quantity || 1), 0);
+                
+                const card = document.createElement('div');
+                card.className = 'card objekat-card';
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>${obj.name}</strong> ${obj.contact ? '(' + obj.contact + ')' : ''}
+                            <div style="font-size: 0.9rem; margin-top: 5px;">
+                                ${aktivne.length > 0 ? 
+                                    `📊 Duguju nama: ${dugujuNama} | Mi dugujemo: ${dugujemoMi}` : 
+                                    '✅ Sve razduženo'}
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn btn-info" onclick="openTransactionModal('${obj.id}', 'pozajmica_od_njih')">Oni nama duguju</button>
+                            <button class="btn btn-warning" onclick="openTransactionModal('${obj.id}', 'pozajmica_od_nas')">Mi njima dugujemo</button>
+                        </div>
+                    </div>
+                    ${aktivne.length > 0 ? `<div style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px;">
+                        <strong>Aktivne pozajmice:</strong>
+                        ${aktivne.map(t => {
+                            const item = items.find(i => i.id === t.itemId);
+                            return `<div class="transaction-row">
+                                <span>${item ? item.name : 'Nepoznato'} (${t.quantity || 1} ${item ? item.unit : ''})</span>
+                                <span class="badge badge-active">${t.type === 'pozajmica_od_njih' ? 'Oni duguju' : 'Mi dugujemo'}</span>
+                                <button class="btn btn-success btn-sm" onclick="razduzi('${t.id}')">Razduži</button>
+                            </div>`;
+                        }).join('')}
+                    </div>` : ''}
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        // ==================== TRANSAKCIJE ====================
+        function openTransactionModal(objekatId, type) {
+            const modal = document.getElementById('transactionModal');
+            document.getElementById('modalTitle').textContent = 
+                type === 'pozajmica_od_njih' ? 'Pozajmica – oni nama duguju' : 'Pozajmica – mi njima dugujemo';
+            
+            let html = `
+                <input type="text" id="itemSearch" placeholder="Pretraži artikal..." class="search-input" oninput="filterItems()">
+                <div class="item-list" id="itemListContainer"></div>
+                <div style="margin-top: 15px;">
+                    <label>Količina:</label>
+                    <input type="number" id="quantity" value="1" min="1" style="width: 80px; padding: 5px;">
+                </div>
+                <button onclick="saveTransaction('${objekatId}', '${type}')" class="btn btn-success" style="margin-top: 10px;">Sačuvaj pozajmicu</button>
+            `;
+            document.getElementById('modalBody').innerHTML = html;
+            currentTransactionType = type;
+            currentTransactionObjekatId = objekatId;
+            filterItems();
+            modal.classList.add('active');
+        }
+        
+        function filterItems() {
+            const search = document.getElementById('itemSearch')?.value.toLowerCase() || '';
+            const filtered = items.filter(item => item.name.toLowerCase().includes(search));
+            const container = document.getElementById('itemListContainer');
+            container.innerHTML = '';
+            filtered.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'item-option';
+                div.textContent = `${item.name} (${item.unit})`;
+                div.onclick = () => selectItem(item.id);
+                container.appendChild(div);
+            });
+        }
+        
+        let selectedItemId = null;
+        function selectItem(itemId) {
+            selectedItemId = itemId;
+            document.querySelectorAll('.item-option').forEach(el => el.style.background = '');
+            event.target.style.background = '#d4edda';
+        }
+        
+        async function saveTransaction(objekatId, type) {
+            if (!selectedItemId) {
+                alert('Odaberi artikal!');
+                return;
+            }
+            const quantity = parseInt(document.getElementById('quantity').value) || 1;
+            
+            const newTrans = {
+                id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                objekatId,
+                itemId: selectedItemId,
+                type,
+                quantity,
+                date: new Date().toISOString(),
+                status: 'aktivno'
+            };
+            transactions.push(newTrans);
+            await updateDatabase();
+            closeModal('transactionModal');
+        }
+        
+        async function razduzi(transactionId) {
+            if (confirm('Potvrdi razduženje – ova pozajmica će biti označena kao vraćena.')) {
+                const trans = transactions.find(t => t.id === transactionId);
+                if (trans) {
+                    trans.status = 'vraceno';
+                    await updateDatabase();
+                }
             }
         }
         
-        function cancelItemEdit() {
-            document.getElementById('editingItemId').value = '';
-            document.getElementById('itemForm').reset();
-            document.getElementById('cancelEdit').style.display = 'none';
+        // ==================== DODAVANJE OBJEKATA I ARTIKALA ====================
+        document.getElementById('addObjekatBtn').addEventListener('click', () => {
+            document.getElementById('objekatFormModal').classList.add('active');
+        });
+        document.getElementById('addItemBtn').addEventListener('click', () => {
+            document.getElementById('itemFormModal').classList.add('active');
+        });
+        
+        async function addObjekat() {
+            const name = document.getElementById('newObjekatName').value.trim();
+            if (!name) return alert('Unesite naziv');
+            objekti.push({
+                id: Date.now().toString(36),
+                name,
+                contact: document.getElementById('newObjekatContact').value.trim()
+            });
+            document.getElementById('newObjekatName').value = '';
+            document.getElementById('newObjekatContact').value = '';
+            await updateDatabase();
+            closeModal('objekatFormModal');
         }
         
-        async function deleteObjekat(objekatId) {
-            if (confirm('Da li ste sigurni da želite obrisati ovaj objekat?')) {
-                objekti = objekti.filter(o => o.id !== objekatId);
-                transactions = transactions.filter(t => t.objekatId !== objekatId);
-                saveToLocalStorage();
-                loadObjekti();
-                if (autoSyncEnabled) await saveToSheets();
-                showSyncStatus('Objekat obrisan!' + (autoSyncEnabled ? ' Automatski spremljeno.' : ''), 'success');
-            }
+        async function addItem() {
+            const name = document.getElementById('newItemName').value.trim();
+            const unit = document.getElementById('newItemUnit').value.trim();
+            if (!name || !unit) return alert('Unesite naziv i jedinicu');
+            items.push({
+                id: Date.now().toString(36),
+                name,
+                unit
+            });
+            document.getElementById('newItemName').value = '';
+            document.getElementById('newItemUnit').value = '';
+            await updateDatabase();
+            closeModal('itemFormModal');
         }
         
-        async function deleteItem(itemId) {
-            if (confirm('Da li ste sigurni da želite obrisati ovaj artikal?')) {
-                items = items.filter(i => i.id !== itemId);
-                transactions = transactions.filter(t => t.itemId !== itemId);
-                saveToLocalStorage();
-                loadItems();
-                if (autoSyncEnabled) await saveToSheets();
-                showSyncStatus('Artikal obrisan!' + (autoSyncEnabled ? ' Automatski spremljeno.' : ''), 'success');
-            }
+        // ==================== POMOĆNE FUNKCIJE ====================
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            selectedItemId = null;
         }
         
-        function showObjekatDetail(objekatId) {
-            const objekat = objekti.find(o => o.id === objekatId);
-            if (objekat) {
-                alert(`📋 ${objekat.name}\n📞 ${objekat.contact}\n📝 ${objekat.note}`);
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
             }
-        }
+        };
         
         window.onload = function() {
             document.getElementById('passwordInput').focus();
