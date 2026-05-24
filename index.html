@@ -38,7 +38,6 @@
         .btn-warning { background: #ffc107; color: black; }
         .btn-sm { padding: 5px 12px; font-size: 13px; }
         
-        /* DUPLO ŠIRA DUGMAD ZA POZAJMICE */
         .btn-pozajmica { padding: 12px 24px; font-size: 15px; min-width: 160px; border-radius: 10px; font-weight: bold; }
         .btn-duguju-nama { background: #0d6efd; color: white; }
         .btn-mi-dugujemo { background: #fd7e14; color: white; }
@@ -69,13 +68,11 @@
         .badge-duguju-nama { background: #cfe2ff; color: #084298; }
         .badge-mi-dugujemo { background: #ffe5d0; color: #a1440a; }
         
-        /* VRACENO - precrtano i druga boja */
         .row-vraceno { background: #f8fff8; opacity: 0.85; }
         .row-vraceno td { text-decoration: line-through; color: #6c757d; }
         .row-vraceno td:last-child { text-decoration: none; }
         
-        /* Aktivne pozajmice - novije na vrhu */
-        .aktivne-lista { display: flex; flex-direction: column-reverse; }
+        .aktivne-lista { display: flex; flex-direction: column; }
         
         @media (max-width: 768px) {
             .header-content { flex-direction: column; }
@@ -253,7 +250,6 @@
                                 ` : '<span style="color:#28a745;font-weight:bold;">✅ Sve razduženo</span>'}
                             </div>
                         </div>
-                        <!-- DUPLO ŠIRA DUGMAD -->
                         <div style="display:flex;gap:8px;flex-wrap:wrap;">
                             <button class="btn btn-pozajmica btn-duguju-nama" onclick="openTransaction('${obj.id}','duguju_nama')">📤 Oni duguju</button>
                             <button class="btn btn-pozajmica btn-mi-dugujemo" onclick="openTransaction('${obj.id}','mi_dugujemo')">📥 Mi dugujemo</button>
@@ -263,7 +259,6 @@
                     ${aktivne.length > 0 ? `
                         <div style="margin-top:15px;border-top:2px solid #eee;padding-top:10px;">
                             <strong style="font-size:14px;">Aktivne pozajmice (najnovije na vrhu):</strong>
-                            <div class="aktivne-liste">
                             ${[...aktivne].reverse().map(t => {
                                 const item = items.find(i => i.id === t.itemId);
                                 return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;gap:10px;flex-wrap:wrap;border-bottom:1px dashed #eee;">
@@ -273,7 +268,6 @@
                                     <button class="btn btn-success btn-sm" onclick="vrati('${t.id}')">✅ Vrati</button>
                                 </div>`;
                             }).join('')}
-                            </div>
                         </div>
                     ` : ''}
                 `;
@@ -304,7 +298,6 @@
                 const item = items.find(i => i.id === t.itemId);
                 const row = document.createElement('tr');
                 
-                // Vraćene transakcije su precrtane i druge boje
                 if (t.status === 'vraceno') {
                     row.className = 'row-vraceno';
                 }
@@ -363,7 +356,7 @@
             }
         }
         
-        // ==================== TRANSAKCIJE ====================
+        // ==================== TRANSAKCIJE (VIŠE NE SABIRA AUTOMATSKI) ====================
         function openTransaction(objekatId, type) {
             const obj = objekti.find(o => o.id === objekatId);
             document.getElementById('modalTitle').textContent = type==='duguju_nama' 
@@ -419,28 +412,17 @@
             }
             const quantity = parseInt(document.getElementById('quantity').value) || 1;
             
-            // Sabiranje sa postojećim aktivnim pozajmicama istog artikla i tipa
-            const existing = transactions.find(t => 
-                t.objekatId === objekatId && 
-                t.itemId === selectedItemId && 
-                t.type === type && 
-                t.status === 'aktivno'
-            );
-            
-            if (existing) {
-                existing.quantity += quantity;
-            } else {
-                transactions.push({
-                    id: Date.now().toString(36),
-                    objekatId,
-                    itemId: selectedItemId,
-                    type,
-                    quantity,
-                    dateBorrowed: new Date().toLocaleString('hr'),
-                    dateReturned: null,
-                    status: 'aktivno'
-                });
-            }
+            // Uvek dodaj NOVU transakciju, ne sabiraj sa starom
+            transactions.push({
+                id: Date.now().toString(36),
+                objekatId,
+                itemId: selectedItemId,
+                type,
+                quantity,
+                dateBorrowed: new Date().toLocaleString('hr'),
+                dateReturned: null,
+                status: 'aktivno'
+            });
             
             saveData();
             renderAll();
