@@ -7,19 +7,15 @@
     <meta name="theme-color" content="#667eea">
     <link rel="icon" type="image/png" href="https://img.icons8.com/color/48/handshake--v1.png">
     <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/handshake--v1.png">
-
     <script>
         const blob = new Blob([JSON.stringify({
             name: "Pozajmnice", short_name: "Pozajmnice", start_url: "/", display: "standalone",
             background_color: "#f5f5f5", theme_color: "#667eea",
-            icons: [
-                { src: "https://img.icons8.com/color/192/handshake--v1.png", sizes: "192x192", type: "image/png", purpose: "any" },
-                { src: "https://img.icons8.com/color/512/handshake--v1.png", sizes: "512x512", type: "image/png", purpose: "any maskable" }
-            ]
+            icons: [{ src: "https://img.icons8.com/color/192/handshake--v1.png", sizes: "192x192", type: "image/png", purpose: "any" },
+            { src: "https://img.icons8.com/color/512/handshake--v1.png", sizes: "512x512", type: "image/png", purpose: "any maskable" }]
         })], {type:'application/json'});
         document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${URL.createObjectURL(blob)}">`);
     </script>
-
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; }
@@ -33,13 +29,10 @@
         header { background: white; padding: 15px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; margin: 2px; color: white; font-weight: bold; }
-        .btn-success { background: #28a745; }
-        .btn-info { background: #17a2b8; }
-        .btn-danger { background: #dc3545; }
+        .btn-success { background: #28a745; } .btn-info { background: #17a2b8; } .btn-danger { background: #dc3545; }
         .btn-sm { padding: 5px 12px; font-size: 13px; }
         .btn-pozajmica { padding: 12px 24px; font-size: 15px; min-width: 160px; border-radius: 10px; font-weight: bold; }
-        .btn-duguju-nama { background: #0d6efd; color: white; }
-        .btn-mi-dugujemo { background: #fd7e14; color: white; }
+        .btn-duguju-nama { background: #0d6efd; color: white; } .btn-mi-dugujemo { background: #fd7e14; color: white; }
         .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 5px rgba(0,0,0,0.1); }
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
         .modal.active { display: flex; }
@@ -50,8 +43,7 @@
         .item-option { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 15px; }
         .item-option:hover { background: #f0f0f0; }
         .badge { padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; display: inline-block; }
-        .badge-duguju-nama { background: #cfe2ff; color: #084298; }
-        .badge-mi-dugujemo { background: #ffe5d0; color: #a1440a; }
+        .badge-duguju-nama { background: #cfe2ff; color: #084298; } .badge-mi-dugujemo { background: #ffe5d0; color: #a1440a; }
     </style>
 </head>
 <body>
@@ -60,9 +52,7 @@
             <div class="login-icon">🤝</div>
             <h1>Pozajmnice</h1>
             <p>Unesite šifru</p>
-            <div class="password-input">
-                <input type="password" id="passwordInput" placeholder="Šifra" autocomplete="off" value="123">
-            </div>
+            <div class="password-input"><input type="password" id="passwordInput" placeholder="Šifra" autocomplete="off" value="123"></div>
             <button id="loginBtn" class="login-btn">Pristupi</button>
             <div style="margin-top:15px;color:#666;">Šifra: <strong>123</strong></div>
         </div>
@@ -82,14 +72,12 @@
         <div class="container"><div id="objektiContainer"></div></div>
     </div>
 
-    <!-- MODALI -->
     <div id="transactionModal" class="modal">
         <div class="modal-content">
             <div class="modal-header"><h3 id="modalTitle"></h3><button onclick="closeModal('transactionModal')" style="font-size:24px;background:none;border:none;">&times;</button></div>
             <div id="modalBody"></div>
         </div>
     </div>
-    
     <div id="objekatFormModal" class="modal">
         <div class="modal-content">
             <div class="modal-header"><h3>Dodaj objekat</h3><button onclick="closeModal('objekatFormModal')" style="font-size:24px;background:none;border:none;">&times;</button></div>
@@ -98,7 +86,6 @@
             <button onclick="addObjekat()" class="btn btn-success">Sačuvaj</button>
         </div>
     </div>
-    
     <div id="itemFormModal" class="modal">
         <div class="modal-content">
             <div class="modal-header"><h3>Dodaj artikal</h3><button onclick="closeModal('itemFormModal')" style="font-size:24px;background:none;border:none;">&times;</button></div>
@@ -109,8 +96,10 @@
     </div>
 
     <script>
-        // ARTIKLI DIREKTNO U KODU
-        const items = [
+        // Učitaj podatke iz localStorage ILI koristi inicijalne
+        let savedData = JSON.parse(localStorage.getItem('poz_data') || 'null');
+        
+        let items = savedData?.items || [
             { id: '1', name: 'Koka kola 0.25', unit: 'kom' },
             { id: '2', name: 'Fanta 0.25', unit: 'kom' },
             { id: '3', name: 'Sprite 0.25', unit: 'kom' },
@@ -138,52 +127,54 @@
             { id: '25', name: 'Palačinke', unit: 'porcija' }
         ];
 
-        let objekti = JSON.parse(localStorage.getItem('poz_obj') || '[]');
-        let transactions = JSON.parse(localStorage.getItem('poz_trans') || '[]');
+        let objekti = savedData?.objekti || [];
+        let transactions = savedData?.transactions || [];
         let selectedItemId = null;
 
         function saveData() {
-            localStorage.setItem('poz_obj', JSON.stringify(objekti));
-            localStorage.setItem('poz_trans', JSON.stringify(transactions));
+            localStorage.setItem('poz_data', JSON.stringify({ objekti, items, transactions }));
         }
 
-        document.getElementById('loginBtn').onclick = function() {
+        // === LOGIN ===
+        document.getElementById('loginBtn').onclick = () => {
             if (document.getElementById('passwordInput').value === '123') {
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('appContent').style.display = 'block';
                 renderObjekti();
             }
         };
-
-        document.getElementById('logoutBtn').onclick = function() {
+        document.getElementById('logoutBtn').onclick = () => {
             document.getElementById('appContent').style.display = 'none';
             document.getElementById('loginScreen').style.display = 'flex';
         };
 
+        // === RENDER ===
         function renderObjekti() {
             const container = document.getElementById('objektiContainer');
-            container.innerHTML = '';
-            if (objekti.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">Nema objekata. Kliknite "+ Objekat".</p>';
-                return;
-            }
+            container.innerHTML = objekti.length === 0 
+                ? '<p style="text-align:center;color:#999;padding:20px;">Nema objekata. Kliknite "+ Objekat".</p>' 
+                : '';
             objekti.forEach(obj => {
-                const aktivne = transactions.filter(t => t.objekatId === obj.id && t.status === 'aktivno');
-                const dNama = aktivne.filter(t => t.type === 'duguju_nama').reduce((s, t) => s + t.quantity, 0);
-                const miD = aktivne.filter(t => t.type === 'mi_dugujemo').reduce((s, t) => s + t.quantity, 0);
+                const akt = transactions.filter(t => t.objekatId === obj.id && t.status === 'aktivno');
+                const dNama = akt.filter(t => t.type === 'duguju_nama').reduce((s, t) => s + t.quantity, 0);
+                const miD = akt.filter(t => t.type === 'mi_dugujemo').reduce((s, t) => s + t.quantity, 0);
                 const card = document.createElement('div'); card.className = 'card';
-                card.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
-                    <div><h3>${obj.name}</h3>${obj.contact||''}
-                    <div>${aktivne.length>0?`<span class="badge badge-duguju-nama">📤 Duguju: ${dNama.toFixed(2)}</span> <span class="badge badge-mi-dugujemo">📥 Dugujemo: ${miD.toFixed(2)}</span>`:'<span style="color:#28a745;">✅ Razduženo</span>'}</div></div>
-                    <div style="display:flex;gap:5px;flex-wrap:wrap;">
-                    <button class="btn btn-pozajmica btn-duguju-nama" onclick="openTransaction('${obj.id}','duguju_nama')">📤 Oni duguju</button>
-                    <button class="btn btn-pozajmica btn-mi-dugujemo" onclick="openTransaction('${obj.id}','mi_dugujemo')">📥 Mi dugujemo</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteObjekat('${obj.id}')">🗑</button></div></div>
-                    ${aktivne.length>0?`<div style="margin-top:10px;border-top:1px solid #eee;padding-top:10px;">${[...aktivne].reverse().map(t=>{const item=items.find(i=>i.id===t.itemId);return`<div style="display:flex;justify-content:space-between;padding:5px 0;">${item?.name||'?'} ×${t.quantity} ${item?.unit||''} <button class="btn btn-success btn-sm" onclick="vrati('${t.id}')">✅ Vrati</button></div>`;}).join('')}</div>`:''}`;
+                card.innerHTML = `
+                    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                        <div><h3>${obj.name}</h3>${obj.contact||''}
+                        <div>${akt.length>0?`<span class="badge badge-duguju-nama">📤 Duguju: ${dNama.toFixed(2)}</span> <span class="badge badge-mi-dugujemo">📥 Dugujemo: ${miD.toFixed(2)}</span>`:'<span style="color:#28a745;">✅ Razduženo</span>'}</div></div>
+                        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                            <button class="btn btn-pozajmica btn-duguju-nama" onclick="openTransaction('${obj.id}','duguju_nama')">📤 Oni duguju</button>
+                            <button class="btn btn-pozajmica btn-mi-dugujemo" onclick="openTransaction('${obj.id}','mi_dugujemo')">📥 Mi dugujemo</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteObjekat('${obj.id}')">🗑</button>
+                        </div>
+                    </div>
+                    ${akt.length>0?`<div style="margin-top:10px;border-top:1px solid #eee;padding-top:10px;">${[...akt].reverse().map(t=>{const item=items.find(i=>i.id===t.itemId);return`<div style="display:flex;justify-content:space-between;padding:5px 0;">${item?.name||'?'} ×${t.quantity} ${item?.unit||''} <button class="btn btn-success btn-sm" onclick="vrati('${t.id}')">✅ Vrati</button></div>`;}).join('')}</div>`:''}`;
                 container.appendChild(card);
             });
         }
 
+        // === TRANSAKCIJE ===
         function openTransaction(objekatId, type) {
             const obj = objekti.find(o => o.id === objekatId);
             document.getElementById('modalTitle').textContent = type==='duguju_nama' ? `📤 ${obj?.name} duguje nama` : `📥 Mi dugujemo: ${obj?.name}`;
@@ -191,8 +182,8 @@
                 <input type="text" id="itemSearch" placeholder="🔍 Pretraži artikal..." class="search-input" oninput="filterItems()">
                 <div class="item-list" id="itemListContainer"></div>
                 <div style="margin-top:15px;"><label>Količina:</label>
-                <input type="number" id="quantity" value="1" min="0.01" step="any" style="width:120px;padding:10px;font-size:16px;"></div>
-                <button onclick="saveTransaction('${objekatId}','${type}')" class="btn btn-success" style="margin-top:15px;width:100%;padding:12px;font-size:16px;">✅ Sačuvaj</button>`;
+                <input type="number" id="quantity" value="1" min="0.01" step="any" style="width:120px;padding:10px;"></div>
+                <button onclick="saveTransaction('${objekatId}','${type}')" class="btn btn-success" style="margin-top:15px;width:100%;padding:12px;">✅ Sačuvaj</button>`;
             selectedItemId = null;
             filterItems();
             showModal('transactionModal');
@@ -203,12 +194,11 @@
             const filtered = items.filter(item => item.name.toLowerCase().includes(search));
             const container = document.getElementById('itemListContainer');
             if (!container) return;
-            container.innerHTML = '';
-            if (filtered.length === 0) { container.innerHTML = '<p style="padding:15px;color:#999;">Nema rezultata.</p>'; return; }
+            container.innerHTML = filtered.length === 0 ? '<p style="padding:15px;color:#999;">Nema artikala.</p>' : '';
             filtered.forEach(item => {
                 const div = document.createElement('div'); div.className = 'item-option';
                 div.textContent = `${item.name} (${item.unit})`;
-                div.onclick = function() { selectedItemId = item.id; document.querySelectorAll('.item-option').forEach(el => el.style.background = ''); this.style.background = '#d4edda'; };
+                div.onclick = () => { selectedItemId = item.id; document.querySelectorAll('.item-option').forEach(el => el.style.background = ''); div.style.background = '#d4edda'; };
                 container.appendChild(div);
             });
         }
@@ -228,7 +218,7 @@
         }
 
         function deleteObjekat(id) {
-            if (confirm('Obrisati?')) {
+            if (confirm('Obrisati objekat?')) {
                 objekti = objekti.filter(o => o.id !== id);
                 transactions = transactions.filter(t => t.objekatId !== id);
                 saveData(); renderObjekti();
@@ -251,13 +241,13 @@
             items.push({ id: Date.now().toString(36), name, unit });
             document.getElementById('newItemName').value = '';
             document.getElementById('newItemUnit').value = '';
-            closeModal('itemFormModal');
-            alert('✅ Artikal dodat! Videćeš ga u pretrazi.');
+            saveData(); closeModal('itemFormModal');
+            alert('✅ Artikal dodat!');
         }
 
         function showModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-        window.onclick = function(e) { if (e.target.classList.contains('modal')) e.target.classList.remove('active'); };
+        window.onclick = e => { if (e.target.classList.contains('modal')) e.target.classList.remove('active'); };
     </script>
 </body>
 </html>
