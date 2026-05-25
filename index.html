@@ -47,207 +47,215 @@
     </style>
 </head>
 <body>
-    <div id="loginScreen" class="login-container">
-        <div class="login-box">
-            <div class="login-icon">🤝</div>
-            <h1>Pozajmnice</h1>
-            <p>Unesite šifru</p>
-            <div class="password-input"><input type="password" id="passwordInput" placeholder="Šifra" autocomplete="off" value="123"></div>
-            <button id="loginBtn" class="login-btn">Pristupi</button>
-            <div style="margin-top:15px;color:#666;">Šifra: <strong>123</strong></div>
-        </div>
-    </div>
 
-    <div id="appContent" style="display:none;">
-        <header>
-            <div class="container header-content">
-                <h1>🤝 Pozajmnice</h1>
-                <div>
-                    <button onclick="showModal('objekatFormModal')" class="btn btn-success">+ Objekat</button>
-                    <button onclick="showModal('itemFormModal')" class="btn btn-info">+ Artikal</button>
-                    <button id="logoutBtn" class="btn btn-danger">Odjava</button>
+<!-- LOGIN -->
+<div id="loginScreen" class="login-container">
+    <div class="login-box">
+        <div class="login-icon">🤝</div>
+        <h1>Pozajmnice</h1>
+        <p>Unesite šifru</p>
+        <div class="password-input"><input type="password" id="passwordInput" placeholder="Šifra" autocomplete="off" value="123"></div>
+        <button id="loginBtn" class="login-btn">Pristupi</button>
+        <div style="margin-top:15px;color:#666;">Šifra: <strong>123</strong></div>
+    </div>
+</div>
+
+<!-- APLIKACIJA -->
+<div id="appContent" style="display:none;">
+    <header>
+        <div class="container header-content">
+            <h1>🤝 Pozajmnice</h1>
+            <div>
+                <button onclick="showModal('objekatFormModal')" class="btn btn-success">+ Objekat</button>
+                <button onclick="showModal('itemFormModal')" class="btn btn-info">+ Artikal</button>
+                <button id="logoutBtn" class="btn btn-danger">Odjava</button>
+            </div>
+        </div>
+    </header>
+    <div class="container"><div id="objektiContainer"></div></div>
+</div>
+
+<!-- MODALI -->
+<div id="transactionModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3 id="modalTitle"></h3><button onclick="closeModal('transactionModal')" style="font-size:24px;background:none;border:none;">&times;</button></div>
+        <div id="modalBody"></div>
+    </div>
+</div>
+<div id="objekatFormModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3>Dodaj objekat</h3><button onclick="closeModal('objekatFormModal')" style="font-size:24px;background:none;border:none;">&times;</button></div>
+        <input type="text" id="newObjekatName" placeholder="Naziv objekta" class="search-input">
+        <input type="text" id="newObjekatContact" placeholder="Kontakt" class="search-input">
+        <button onclick="addObjekat()" class="btn btn-success">Sačuvaj</button>
+    </div>
+</div>
+<div id="itemFormModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3>Dodaj artikal</h3><button onclick="closeModal('itemFormModal')" style="font-size:24px;background:none;border:none;">&times;</button></div>
+        <input type="text" id="newItemName" placeholder="Naziv artikla" class="search-input">
+        <input type="text" id="newItemUnit" placeholder="Jedinica (kom, kg, l...)" class="search-input">
+        <button onclick="addItem()" class="btn btn-success">Sačuvaj artikal</button>
+    </div>
+</div>
+
+<script>
+// ==================== BRISANJE STARIH PODATAKA ====================
+localStorage.removeItem('poz_data');
+localStorage.removeItem('poz_obj');
+localStorage.removeItem('poz_trans');
+localStorage.removeItem('pozajmnice_backup');
+localStorage.removeItem('pozajmnice_data');
+
+// ==================== SVEŽI PODACI ====================
+const items = [
+    { id: 'i1', name: 'Koka kola 0.25', unit: 'kom' },
+    { id: 'i2', name: 'Fanta 0.25', unit: 'kom' },
+    { id: 'i3', name: 'Sprite 0.25', unit: 'kom' },
+    { id: 'i4', name: 'Schweppes 0.25', unit: 'kom' },
+    { id: 'i5', name: 'Sok od narandže', unit: 'l' },
+    { id: 'i6', name: 'Sok od jabuke', unit: 'l' },
+    { id: 'i7', name: 'Coca Cola 1l', unit: 'kom' },
+    { id: 'i8', name: 'Voda 0.5', unit: 'kom' },
+    { id: 'i9', name: 'Voda 1.5', unit: 'kom' },
+    { id: 'i10', name: 'Pivo 0.5', unit: 'kom' },
+    { id: 'i11', name: 'Vino 1l', unit: 'kom' },
+    { id: 'i12', name: 'Rakija 1l', unit: 'kom' },
+    { id: 'i13', name: 'Kafa', unit: 'kom' },
+    { id: 'i14', name: 'Espresso', unit: 'kom' },
+    { id: 'i15', name: 'Čaj', unit: 'kom' },
+    { id: 'i16', name: 'Mleko 1l', unit: 'kom' },
+    { id: 'i17', name: 'Jogurt 1l', unit: 'kom' },
+    { id: 'i18', name: 'Sladoled', unit: 'kom' },
+    { id: 'i19', name: 'Čokolada', unit: 'kom' },
+    { id: 'i20', name: 'Keks', unit: 'kom' },
+    { id: 'i21', name: 'Sendvič', unit: 'kom' },
+    { id: 'i22', name: 'Pica', unit: 'kom' },
+    { id: 'i23', name: 'Pomfrit', unit: 'porcija' },
+    { id: 'i24', name: 'Salata', unit: 'porcija' },
+    { id: 'i25', name: 'Palačinke', unit: 'porcija' }
+];
+
+let objekti = [];
+let transactions = [];
+let selectedItemId = null;
+
+function saveData() {
+    localStorage.setItem('poz_data', JSON.stringify({ objekti, transactions }));
+}
+
+// === LOGIN ===
+document.getElementById('loginBtn').onclick = () => {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appContent').style.display = 'block';
+    const saved = JSON.parse(localStorage.getItem('poz_data'));
+    if (saved) { objekti = saved.objekti || []; transactions = saved.transactions || []; }
+    renderObjekti();
+};
+
+document.getElementById('logoutBtn').onclick = () => {
+    document.getElementById('appContent').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+};
+
+// === RENDER ===
+function renderObjekti() {
+    const c = document.getElementById('objektiContainer');
+    c.innerHTML = objekti.length === 0 ? '<p style="text-align:center;color:#999;padding:20px;">Nema objekata. Dodajte prvi.</p>' : '';
+    objekti.forEach(obj => {
+        const akt = transactions.filter(t => t.objekatId === obj.id && t.status === 'aktivno');
+        const dNama = akt.filter(t => t.type === 'duguju_nama').reduce((s, t) => s + t.quantity, 0);
+        const miD = akt.filter(t => t.type === 'mi_dugujemo').reduce((s, t) => s + t.quantity, 0);
+        const card = document.createElement('div'); card.className = 'card';
+        card.innerHTML = `
+            <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                <div><h3>${obj.name}</h3>${obj.contact||''}
+                <div>${akt.length>0?`<span class="badge badge-duguju-nama">📤 Duguju: ${dNama.toFixed(2)}</span> <span class="badge badge-mi-dugujemo">📥 Dugujemo: ${miD.toFixed(2)}</span>`:'<span style="color:#28a745;">✅ Razduženo</span>'}</div></div>
+                <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                    <button class="btn btn-pozajmica btn-duguju-nama" onclick="openTrans('${obj.id}','duguju_nama')">📤 Oni duguju</button>
+                    <button class="btn btn-pozajmica btn-mi-dugujemo" onclick="openTrans('${obj.id}','mi_dugujemo')">📥 Mi dugujemo</button>
+                    <button class="btn btn-danger btn-sm" onclick="delObj('${obj.id}')">🗑</button>
                 </div>
             </div>
-        </header>
-        <div class="container"><div id="objektiContainer"></div></div>
-    </div>
+            ${akt.length>0?`<div style="margin-top:10px;border-top:1px solid #eee;padding-top:10px;">${[...akt].reverse().map(t=>{const item=items.find(i=>i.id===t.itemId);return`<div style="display:flex;justify-content:space-between;padding:5px 0;">${item?.name||'?'} ×${t.quantity} ${item?.unit||''} <button class="btn btn-success btn-sm" onclick="vrati('${t.id}')">✅ Vrati</button></div>`;}).join('')}</div>`:''}`;
+        c.appendChild(card);
+    });
+}
 
-    <div id="transactionModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header"><h3 id="modalTitle"></h3><button onclick="closeModal('transactionModal')" style="font-size:24px;background:none;border:none;">&times;</button></div>
-            <div id="modalBody"></div>
-        </div>
-    </div>
-    <div id="objekatFormModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header"><h3>Dodaj objekat</h3><button onclick="closeModal('objekatFormModal')" style="font-size:24px;background:none;border:none;">&times;</button></div>
-            <input type="text" id="newObjekatName" placeholder="Naziv objekta" class="search-input">
-            <input type="text" id="newObjekatContact" placeholder="Kontakt" class="search-input">
-            <button onclick="addObjekat()" class="btn btn-success">Sačuvaj</button>
-        </div>
-    </div>
-    <div id="itemFormModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header"><h3>Dodaj artikal</h3><button onclick="closeModal('itemFormModal')" style="font-size:24px;background:none;border:none;">&times;</button></div>
-            <input type="text" id="newItemName" placeholder="Naziv artikla" class="search-input">
-            <input type="text" id="newItemUnit" placeholder="Jedinica (kom, kg, l...)" class="search-input">
-            <button onclick="addItem()" class="btn btn-success">Sačuvaj artikal</button>
-        </div>
-    </div>
+// === TRANSAKCIJE ===
+function openTrans(oid, type) {
+    const obj = objekti.find(o => o.id === oid);
+    document.getElementById('modalTitle').textContent = type==='duguju_nama' ? `📤 ${obj?.name} duguje nama` : `📥 Mi dugujemo: ${obj?.name}`;
+    document.getElementById('modalBody').innerHTML = `
+        <input type="text" id="itemSearch" placeholder="🔍 Pretraži artikal..." class="search-input" oninput="fil()">
+        <div class="item-list" id="itemListContainer"></div>
+        <div style="margin-top:15px;"><label>Količina:</label>
+        <input type="number" id="quantity" value="1" min="0.01" step="any" style="width:120px;padding:10px;"></div>
+        <button onclick="saveTrans('${oid}','${type}')" class="btn btn-success" style="margin-top:15px;width:100%;padding:12px;">✅ Sačuvaj</button>`;
+    selectedItemId = null;
+    fil();
+    showModal('transactionModal');
+}
 
-    <script>
-        // Učitaj podatke iz localStorage ILI koristi inicijalne
-        let savedData = JSON.parse(localStorage.getItem('poz_data') || 'null');
-        
-        let items = savedData?.items || [
-            { id: '1', name: 'Koka kola 0.25', unit: 'kom' },
-            { id: '2', name: 'Fanta 0.25', unit: 'kom' },
-            { id: '3', name: 'Sprite 0.25', unit: 'kom' },
-            { id: '4', name: 'Schweppes 0.25', unit: 'kom' },
-            { id: '5', name: 'Sok od narandže', unit: 'l' },
-            { id: '6', name: 'Sok od jabuke', unit: 'l' },
-            { id: '7', name: 'Coca Cola 1l', unit: 'kom' },
-            { id: '8', name: 'Voda 0.5', unit: 'kom' },
-            { id: '9', name: 'Voda 1.5', unit: 'kom' },
-            { id: '10', name: 'Pivo 0.5', unit: 'kom' },
-            { id: '11', name: 'Vino 1l', unit: 'kom' },
-            { id: '12', name: 'Rakija 1l', unit: 'kom' },
-            { id: '13', name: 'Kafa', unit: 'kom' },
-            { id: '14', name: 'Espresso', unit: 'kom' },
-            { id: '15', name: 'Čaj', unit: 'kom' },
-            { id: '16', name: 'Mleko 1l', unit: 'kom' },
-            { id: '17', name: 'Jogurt 1l', unit: 'kom' },
-            { id: '18', name: 'Sladoled', unit: 'kom' },
-            { id: '19', name: 'Čokolada', unit: 'kom' },
-            { id: '20', name: 'Keks', unit: 'kom' },
-            { id: '21', name: 'Sendvič', unit: 'kom' },
-            { id: '22', name: 'Pica', unit: 'kom' },
-            { id: '23', name: 'Pomfrit', unit: 'porcija' },
-            { id: '24', name: 'Salata', unit: 'porcija' },
-            { id: '25', name: 'Palačinke', unit: 'porcija' }
-        ];
+function fil() {
+    const s = document.getElementById('itemSearch')?.value.toLowerCase() || '';
+    const f = items.filter(i => i.name.toLowerCase().includes(s));
+    const c = document.getElementById('itemListContainer');
+    if (!c) return;
+    c.innerHTML = f.length === 0 ? '<p style="padding:15px;color:#999;">Nema artikala.</p>' : '';
+    f.forEach(i => {
+        const d = document.createElement('div'); d.className = 'item-option';
+        d.textContent = `${i.name} (${i.unit})`;
+        d.onclick = () => { selectedItemId = i.id; document.querySelectorAll('.item-option').forEach(e => e.style.background = ''); d.style.background = '#d4edda'; };
+        c.appendChild(d);
+    });
+}
 
-        let objekti = savedData?.objekti || [];
-        let transactions = savedData?.transactions || [];
-        let selectedItemId = null;
+function saveTrans(oid, type) {
+    if (!selectedItemId) { alert('Odaberi artikal!'); return; }
+    const qty = parseFloat(document.getElementById('quantity').value.replace(',', '.')) || 1;
+    transactions.push({ id: Date.now().toString(36), objekatId: oid, itemId: selectedItemId, type, quantity: qty, dateBorrowed: new Date().toLocaleString('hr'), dateReturned: null, status: 'aktivno' });
+    saveData(); renderObjekti(); closeModal('transactionModal');
+}
 
-        function saveData() {
-            localStorage.setItem('poz_data', JSON.stringify({ objekti, items, transactions }));
-        }
+function vrati(id) {
+    if (confirm('Razdužiti?')) {
+        const t = transactions.find(t => t.id === id);
+        if (t) { t.status = 'vraceno'; t.dateReturned = new Date().toLocaleString('hr'); saveData(); renderObjekti(); }
+    }
+}
 
-        // === LOGIN ===
-        document.getElementById('loginBtn').onclick = () => {
-            if (document.getElementById('passwordInput').value === '123') {
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('appContent').style.display = 'block';
-                renderObjekti();
-            }
-        };
-        document.getElementById('logoutBtn').onclick = () => {
-            document.getElementById('appContent').style.display = 'none';
-            document.getElementById('loginScreen').style.display = 'flex';
-        };
+function delObj(id) {
+    if (confirm('Obrisati objekat i transakcije?')) {
+        objekti = objekti.filter(o => o.id !== id);
+        transactions = transactions.filter(t => t.objekatId !== id);
+        saveData(); renderObjekti();
+    }
+}
 
-        // === RENDER ===
-        function renderObjekti() {
-            const container = document.getElementById('objektiContainer');
-            container.innerHTML = objekti.length === 0 
-                ? '<p style="text-align:center;color:#999;padding:20px;">Nema objekata. Kliknite "+ Objekat".</p>' 
-                : '';
-            objekti.forEach(obj => {
-                const akt = transactions.filter(t => t.objekatId === obj.id && t.status === 'aktivno');
-                const dNama = akt.filter(t => t.type === 'duguju_nama').reduce((s, t) => s + t.quantity, 0);
-                const miD = akt.filter(t => t.type === 'mi_dugujemo').reduce((s, t) => s + t.quantity, 0);
-                const card = document.createElement('div'); card.className = 'card';
-                card.innerHTML = `
-                    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-                        <div><h3>${obj.name}</h3>${obj.contact||''}
-                        <div>${akt.length>0?`<span class="badge badge-duguju-nama">📤 Duguju: ${dNama.toFixed(2)}</span> <span class="badge badge-mi-dugujemo">📥 Dugujemo: ${miD.toFixed(2)}</span>`:'<span style="color:#28a745;">✅ Razduženo</span>'}</div></div>
-                        <div style="display:flex;gap:5px;flex-wrap:wrap;">
-                            <button class="btn btn-pozajmica btn-duguju-nama" onclick="openTransaction('${obj.id}','duguju_nama')">📤 Oni duguju</button>
-                            <button class="btn btn-pozajmica btn-mi-dugujemo" onclick="openTransaction('${obj.id}','mi_dugujemo')">📥 Mi dugujemo</button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteObjekat('${obj.id}')">🗑</button>
-                        </div>
-                    </div>
-                    ${akt.length>0?`<div style="margin-top:10px;border-top:1px solid #eee;padding-top:10px;">${[...akt].reverse().map(t=>{const item=items.find(i=>i.id===t.itemId);return`<div style="display:flex;justify-content:space-between;padding:5px 0;">${item?.name||'?'} ×${t.quantity} ${item?.unit||''} <button class="btn btn-success btn-sm" onclick="vrati('${t.id}')">✅ Vrati</button></div>`;}).join('')}</div>`:''}`;
-                container.appendChild(card);
-            });
-        }
+function addObjekat() {
+    const name = document.getElementById('newObjekatName').value.trim();
+    if (!name) return;
+    objekti.push({ id: Date.now().toString(36), name, contact: document.getElementById('newObjekatContact').value.trim() });
+    document.getElementById('newObjekatName').value = '';
+    document.getElementById('newObjekatContact').value = '';
+    saveData(); renderObjekti(); closeModal('objekatFormModal');
+}
 
-        // === TRANSAKCIJE ===
-        function openTransaction(objekatId, type) {
-            const obj = objekti.find(o => o.id === objekatId);
-            document.getElementById('modalTitle').textContent = type==='duguju_nama' ? `📤 ${obj?.name} duguje nama` : `📥 Mi dugujemo: ${obj?.name}`;
-            document.getElementById('modalBody').innerHTML = `
-                <input type="text" id="itemSearch" placeholder="🔍 Pretraži artikal..." class="search-input" oninput="filterItems()">
-                <div class="item-list" id="itemListContainer"></div>
-                <div style="margin-top:15px;"><label>Količina:</label>
-                <input type="number" id="quantity" value="1" min="0.01" step="any" style="width:120px;padding:10px;"></div>
-                <button onclick="saveTransaction('${objekatId}','${type}')" class="btn btn-success" style="margin-top:15px;width:100%;padding:12px;">✅ Sačuvaj</button>`;
-            selectedItemId = null;
-            filterItems();
-            showModal('transactionModal');
-        }
+function addItem() {
+    const name = document.getElementById('newItemName').value.trim();
+    const unit = document.getElementById('newItemUnit').value.trim();
+    if (!name || !unit) return;
+    items.push({ id: Date.now().toString(36), name, unit });
+    document.getElementById('newItemName').value = '';
+    document.getElementById('newItemUnit').value = '';
+    closeModal('itemFormModal');
+    alert('✅ Artikal dodat!');
+}
 
-        function filterItems() {
-            const search = document.getElementById('itemSearch')?.value.toLowerCase() || '';
-            const filtered = items.filter(item => item.name.toLowerCase().includes(search));
-            const container = document.getElementById('itemListContainer');
-            if (!container) return;
-            container.innerHTML = filtered.length === 0 ? '<p style="padding:15px;color:#999;">Nema artikala.</p>' : '';
-            filtered.forEach(item => {
-                const div = document.createElement('div'); div.className = 'item-option';
-                div.textContent = `${item.name} (${item.unit})`;
-                div.onclick = () => { selectedItemId = item.id; document.querySelectorAll('.item-option').forEach(el => el.style.background = ''); div.style.background = '#d4edda'; };
-                container.appendChild(div);
-            });
-        }
-
-        function saveTransaction(objekatId, type) {
-            if (!selectedItemId) { alert('Odaberi artikal!'); return; }
-            const qty = parseFloat(document.getElementById('quantity').value.replace(',', '.')) || 1;
-            transactions.push({ id: Date.now().toString(36), objekatId, itemId: selectedItemId, type, quantity: qty, dateBorrowed: new Date().toLocaleString('hr'), dateReturned: null, status: 'aktivno' });
-            saveData(); renderObjekti(); closeModal('transactionModal');
-        }
-
-        function vrati(id) {
-            if (confirm('Razdužiti?')) {
-                const t = transactions.find(t => t.id === id);
-                if (t) { t.status = 'vraceno'; t.dateReturned = new Date().toLocaleString('hr'); saveData(); renderObjekti(); }
-            }
-        }
-
-        function deleteObjekat(id) {
-            if (confirm('Obrisati objekat?')) {
-                objekti = objekti.filter(o => o.id !== id);
-                transactions = transactions.filter(t => t.objekatId !== id);
-                saveData(); renderObjekti();
-            }
-        }
-
-        function addObjekat() {
-            const name = document.getElementById('newObjekatName').value.trim();
-            if (!name) return;
-            objekti.push({ id: Date.now().toString(36), name, contact: document.getElementById('newObjekatContact').value.trim() });
-            document.getElementById('newObjekatName').value = '';
-            document.getElementById('newObjekatContact').value = '';
-            saveData(); renderObjekti(); closeModal('objekatFormModal');
-        }
-
-        function addItem() {
-            const name = document.getElementById('newItemName').value.trim();
-            const unit = document.getElementById('newItemUnit').value.trim();
-            if (!name || !unit) return;
-            items.push({ id: Date.now().toString(36), name, unit });
-            document.getElementById('newItemName').value = '';
-            document.getElementById('newItemUnit').value = '';
-            saveData(); closeModal('itemFormModal');
-            alert('✅ Artikal dodat!');
-        }
-
-        function showModal(id) { document.getElementById(id).classList.add('active'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-        window.onclick = e => { if (e.target.classList.contains('modal')) e.target.classList.remove('active'); };
-    </script>
+function showModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+window.onclick = e => { if (e.target.classList.contains('modal')) e.target.classList.remove('active'); };
+</script>
 </body>
 </html>
