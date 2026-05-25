@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pozajmnice</title>
+    <title>Pozajmnice ☁️</title>
     <meta name="theme-color" content="#667eea">
     <link rel="icon" type="image/png" href="https://img.icons8.com/color/48/handshake--v1.png">
     <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/handshake--v1.png">
     <script>
         const blob = new Blob([JSON.stringify({
-            name: "Pozajmnice", short_name: "Pozajmnice", start_url: "/", display: "standalone",
+            name: "Pozajmnice ☁️", short_name: "Pozajmnice", start_url: "/", display: "standalone",
             background_color: "#f5f5f5", theme_color: "#667eea",
             icons: [{ src: "https://img.icons8.com/color/192/handshake--v1.png", sizes: "192x192", type: "image/png", purpose: "any" },
             { src: "https://img.icons8.com/color/512/handshake--v1.png", sizes: "512x512", type: "image/png", purpose: "any maskable" }]
         })], {type:'application/json'});
         document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${URL.createObjectURL(blob)}">`);
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; }
@@ -33,6 +34,8 @@
         .btn-sm { padding: 5px 12px; font-size: 13px; }
         .btn-pozajmica { padding: 12px 24px; font-size: 15px; min-width: 160px; border-radius: 10px; font-weight: bold; }
         .btn-duguju-nama { background: #0d6efd; color: white; } .btn-mi-dugujemo { background: #fd7e14; color: white; }
+        .sync-indicator { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+        .sync-online { background: #28a745; } .sync-offline { background: #dc3545; }
         .tabs { display: flex; gap: 5px; margin-bottom: 20px; }
         .tab { padding: 10px 20px; background: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .tab.active { background: #667eea; color: white; }
@@ -62,7 +65,7 @@
 <div id="loginScreen" class="login-container">
     <div class="login-box">
         <div class="login-icon">🤝</div>
-        <h1>Pozajmnice</h1>
+        <h1>Pozajmnice ☁️</h1>
         <p>Unesite šifru</p>
         <div class="password-input"><input type="password" id="passwordInput" placeholder="Šifra" autocomplete="off" value="123"></div>
         <button id="loginBtn" class="login-btn">Pristupi</button>
@@ -73,10 +76,11 @@
 <div id="appContent" style="display:none;">
     <header>
         <div class="container header-content">
-            <h1>🤝 Pozajmnice</h1>
+            <h1>🤝 Pozajmnice <span id="syncDot" class="sync-indicator sync-offline" title="Sinhronizacija"></span></h1>
             <div>
                 <button onclick="showModal('objekatFormModal')" class="btn btn-success">+ Objekat</button>
                 <button onclick="showModal('itemFormModal')" class="btn btn-info">+ Artikal</button>
+                <button onclick="exportData()" class="btn btn-info">📥 Export</button>
                 <button id="logoutBtn" class="btn btn-danger">Odjava</button>
             </div>
         </div>
@@ -129,8 +133,14 @@
 </div>
 
 <script>
+// ==================== SUPABASE ====================
+const SUPABASE_URL = 'https://itoyvqqssqmeyxawvulq.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_nbUWlCIXbB48NoBRhH4ucg_PfCAmau1';
+let supabaseClient = null;
+try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
+
 // ==================== ARTIKLI ====================
-const items = [
+const DEFAULT_ITEMS = [
     { id: '1', name: 'CEVAP MASA KOM/S', unit: 'KOM.' },
     { id: '2', name: 'TOST 24/1 KOM/S', unit: 'KOM.' },
     { id: '3', name: 'BRASNO T400/S', unit: 'KG.' },
@@ -180,167 +190,73 @@ const items = [
     { id: '47', name: 'AUSTRIJSKE KOBASICE SVE /S', unit: 'KG.' },
     { id: '48', name: 'JUNETINA BURGER/S', unit: 'KOM.' },
     { id: '49', name: 'JUNECA KREMENADLA / S', unit: 'KOM.' },
-    { id: '50', name: 'JUNECI RAMSTEK /S', unit: 'KOM.' },
-    { id: '51', name: 'CURECA PRSA /S', unit: 'KG.' },
-    { id: '52', name: 'TJESTENINA / S', unit: 'KG.' },
-    { id: '53', name: 'LIGNJE / S', unit: 'KG.' },
-    { id: '54', name: 'TORTILJA 18 KOM/ PAK /S', unit: 'KOM.' },
-    { id: '55', name: 'SVINJSKA REBARCA / S', unit: 'KOM.' },
-    { id: '56', name: 'KORNISONI/S', unit: 'KG.' },
-    { id: '57', name: 'NJOKE/S', unit: 'KG.' },
-    { id: '58', name: 'BOLOGNESE SOS/S', unit: 'LIT.' },
-    { id: '59', name: 'CAJ', unit: 'KOM.' },
-    { id: '60', name: 'ESPRESSO / S', unit: 'KG.' },
-    { id: '61', name: 'NESCAFE / S', unit: 'KG.' },
-    { id: '62', name: 'TOPLA COKOLADA / S', unit: 'KOM.' },
-    { id: '63', name: 'MLIJEKO/S', unit: 'LIT.' },
-    { id: '64', name: 'COCA COLA 0,25', unit: 'KOM.' },
-    { id: '65', name: 'COCA COLA ZERO 0,25', unit: 'KOM.' },
-    { id: '66', name: 'FANTA 0,25', unit: 'KOM.' },
-    { id: '67', name: 'SPRITE 0,25', unit: 'KOM.' },
-    { id: '68', name: 'BITTER LEMON 0,25', unit: 'KOM.' },
-    { id: '69', name: 'TONIC WATER 0,25', unit: 'KOM.' },
-    { id: '70', name: 'COCKTA 0,25', unit: 'KOM.' },
-    { id: '71', name: 'ORANGINA 0,20', unit: 'KOM.' },
-    { id: '72', name: 'THOMAS HENRY 0,25', unit: 'KOM.' },
-    { id: '73', name: 'WELCOME DRINK', unit: 'KOM.' },
-    { id: '74', name: 'IVI 0,33', unit: 'KOM.' },
-    { id: '75', name: 'ICE TEA 0,33', unit: 'KOM.' },
-    { id: '76', name: 'CEDEVITA 0,20', unit: 'KOM.' },
-    { id: '77', name: 'FRUCTAL', unit: 'KOM.' },
-    { id: '78', name: 'AQUA BIANCA 0,25', unit: 'KOM.' },
-    { id: '79', name: 'ROSA 0,33', unit: 'KOM.' },
-    { id: '80', name: 'NEGAZIRANA VODA 0,70', unit: 'KOM.' },
-    { id: '81', name: 'MINERALNA VODA 0,25', unit: 'KOM.' },
-    { id: '82', name: 'MINERALNA VODA 0,70', unit: 'KOM.' },
-    { id: '83', name: 'EVIAN 0,33', unit: 'KOM.' },
-    { id: '84', name: 'EVIAN 0,75', unit: 'KOM.' },
-    { id: '85', name: 'EVIAN GAZIRANA 0,33', unit: 'KOM.' },
-    { id: '86', name: 'EVIAN GAZIRANA 0,75', unit: 'KOM.' },
-    { id: '87', name: 'RED BULL 0,25', unit: 'KOM.' },
-    { id: '88', name: 'GUARANA 0,25', unit: 'KOM.' },
-    { id: '89', name: 'NIK GOLD 0,33', unit: 'KOM.' },
-    { id: '90', name: 'NIK TAMNO 0,33', unit: 'KOM.' },
-    { id: '91', name: 'NIKSICKO PIVO 0,33', unit: 'KOM.' },
-    { id: '92', name: 'STELLA ARTOIS 0,33', unit: 'KOM.' },
-    { id: '93', name: 'STAROPRAMEN 0,33', unit: 'KOM.' },
-    { id: '94', name: 'HEINEKEN 0,25', unit: 'KOM.' },
-    { id: '95', name: 'CORONA', unit: 'KOM.' },
-    { id: '96', name: 'BAVARIA 0,25', unit: 'KOM.' },
-    { id: '97', name: 'BAVARIA BEZALKOHOLNA 0,25', unit: 'KOM.' },
-    { id: '98', name: 'CABERNET 0,70', unit: 'KOM.' },
-    { id: '99', name: 'VRANAC 0,187', unit: 'KOM.' },
-    { id: '100', name: 'VRANAC BARIQUE 0,75', unit: 'KOM.' },
-    { id: '101', name: 'VRANAC PRO CORDE 0,75', unit: 'KOM.' },
-    { id: '102', name: 'VRANAC PRO CORDE 0,187', unit: 'KOM.' },
-    { id: '103', name: 'VRANAC RESERVE 0,75', unit: 'KOM.' },
-    { id: '104', name: 'STRANO VINO 0,187', unit: 'KOM.' },
-    { id: '105', name: 'VRANAC 0,75L', unit: 'KOM.' },
-    { id: '106', name: 'LAMBORGINI BARBERA', unit: 'KOM.' },
-    { id: '107', name: 'DEPESA BABALUU 1/1', unit: 'LIT.' },
-    { id: '108', name: 'PRIMITIVO FEUDO ITALIA 0,75', unit: 'KOM.' },
-    { id: '109', name: 'PETRA  TOSCANA  0,75', unit: 'KOM.' },
-    { id: '110', name: 'PINOT NOIR, SOSKIC', unit: 'KOM.' },
-    { id: '111', name: 'EPOHA PLANTAZE 0,75', unit: 'KOM.' },
-    { id: '112', name: 'VLADIKA PLANTAZE 0,75', unit: 'KOM.' },
-    { id: '113', name: 'CHIANTI CLASSICO, CECCHI 1/1', unit: 'LIT.' },
-    { id: '114', name: 'CHARDONNAY 0,75', unit: 'KOM.' },
-    { id: '115', name: 'CHARDONNAY BARIQUE 0,75', unit: 'KOM.' },
-    { id: '116', name: 'CHARDONNAY 0,187', unit: 'KOM.' },
-    { id: '117', name: 'SAUVIGNON 0,75', unit: 'KOM.' },
-    { id: '118', name: 'KRSTAC 0,75', unit: 'KOM.' },
-    { id: '119', name: 'PINOT GRIGIO BENNATI 1/1', unit: 'LIT.' },
-    { id: '120', name: 'GAVI DI GAVI 1/1', unit: 'LIT.' },
-    { id: '121', name: 'SAUVIGNON BLANC, SOSKIC', unit: 'KOM.' },
-    { id: '122', name: 'MALVAZIJA 0,187', unit: 'KOM.' },
-    { id: '123', name: 'MALVAZIJA PLANTAZE 0,75', unit: 'KOM.' },
-    { id: '124', name: 'PINOT BLANC PRO ANIMA 0,75', unit: 'KOM.' },
-    { id: '125', name: 'BIJELO VINO1/1 (ŠPRICER)', unit: 'LIT.' },
-    { id: '126', name: 'ROSE KRAUTHAKER 0,75', unit: 'KOM.' },
-    { id: '127', name: 'ROSE 0,75', unit: 'KOM.' },
-    { id: '128', name: 'ROSE 0,187', unit: 'KOM.' },
-    { id: '129', name: 'ROSE REGINA JELENA 0,75', unit: 'KOM.' },
-    { id: '130', name: 'BARDOLINO CHIARETTO, BENNATI 1/1', unit: 'LIT.' },
-    { id: '131', name: 'MARIE-CHRISTINE  DE PROVANCE  0,75', unit: 'KOM.' },
-    { id: '132', name: 'PROSECCO ROSE 0,75  MILLESIMATO', unit: 'KOM.' },
-    { id: '133', name: 'PROSECCO ROSE  0,2 MILLESIMATO', unit: 'KOM.' },
-    { id: '134', name: 'PROSECCO 0,2 BORGO MOLINO', unit: 'KOM.' },
-    { id: '135', name: 'PROSECCO 0,75 BORGO MOLINO', unit: 'KOM.' },
-    { id: '136', name: 'MOET & CHANDON 0,75', unit: 'KOM.' },
-    { id: '137', name: 'DOM PERIGNON 0,75', unit: 'KOM.' },
-    { id: '138', name: 'SOMERSBY 0,33', unit: 'KOM.' },
-    { id: '139', name: 'CIDER ASPALL 0,33', unit: 'KOM.' },
-    { id: '140', name: 'CHARDONNAY KOVACEVIC', unit: 'KOM.' },
-    { id: '141', name: 'SAUVIGNON KOVACEVIC 0,75', unit: 'KOM.' },
-    { id: '142', name: 'TRIJUMF ALEKSANDROVIC', unit: 'KOM.' },
-    { id: '143', name: 'POSIP MATUSKO 0,75', unit: 'KOM.' },
-    { id: '144', name: 'POSIP KORTA KATARINA', unit: 'KOM.' },
-    { id: '145', name: 'GRASEVINA KUTJEVO 0,75', unit: 'KOM.' },
-    { id: '146', name: 'GRASEVINA KUTJEVO 0,187', unit: 'KOM.' },
-    { id: '147', name: 'CATARRATTO DORICIUM', unit: 'KOM.' },
-    { id: '148', name: 'CIARI SAUVIGNON 0,75', unit: 'KOM.' },
-    { id: '149', name: 'MALVAZIJA AVANGARDE, TOMAZ', unit: 'KOM.' },
-    { id: '150', name: 'ZIVOT TECE', unit: 'KOM.' },
-    { id: '151', name: 'AURELIUS KOVACEVIC', unit: 'KOM.' },
-    { id: '152', name: 'REGENT RESERVE ALEKSANDROVIC', unit: 'KOM.' },
-    { id: '153', name: 'CABERNET SAUV RADOVANOVIC 0,75', unit: 'KOM.' },
-    { id: '154', name: 'DINGAC MATUSKO 0,75', unit: 'KOM.' },
-    { id: '155', name: 'AMARONE DELLA VALP', unit: 'KOM.' },
-    { id: '156', name: 'CABERNET FRANC  CORTE PITORA  0,75', unit: 'KOM.' },
-    { id: '157', name: 'CHARDONNAY BENNATI VENATO 0,75', unit: 'KOM.' },
-    { id: '158', name: 'TEMJANIKA TIKVES 0,75', unit: 'KOM.' },
-    { id: '159', name: 'PINOT GRIGIO APOLITICO 0,75', unit: 'KOM.' },
-    { id: '160', name: 'WHITE CUVEE TIKVES 0,75', unit: 'KOM.' },
-    { id: '161', name: 'RED CUVEE TIKVES 0,75', unit: 'KOM.' },
-    { id: '162', name: 'AMARETTO 1/1', unit: 'LIT.' },
-    { id: '163', name: 'UDERBERG 1/1', unit: 'LIT.' },
-    { id: '164', name: 'OUZO 1/1', unit: 'LIT.' },
-    { id: '165', name: 'LIME LIK 1/1', unit: 'LIT.' },
-    { id: '166', name: 'MARASKINO LIK 1/1', unit: 'LIT.' },
-    { id: '167', name: 'SAMBUCA 1/1', unit: 'LIT.' },
-    { id: '168', name: 'LIMONCELLO 1/1', unit: 'LIT.' },
-    { id: '169', name: 'KAHLUA 1/1', unit: 'LIT.' },
-    { id: '170', name: 'DIPLOMATICO RES/S', unit: 'LIT.' },
-    { id: '171', name: 'BACARDI BLACK 1/1', unit: 'LIT.' },
-    { id: '172', name: 'HERADURA PLATA/S', unit: 'LIT.' },
-    { id: '173', name: 'HERADURA REPOSADO/S', unit: 'LIT.' },
-    { id: '174', name: 'TEKILA 1/1', unit: 'LIT.' },
-    { id: '175', name: 'BOMBAY SAPPHIRE  1/1', unit: 'LIT.' },
-    { id: '176', name: 'GIN MARE 1/1', unit: 'LIT.' },
-    { id: '177', name: 'JEZDIC COKANJ 0,04 KOM/S', unit: 'KOM.' },
-    { id: '178', name: 'SAMAR SLJIVA 1/1', unit: 'LIT.' },
-    { id: '179', name: 'BOJKOVCANKA DUNJA 5G /S', unit: 'LIT.' },
-    { id: '180', name: 'BOJKOVCANKA SLJIVA 5G /S', unit: 'LIT.' },
-    { id: '181', name: 'BOJKOVCANKA SLJIVA 10G /S', unit: 'LIT.' },
-    { id: '182', name: 'TRIPLE SEC 1/1', unit: 'LIT.' },
-    { id: '183', name: 'BLUE CURACAO 1/1', unit: 'LIT.' },
-    { id: '184', name: 'PASOA/S', unit: 'LIT.' },
-    { id: '185', name: 'MELON LIKER/S', unit: 'LIT.' },
-    { id: '186', name: 'GRENADINE 1/1', unit: 'LIT.' }
+    { id: '50', name: 'JUNECI RAMSTEK /S', unit: 'KOM.' }
 ];
 
+let items = [...DEFAULT_ITEMS];
 let objekti = [];
 let transactions = [];
 let selectedItemId = null;
 
-function loadData() {
+function updateSyncStatus(online) {
+    const dot = document.getElementById('syncDot');
+    if (dot) { dot.className = 'sync-indicator ' + (online ? 'sync-online' : 'sync-offline'); dot.title = online ? '☁️ Sinhronizovano' : '📱 Lokalno'; }
+}
+
+async function loadFromCloud() {
+    if (!supabaseClient) { loadLocal(); updateSyncStatus(false); return; }
+    try {
+        const { data, error } = await supabaseClient.from('podaci').select('*').eq('id', 1).single();
+        if (data) {
+            objekti = data.objekti || [];
+            items = data.items && data.items.length > 0 ? data.items : [...DEFAULT_ITEMS];
+            transactions = data.transactions || [];
+            updateSyncStatus(true);
+        } else if (error) {
+            await supabaseClient.from('podaci').upsert({ id: 1, objekti: [], items: [...DEFAULT_ITEMS], transactions: [] });
+            updateSyncStatus(true);
+        }
+    } catch(e) { loadLocal(); updateSyncStatus(false); }
+}
+
+async function saveToCloud() {
+    saveLocal();
+    if (!supabaseClient) return;
+    try { await supabaseClient.from('podaci').upsert({ id: 1, objekti, items, transactions }); updateSyncStatus(true); } catch(e) { updateSyncStatus(false); }
+}
+
+function loadLocal() {
     const saved = localStorage.getItem('poz_data');
     if (saved) {
         const d = JSON.parse(saved);
         objekti = d.objekti || [];
+        items = d.items && d.items.length > 0 ? d.items : [...DEFAULT_ITEMS];
         transactions = d.transactions || [];
     }
 }
 
-function saveData() {
-    localStorage.setItem('poz_data', JSON.stringify({ objekti, transactions }));
+function saveLocal() {
+    localStorage.setItem('poz_data', JSON.stringify({ objekti, items, transactions }));
 }
 
-document.getElementById('loginBtn').onclick = () => {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appContent').style.display = 'block';
-    loadData();
-    renderAll();
+// ==================== LOGIN ====================
+document.getElementById('loginBtn').onclick = async () => {
+    if (document.getElementById('passwordInput').value === '123') {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appContent').style.display = 'block';
+        await loadFromCloud();
+        renderAll();
+        if (supabaseClient) {
+            supabaseClient.channel('podaci-changes').on('postgres_changes', { event: '*', schema: 'public', table: 'podaci' }, (payload) => {
+                if (payload.new && payload.new.id === 1) {
+                    objekti = payload.new.objekti || [];
+                    items = payload.new.items || [];
+                    transactions = payload.new.transactions || [];
+                    renderAll();
+                }
+            }).subscribe();
+        }
+    }
 };
 
 document.getElementById('logoutBtn').onclick = () => {
@@ -348,6 +264,7 @@ document.getElementById('logoutBtn').onclick = () => {
     document.getElementById('loginScreen').style.display = 'flex';
 };
 
+// ==================== RENDER ====================
 function renderAll() { renderObjekti(); renderLogovi(); renderStanje(); }
 
 function renderObjekti() {
@@ -403,13 +320,12 @@ function renderStanje() {
     if (!ima) c.innerHTML = '<p style="text-align:center;color:#28a745;padding:20px;">✅ Sve razduženo.</p>';
 }
 
+// ==================== TRANSAKCIJE ====================
 function openTrans(oid, type) {
     const obj = objekti.find(o => o.id === oid);
     document.getElementById('modalTitle').textContent = type==='duguju_nama' ? `📤 ${obj?.name} duguje nama` : `📥 Mi dugujemo: ${obj?.name}`;
     document.getElementById('modalBody').innerHTML = `<input type="text" id="itemSearch" placeholder="🔍 Pretraži artikal..." class="search-input" oninput="fil()"><div class="item-list" id="itemListContainer"></div><div style="margin-top:15px;"><label>Količina:</label><input type="number" id="quantity" value="1" min="0.01" step="any" style="width:120px;padding:10px;"></div><button onclick="saveTrans(\'${oid}\',\'${type}\')" class="btn btn-success" style="margin-top:15px;width:100%;padding:12px;">✅ Sačuvaj</button>`;
-    selectedItemId = null;
-    fil();
-    showModal('transactionModal');
+    selectedItemId = null; fil(); showModal('transactionModal');
 }
 
 function fil() {
@@ -426,44 +342,52 @@ function fil() {
     });
 }
 
-function saveTrans(oid, type) {
+async function saveTrans(oid, type) {
     if (!selectedItemId) { alert('Odaberi artikal!'); return; }
     const qty = parseFloat(document.getElementById('quantity').value.replace(',', '.')) || 1;
     transactions.push({ id: Date.now().toString(36), objekatId: oid, itemId: selectedItemId, type, quantity: qty, dateBorrowed: new Date().toLocaleString('hr'), dateReturned: null, status: 'aktivno' });
-    saveData(); renderAll(); closeModal('transactionModal');
+    await saveToCloud(); renderAll(); closeModal('transactionModal');
 }
 
-function vrati(id) {
+async function vrati(id) {
     if (confirm('Razdužiti?')) {
         const t = transactions.find(t => t.id === id);
-        if (t) { t.status = 'vraceno'; t.dateReturned = new Date().toLocaleString('hr'); saveData(); renderAll(); }
+        if (t) { t.status = 'vraceno'; t.dateReturned = new Date().toLocaleString('hr'); await saveToCloud(); renderAll(); }
     }
 }
 
-function delObj(id) {
-    if (confirm('Obrisati objekat i sve transakcije?')) {
+async function delObj(id) {
+    if (confirm('Obrisati objekat?')) {
         objekti = objekti.filter(o => o.id !== id);
         transactions = transactions.filter(t => t.objekatId !== id);
-        saveData(); renderAll();
+        await saveToCloud(); renderAll();
     }
 }
 
-function addObjekat() {
+async function addObjekat() {
     const name = document.getElementById('newObjekatName').value.trim();
     if (!name) return;
     objekti.push({ id: Date.now().toString(36), name, contact: document.getElementById('newObjekatContact').value.trim() });
     document.getElementById('newObjekatName').value = ''; document.getElementById('newObjekatContact').value = '';
-    saveData(); renderAll(); closeModal('objekatFormModal');
+    await saveToCloud(); renderAll(); closeModal('objekatFormModal');
 }
 
-function addItem() {
+async function addItem() {
     const name = document.getElementById('newItemName').value.trim();
     const unit = document.getElementById('newItemUnit').value.trim();
     if (!name || !unit) return;
     items.push({ id: Date.now().toString(36), name, unit });
     document.getElementById('newItemName').value = ''; document.getElementById('newItemUnit').value = '';
-    closeModal('itemFormModal');
+    await saveToCloud(); closeModal('itemFormModal');
     alert('✅ Artikal dodat!');
+}
+
+function exportData() {
+    const data = JSON.stringify({ objekti, items, transactions }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `pozajmnice_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
+    URL.revokeObjectURL(url);
 }
 
 function switchTab(event, tab) {
