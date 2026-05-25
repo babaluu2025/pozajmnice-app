@@ -529,14 +529,21 @@ function exportData() {
 }
 
 async function resetAll() {
-    if (confirm('⚠️ Resetovati SVE podatke? Ovo briše objekte i transakcije, ali zadržava artikle.')) {
-        localStorage.removeItem('poz_data');
-        objekti = [];
-        transactions = [];
-        items = [...DEFAULT_ITEMS];
-        await saveToCloud();
-        renderAll();
-        alert('✅ Resetovano! Svih 186 artikala je tu.');
+    const sifra = prompt('🔒 Unesite šifru za reset:');
+    if (sifra === '1978') {
+        if (confirm('⚠️ Resetovati SVE podatke? Ovo briše objekte i transakcije, ali zadržava artikle.')) {
+            localStorage.removeItem('poz_data');
+            objekti = [];
+            transactions = [];
+            items = [...DEFAULT_ITEMS];
+            await saveToCloud();
+            renderAll();
+            alert('✅ Resetovano! Svih 186 artikala je tu.');
+        }
+    } else if (sifra === null) {
+        // korisnik je kliknuo Cancel
+    } else {
+        alert('❌ Pogrešna šifra! Pokušajte ponovo.');
     }
 }
 
