@@ -33,6 +33,9 @@
         .btn-sm { padding: 5px 12px; font-size: 13px; }
         .btn-pozajmica { padding: 12px 24px; font-size: 15px; min-width: 160px; border-radius: 10px; font-weight: bold; }
         .btn-duguju-nama { background: #0d6efd; color: white; } .btn-mi-dugujemo { background: #fd7e14; color: white; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; background: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .tab.active { background: #667eea; color: white; }
         .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 5px rgba(0,0,0,0.1); }
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
         .modal.active { display: flex; }
@@ -42,8 +45,16 @@
         .item-list { max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; }
         .item-option { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 15px; }
         .item-option:hover { background: #f0f0f0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; font-weight: bold; }
         .badge { padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; display: inline-block; }
-        .badge-duguju-nama { background: #cfe2ff; color: #084298; } .badge-mi-dugujemo { background: #ffe5d0; color: #a1440a; }
+        .badge-aktivno { background: #fff3cd; color: #856404; }
+        .badge-vraceno { background: #d4edda; color: #155724; }
+        .badge-duguju-nama { background: #cfe2ff; color: #084298; } 
+        .badge-mi-dugujemo { background: #ffe5d0; color: #a1440a; }
+        .row-vraceno { background: #f8fff8; opacity: 0.85; }
+        .row-vraceno td { text-decoration: line-through; color: #6c757d; }
     </style>
 </head>
 <body>
@@ -72,7 +83,32 @@
             </div>
         </div>
     </header>
-    <div class="container"><div id="objektiContainer"></div></div>
+    
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab(event, 'objekti')">🏢 Objekti</button>
+            <button class="tab" onclick="switchTab(event, 'logovi')">📋 Logovi</button>
+            <button class="tab" onclick="switchTab(event, 'stanje')">📊 Stanje</button>
+        </div>
+        
+        <div id="tab-objekti" class="tab-content"><div id="objektiContainer"></div></div>
+        
+        <div id="tab-logovi" class="tab-content" style="display:none;">
+            <div class="card">
+                <h3>Sve transakcije</h3>
+                <select id="logFilter" onchange="renderLogovi()" style="padding:8px;font-size:14px;">
+                    <option value="sve">📋 Sve</option>
+                    <option value="aktivno">⏳ Aktivne</option>
+                    <option value="vraceno">✅ Vraćene</option>
+                </select>
+                <table id="logoviTable"><thead><tr><th>Objekat</th><th>Artikal</th><th>Tip</th><th>Kol</th><th>Pozajmljeno</th><th>Vraćeno</th><th>Status</th></tr></thead><tbody></tbody></table>
+            </div>
+        </div>
+        
+        <div id="tab-stanje" class="tab-content" style="display:none;">
+            <div class="card"><h3>📊 Sabrano stanje po objektima</h3><div id="stanjeContainer"></div></div>
+        </div>
+    </div>
 </div>
 
 <!-- MODALI -->
@@ -100,14 +136,7 @@
 </div>
 
 <script>
-// ==================== BRISANJE STARIH PODATAKA ====================
-localStorage.removeItem('poz_data');
-localStorage.removeItem('poz_obj');
-localStorage.removeItem('poz_trans');
-localStorage.removeItem('pozajmnice_backup');
-localStorage.removeItem('pozajmnice_data');
-
-// ==================== SVEŽI PODACI ====================
+// ==================== ARTIKLI ====================
 const items = [
     { id: 'i1', name: 'Koka kola 0.25', unit: 'kom' },
     { id: 'i2', name: 'Fanta 0.25', unit: 'kom' },
@@ -140,17 +169,25 @@ let objekti = [];
 let transactions = [];
 let selectedItemId = null;
 
+function loadData() {
+    const saved = localStorage.getItem('poz_data');
+    if (saved) {
+        const d = JSON.parse(saved);
+        objekti = d.objekti || [];
+        transactions = d.transactions || [];
+    }
+}
+
 function saveData() {
     localStorage.setItem('poz_data', JSON.stringify({ objekti, transactions }));
 }
 
-// === LOGIN ===
+// ==================== LOGIN ====================
 document.getElementById('loginBtn').onclick = () => {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('appContent').style.display = 'block';
-    const saved = JSON.parse(localStorage.getItem('poz_data'));
-    if (saved) { objekti = saved.objekti || []; transactions = saved.transactions || []; }
-    renderObjekti();
+    loadData();
+    renderAll();
 };
 
 document.getElementById('logoutBtn').onclick = () => {
@@ -158,10 +195,12 @@ document.getElementById('logoutBtn').onclick = () => {
     document.getElementById('loginScreen').style.display = 'flex';
 };
 
-// === RENDER ===
+// ==================== RENDER ====================
+function renderAll() { renderObjekti(); renderLogovi(); renderStanje(); }
+
 function renderObjekti() {
     const c = document.getElementById('objektiContainer');
-    c.innerHTML = objekti.length === 0 ? '<p style="text-align:center;color:#999;padding:20px;">Nema objekata. Dodajte prvi.</p>' : '';
+    c.innerHTML = objekti.length === 0 ? '<p style="text-align:center;color:#999;padding:20px;">Nema objekata. Kliknite "+ Objekat".</p>' : '';
     objekti.forEach(obj => {
         const akt = transactions.filter(t => t.objekatId === obj.id && t.status === 'aktivno');
         const dNama = akt.filter(t => t.type === 'duguju_nama').reduce((s, t) => s + t.quantity, 0);
@@ -170,7 +209,7 @@ function renderObjekti() {
         card.innerHTML = `
             <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;">
                 <div><h3>${obj.name}</h3>${obj.contact||''}
-                <div>${akt.length>0?`<span class="badge badge-duguju-nama">📤 Duguju: ${dNama.toFixed(2)}</span> <span class="badge badge-mi-dugujemo">📥 Dugujemo: ${miD.toFixed(2)}</span>`:'<span style="color:#28a745;">✅ Razduženo</span>'}</div></div>
+                <div style="margin-top:8px;">${akt.length>0?`<span class="badge badge-duguju-nama">📤 Duguju: ${dNama.toFixed(2)}</span> <span class="badge badge-mi-dugujemo">📥 Dugujemo: ${miD.toFixed(2)}</span>`:'<span style="color:#28a745;">✅ Razduženo</span>'}</div></div>
                 <div style="display:flex;gap:5px;flex-wrap:wrap;">
                     <button class="btn btn-pozajmica btn-duguju-nama" onclick="openTrans('${obj.id}','duguju_nama')">📤 Oni duguju</button>
                     <button class="btn btn-pozajmica btn-mi-dugujemo" onclick="openTrans('${obj.id}','mi_dugujemo')">📥 Mi dugujemo</button>
@@ -182,7 +221,47 @@ function renderObjekti() {
     });
 }
 
-// === TRANSAKCIJE ===
+function renderLogovi() {
+    const filter = document.getElementById('logFilter')?.value || 'sve';
+    const tbody = document.querySelector('#logoviTable tbody');
+    tbody.innerHTML = '';
+    let f = [...transactions];
+    if (filter === 'aktivno') f = f.filter(t => t.status === 'aktivno');
+    if (filter === 'vraceno') f = f.filter(t => t.status === 'vraceno');
+    f.sort((a, b) => (b.dateBorrowed||'').localeCompare(a.dateBorrowed||''));
+    if (f.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;">Nema transakcija.</td></tr>'; return; }
+    f.forEach(t => {
+        const obj = objekti.find(o => o.id === t.objekatId);
+        const item = items.find(i => i.id === t.itemId);
+        const row = document.createElement('tr');
+        if (t.status === 'vraceno') row.className = 'row-vraceno';
+        row.innerHTML = `<td>${obj?.name||'?'}</td><td>${item?.name||'?'}</td><td>${t.type==='duguju_nama'?'📤 Duguju nama':'📥 Mi dugujemo'}</td><td>${t.quantity} ${item?.unit||''}</td><td>${t.dateBorrowed||'?'}</td><td>${t.dateReturned||'-'}</td><td><span class="badge ${t.status==='aktivno'?'badge-aktivno':'badge-vraceno'}">${t.status==='aktivno'?'⏳ Aktivno':'✅ Vraćeno'}</span></td>`;
+        tbody.appendChild(row);
+    });
+}
+
+function renderStanje() {
+    const c = document.getElementById('stanjeContainer');
+    c.innerHTML = '';
+    let ima = false;
+    objekti.forEach(obj => {
+        const akt = transactions.filter(t => t.objekatId === obj.id && t.status === 'aktivno');
+        if (akt.length === 0) return;
+        ima = true;
+        const sabrano = {};
+        akt.forEach(t => {
+            const key = t.itemId + '_' + t.type;
+            if (!sabrano[key]) { const item = items.find(i => i.id === t.itemId); sabrano[key] = { item, type: t.type, quantity: 0 }; }
+            sabrano[key].quantity += t.quantity;
+        });
+        const card = document.createElement('div'); card.className = 'card';
+        card.innerHTML = `<h4>${obj.name}</h4>${Object.values(sabrano).map(s => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;"><span>${s.item?.name||'?'} (${s.item?.unit||''})</span><span class="badge ${s.type==='duguju_nama'?'badge-duguju-nama':'badge-mi-dugujemo'}">${s.type==='duguju_nama'?'📤 Duguju':'📥 Dugujemo'}</span><strong>×${s.quantity}</strong></div>`).join('')}`;
+        c.appendChild(card);
+    });
+    if (!ima) c.innerHTML = '<p style="text-align:center;color:#28a745;padding:20px;">✅ Sve razduženo.</p>';
+}
+
+// ==================== TRANSAKCIJE ====================
 function openTrans(oid, type) {
     const obj = objekti.find(o => o.id === oid);
     document.getElementById('modalTitle').textContent = type==='duguju_nama' ? `📤 ${obj?.name} duguje nama` : `📥 Mi dugujemo: ${obj?.name}`;
@@ -215,21 +294,21 @@ function saveTrans(oid, type) {
     if (!selectedItemId) { alert('Odaberi artikal!'); return; }
     const qty = parseFloat(document.getElementById('quantity').value.replace(',', '.')) || 1;
     transactions.push({ id: Date.now().toString(36), objekatId: oid, itemId: selectedItemId, type, quantity: qty, dateBorrowed: new Date().toLocaleString('hr'), dateReturned: null, status: 'aktivno' });
-    saveData(); renderObjekti(); closeModal('transactionModal');
+    saveData(); renderAll(); closeModal('transactionModal');
 }
 
 function vrati(id) {
     if (confirm('Razdužiti?')) {
         const t = transactions.find(t => t.id === id);
-        if (t) { t.status = 'vraceno'; t.dateReturned = new Date().toLocaleString('hr'); saveData(); renderObjekti(); }
+        if (t) { t.status = 'vraceno'; t.dateReturned = new Date().toLocaleString('hr'); saveData(); renderAll(); }
     }
 }
 
 function delObj(id) {
-    if (confirm('Obrisati objekat i transakcije?')) {
+    if (confirm('Obrisati objekat i sve transakcije?')) {
         objekti = objekti.filter(o => o.id !== id);
         transactions = transactions.filter(t => t.objekatId !== id);
-        saveData(); renderObjekti();
+        saveData(); renderAll();
     }
 }
 
@@ -237,9 +316,8 @@ function addObjekat() {
     const name = document.getElementById('newObjekatName').value.trim();
     if (!name) return;
     objekti.push({ id: Date.now().toString(36), name, contact: document.getElementById('newObjekatContact').value.trim() });
-    document.getElementById('newObjekatName').value = '';
-    document.getElementById('newObjekatContact').value = '';
-    saveData(); renderObjekti(); closeModal('objekatFormModal');
+    document.getElementById('newObjekatName').value = ''; document.getElementById('newObjekatContact').value = '';
+    saveData(); renderAll(); closeModal('objekatFormModal');
 }
 
 function addItem() {
@@ -247,10 +325,19 @@ function addItem() {
     const unit = document.getElementById('newItemUnit').value.trim();
     if (!name || !unit) return;
     items.push({ id: Date.now().toString(36), name, unit });
-    document.getElementById('newItemName').value = '';
-    document.getElementById('newItemUnit').value = '';
+    document.getElementById('newItemName').value = ''; document.getElementById('newItemUnit').value = '';
     closeModal('itemFormModal');
     alert('✅ Artikal dodat!');
+}
+
+// ==================== TABOVI ====================
+function switchTab(event, tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+    event.target.classList.add('active');
+    document.getElementById('tab-' + tab).style.display = 'block';
+    if (tab === 'logovi') renderLogovi();
+    if (tab === 'stanje') renderStanje();
 }
 
 function showModal(id) { document.getElementById(id).classList.add('active'); }
