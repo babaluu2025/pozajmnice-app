@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pozajmnice ☁️</title>
+    <title>Pozajmnice</title>
     <meta name="theme-color" content="#667eea">
     <link rel="icon" type="image/png" href="https://img.icons8.com/color/48/handshake--v1.png">
     <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/handshake--v1.png">
 
     <script>
         const blob = new Blob([JSON.stringify({
-            name: "Pozajmnice ☁️",
+            name: "Pozajmnice",
             short_name: "Pozajmnice",
             start_url: "/",
             display: "standalone",
@@ -23,8 +23,6 @@
         })], {type:'application/json'});
         document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${URL.createObjectURL(blob)}">`);
     </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -48,12 +46,6 @@
         .btn-pozajmica { padding: 12px 24px; font-size: 15px; min-width: 160px; border-radius: 10px; font-weight: bold; }
         .btn-duguju-nama { background: #0d6efd; color: white; }
         .btn-mi-dugujemo { background: #fd7e14; color: white; }
-        .sync-indicator { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
-        .sync-online { background: #28a745; }
-        .sync-offline { background: #dc3545; }
-        .tabs { display: flex; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab { padding: 10px 20px; background: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .tab.active { background: #667eea; color: white; }
         .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 5px rgba(0,0,0,0.1); }
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
         .modal.active { display: flex; }
@@ -63,21 +55,11 @@
         .item-list { max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; }
         .item-option { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 15px; }
         .item-option:hover { background: #f0f0f0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #f8f9fa; font-weight: bold; position: sticky; top: 0; }
         .badge { padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; display: inline-block; }
-        .badge-aktivno { background: #fff3cd; color: #856404; }
-        .badge-vraceno { background: #d4edda; color: #155724; }
         .badge-duguju-nama { background: #cfe2ff; color: #084298; }
         .badge-mi-dugujemo { background: #ffe5d0; color: #a1440a; }
-        .row-vraceno { background: #f8fff8; opacity: 0.85; }
-        .row-vraceno td { text-decoration: line-through; color: #6c757d; }
-        .row-vraceno td:last-child { text-decoration: none; }
         @media (max-width: 768px) {
             .header-content { flex-direction: column; }
-            table { font-size: 12px; }
-            th, td { padding: 6px; }
             .btn-pozajmica { min-width: 140px; font-size: 14px; padding: 10px 16px; }
         }
     </style>
@@ -87,14 +69,14 @@
     <div id="loginScreen" class="login-container">
         <div class="login-box">
             <div class="login-icon">🤝</div>
-            <h1>Pozajmnice ☁️</h1>
+            <h1>Pozajmnice</h1>
             <p>Unesite šifru za pristup</p>
             <div class="password-input">
-                <input type="password" id="passwordInput" placeholder="Šifra" autocomplete="off">
+                <input type="password" id="passwordInput" placeholder="Šifra" autocomplete="off" value="123">
             </div>
             <button id="loginBtn" class="login-btn">Pristupi</button>
             <div id="errorMsg" class="error-msg">Pogrešna šifra!</div>
-            <div style="margin-top: 15px; color: #666;">Šifra za test: <strong>123</strong></div>
+            <div style="margin-top: 15px; color: #666;">Šifra: <strong>123</strong></div>
         </div>
     </div>
 
@@ -102,40 +84,16 @@
     <div id="appContent" style="display: none;">
         <header>
             <div class="container header-content">
-                <h1>🤝 Pozajmnice <span id="syncDot" class="sync-indicator sync-offline" title="Sinhronizacija"></span></h1>
+                <h1>🤝 Pozajmnice</h1>
                 <div>
                     <button onclick="showModal('objekatFormModal')" class="btn btn-success">+ Objekat</button>
                     <button onclick="showModal('itemFormModal')" class="btn btn-info">+ Artikal</button>
-                    <button onclick="exportData()" class="btn btn-info">📥 Export</button>
                     <button id="logoutBtn" class="btn btn-danger">Odjava</button>
                 </div>
             </div>
         </header>
-
         <div class="container">
-            <div class="tabs">
-                <button class="tab active" onclick="switchTab(event, 'objekti')">🏢 Objekti</button>
-                <button class="tab" onclick="switchTab(event, 'logovi')">📋 Logovi</button>
-                <button class="tab" onclick="switchTab(event, 'stanje')">📊 Stanje</button>
-            </div>
-
-            <div id="tab-objekti" class="tab-content"><div id="objektiContainer"></div></div>
-            <div id="tab-logovi" class="tab-content" style="display:none;">
-                <div class="card">
-                    <h3>Sve transakcije</h3>
-                    <select id="logFilter" onchange="renderLogovi()" style="padding:8px;font-size:14px;">
-                        <option value="sve">📋 Sve</option>
-                        <option value="aktivno">⏳ Aktivne</option>
-                        <option value="vraceno">✅ Vraćene</option>
-                    </select>
-                    <div style="overflow-x:auto;">
-                        <table id="logoviTable"><thead><tr><th>Objekat</th><th>Artikal</th><th>Tip</th><th>Kol</th><th>Pozajmljeno</th><th>Vraćeno</th><th>Status</th></tr></thead><tbody></tbody></table>
-                    </div>
-                </div>
-            </div>
-            <div id="tab-stanje" class="tab-content" style="display:none;">
-                <div class="card"><h3>📊 Sabrano stanje po objektima</h3><div id="stanjeContainer"></div></div>
-            </div>
+            <div id="objektiContainer"></div>
         </div>
     </div>
 
@@ -164,12 +122,6 @@
     </div>
 
     <script>
-        // ==================== SUPABASE KONFIGURACIJA ====================
-        const SUPABASE_URL = 'https://itoyvqqssqmeyxawvulq.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_nbUWlCIXbB48NoBRhH4ucg_PfCAmau1';
-        let supabaseClient = null;
-        try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
-
         // ==================== INICIJALNI ARTIKLI ====================
         const DEFAULT_ITEMS = [
             { id: 'def_1', name: 'Koka kola 0.25', unit: 'kom' },
@@ -205,83 +157,39 @@
         let transactions = [];
         let selectedItemId = null;
 
-        function loadLocal() {
-            const saved = localStorage.getItem('pozajmnice_backup');
+        function loadData() {
+            const saved = localStorage.getItem('pozajmnice_data');
             if (saved) {
                 const d = JSON.parse(saved);
                 objekti = d.objekti || [];
-                items = d.items && d.items.length > 0 ? d.items : [...DEFAULT_ITEMS];
+                items = d.items || [];
                 transactions = d.transactions || [];
-            } else {
+            }
+            if (items.length === 0) {
                 items = [...DEFAULT_ITEMS];
             }
         }
 
-        function saveLocal() {
-            localStorage.setItem('pozajmnice_backup', JSON.stringify({ objekti, items, transactions }));
-        }
-
-        async function loadFromSupabase() {
-            if (!supabaseClient) { loadLocal(); updateSyncStatus(false); return; }
-            try {
-                const { data, error } = await supabaseClient.from('podaci').select('*').eq('id', 1).single();
-                if (data) {
-                    objekti = data.objekti || [];
-                    items = data.items && data.items.length > 0 ? data.items : [...DEFAULT_ITEMS];
-                    transactions = data.transactions || [];
-                    updateSyncStatus(true);
-                } else if (error) {
-                    await supabaseClient.from('podaci').upsert({ id: 1, objekti: [], items: [...DEFAULT_ITEMS], transactions: [] });
-                    items = [...DEFAULT_ITEMS];
-                    updateSyncStatus(true);
-                }
-            } catch(e) { loadLocal(); updateSyncStatus(false); }
-        }
-
-        async function saveToSupabase() {
-            saveLocal();
-            if (!supabaseClient) return;
-            try { await supabaseClient.from('podaci').upsert({ id: 1, objekti, items, transactions }); updateSyncStatus(true); } catch(e) { updateSyncStatus(false); }
-        }
-
-        function subscribeToChanges() {
-            if (!supabaseClient) return;
-            supabaseClient.channel('podaci-changes').on('postgres_changes', { event: '*', schema: 'public', table: 'podaci' }, (payload) => {
-                if (payload.new && payload.new.id === 1) {
-                    objekti = payload.new.objekti || [];
-                    items = payload.new.items || [];
-                    transactions = payload.new.transactions || [];
-                    renderAll();
-                }
-            }).subscribe();
-        }
-
-        function updateSyncStatus(online) {
-            const dot = document.getElementById('syncDot');
-            if (dot) { dot.className = 'sync-indicator ' + (online ? 'sync-online' : 'sync-offline'); dot.title = online ? '☁️ Sinhronizovano' : '📱 Lokalno (offline)'; }
+        function saveData() {
+            localStorage.setItem('pozajmnice_data', JSON.stringify({ objekti, items, transactions }));
         }
 
         // ==================== LOGIN ====================
-        document.getElementById('loginBtn').addEventListener('click', async function() {
+        document.getElementById('loginBtn').addEventListener('click', function() {
             if (document.getElementById('passwordInput').value === '123') {
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('appContent').style.display = 'block';
-                await loadFromSupabase();
-                renderAll();
-                subscribeToChanges();
+                loadData();
+                renderObjekti();
             } else { document.getElementById('errorMsg').style.display = 'block'; }
         });
         document.getElementById('passwordInput').addEventListener('keypress', function(e) { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
         document.getElementById('logoutBtn').addEventListener('click', function() {
             document.getElementById('appContent').style.display = 'none';
             document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('passwordInput').value = '';
-            document.getElementById('errorMsg').style.display = 'none';
         });
 
         // ==================== RENDER ====================
-        function renderAll() { renderObjekti(); renderLogovi(); renderStanje(); }
-
         function renderObjekti() {
             const container = document.getElementById('objektiContainer');
             container.innerHTML = '';
@@ -291,19 +199,16 @@
                 const dugujuNama = aktivne.filter(t => t.type === 'duguju_nama').reduce((s, t) => s + t.quantity, 0);
                 const miDugujemo = aktivne.filter(t => t.type === 'mi_dugujemo').reduce((s, t) => s + t.quantity, 0);
                 const card = document.createElement('div'); card.className = 'card';
-                card.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;"><div style="flex:1;min-width:200px;"><h3 style="font-size:18px;">${obj.name}</h3>${obj.contact ? `<p style="color:#666;">📞 ${obj.contact}</p>` : ''}<div style="margin-top:8px;">${aktivne.length > 0 ? `<span class="badge badge-duguju-nama" style="font-size:13px;">📤 Duguju nama: ${dugujuNama.toFixed(2)}</span><span class="badge badge-mi-dugujemo" style="font-size:13px;margin-left:5px;">📥 Mi dugujemo: ${miDugujemo.toFixed(2)}</span>` : '<span style="color:#28a745;font-weight:bold;">✅ Sve razduženo</span>'}</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-pozajmica btn-duguju-nama" onclick="openTransaction('${obj.id}','duguju_nama')">📤 Oni duguju</button><button class="btn btn-pozajmica btn-mi-dugujemo" onclick="openTransaction('${obj.id}','mi_dugujemo')">📥 Mi dugujemo</button><button class="btn btn-danger btn-sm" onclick="deleteObjekat('${obj.id}')" style="margin-top:5px;">🗑</button></div></div>${aktivne.length > 0 ? `<div style="margin-top:15px;border-top:2px solid #eee;padding-top:10px;"><strong style="font-size:14px;">Aktivne pozajmice (najnovije na vrhu):</strong>${[...aktivne].reverse().map(t => { const item = items.find(i => i.id === t.itemId); return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;gap:10px;flex-wrap:wrap;border-bottom:1px dashed #eee;"><span style="font-weight:bold;">${item?.name||'Nepoznato'} ×${t.quantity.toFixed(2)} ${item?.unit||''}</span><span style="font-size:11px;color:#666;">📅 ${t.dateBorrowed}</span><span class="badge ${t.type==='duguju_nama'?'badge-duguju-nama':'badge-mi-dugujemo'}">${t.type==='duguju_nama'?'Oni duguju':'Mi dugujemo'}</span><button class="btn btn-success btn-sm" onclick="vrati('${t.id}')">✅ Vrati</button></div>`; }).join('')}</div>` : ''}`;
+                card.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;"><div style="flex:1;min-width:200px;"><h3 style="font-size:18px;">${obj.name}</h3>${obj.contact ? `<p style="color:#666;">📞 ${obj.contact}</p>` : ''}<div style="margin-top:8px;">${aktivne.length > 0 ? `<span class="badge badge-duguju-nama" style="font-size:13px;">📤 Duguju nama: ${dugujuNama.toFixed(2)}</span><span class="badge badge-mi-dugujemo" style="font-size:13px;margin-left:5px;">📥 Mi dugujemo: ${miDugujemo.toFixed(2)}</span>` : '<span style="color:#28a745;font-weight:bold;">✅ Sve razduženo</span>'}</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-pozajmica btn-duguju-nama" onclick="openTransaction('${obj.id}','duguju_nama')">📤 Oni duguju</button><button class="btn btn-pozajmica btn-mi-dugujemo" onclick="openTransaction('${obj.id}','mi_dugujemo')">📥 Mi dugujemo</button><button class="btn btn-danger btn-sm" onclick="deleteObjekat('${obj.id}')" style="margin-top:5px;">🗑</button></div></div>${aktivne.length > 0 ? `<div style="margin-top:15px;border-top:2px solid #eee;padding-top:10px;"><strong>Aktivne pozajmice:</strong>${[...aktivne].reverse().map(t => { const item = items.find(i => i.id === t.itemId); return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;gap:10px;"><span style="font-weight:bold;">${item?.name||'Nepoznato'} ×${t.quantity.toFixed(2)} ${item?.unit||''}</span><span class="badge ${t.type==='duguju_nama'?'badge-duguju-nama':'badge-mi-dugujemo'}">${t.type==='duguju_nama'?'Oni duguju':'Mi dugujemo'}</span><button class="btn btn-success btn-sm" onclick="vrati('${t.id}')">✅ Vrati</button></div>`; }).join('')}</div>` : ''}`;
                 container.appendChild(card);
             });
         }
 
-        function renderLogovi() { /* isto kao pre */ }
-        function renderStanje() { /* isto kao pre */ }
-
-        // ==================== OSTATALO ISTO ====================
+        // ==================== TRANSAKCIJE ====================
         function openTransaction(objekatId, type) {
             const obj = objekti.find(o => o.id === objekatId);
-            document.getElementById('modalTitle').textContent = type==='duguju_nama' ? `📤 Pozajmica – ${obj?.name||'Objekat'} duguje nama` : `📥 Pozajmica – mi dugujemo: ${obj?.name||'Objektu'}`;
-            document.getElementById('modalBody').innerHTML = `<input type="text" id="itemSearch" placeholder="🔍 Pretraži artikal..." class="search-input" oninput="filterItems()"><div class="item-list" id="itemListContainer"></div><div style="margin-top:15px;display:flex;gap:10px;align-items:center;"><label style="font-weight:bold;">Količina:</label><input type="number" id="quantity" value="1" min="0.01" step="any" style="width:120px;padding:10px;font-size:16px;"><small style="color:#666;">(npr. 1,5 ili 0.75)</small></div><button onclick="saveTransaction('${objekatId}','${type}')" class="btn btn-success" style="margin-top:15px;width:100%;padding:12px;font-size:16px;">✅ Sačuvaj pozajmicu</button>`;
+            document.getElementById('modalTitle').textContent = type==='duguju_nama' ? `📤 ${obj?.name||'Objekat'} duguje nama` : `📥 Mi dugujemo: ${obj?.name||'Objektu'}`;
+            document.getElementById('modalBody').innerHTML = `<input type="text" id="itemSearch" placeholder="🔍 Pretraži artikal..." class="search-input" oninput="filterItems()"><div class="item-list" id="itemListContainer"></div><div style="margin-top:15px;display:flex;gap:10px;align-items:center;"><label>Količina:</label><input type="number" id="quantity" value="1" min="0.01" step="any" style="width:120px;padding:10px;font-size:16px;"></div><button onclick="saveTransaction('${objekatId}','${type}')" class="btn btn-success" style="margin-top:15px;width:100%;padding:12px;font-size:16px;">✅ Sačuvaj pozajmicu</button>`;
             window._objekatId = objekatId; window._type = type; selectedItemId = null; filterItems(); showModal('transactionModal');
         }
 
@@ -313,34 +218,60 @@
             const container = document.getElementById('itemListContainer');
             if (!container) return;
             container.innerHTML = '';
-            if (filtered.length === 0) { container.innerHTML = '<p style="padding:15px;color:#999;">Nema artikala. Prvo dodajte artikal.</p>'; return; }
+            if (filtered.length === 0) { container.innerHTML = '<p style="padding:15px;color:#999;">Nema artikala.</p>'; return; }
             filtered.forEach(item => {
                 const div = document.createElement('div'); div.className = 'item-option';
                 div.textContent = `${item.name} (${item.unit})`;
-                div.onclick = function() { selectedItemId = item.id; document.querySelectorAll('.item-option').forEach(el => el.style.background = ''); this.style.background = '#d4edda'; this.style.fontWeight = 'bold'; };
+                div.onclick = function() { selectedItemId = item.id; document.querySelectorAll('.item-option').forEach(el => el.style.background = ''); this.style.background = '#d4edda'; };
                 container.appendChild(div);
             });
         }
 
-        async function saveTransaction(objekatId, type) {
-            if (!selectedItemId) { alert('⚠️ Odaberi artikal!'); return; }
-            let qtyStr = document.getElementById('quantity').value.replace(',', '.');
-            const quantity = parseFloat(qtyStr);
-            if (isNaN(quantity) || quantity <= 0) { alert('⚠️ Unesite ispravnu količinu!'); return; }
+        function saveTransaction(objekatId, type) {
+            if (!selectedItemId) { alert('Odaberi artikal!'); return; }
+            const quantity = parseFloat(document.getElementById('quantity').value.replace(',', '.')) || 1;
             transactions.push({ id: Date.now().toString(36), objekatId, itemId: selectedItemId, type, quantity, dateBorrowed: new Date().toLocaleString('hr'), dateReturned: null, status: 'aktivno' });
-            await saveToSupabase(); renderAll(); closeModal('transactionModal');
+            saveData(); renderObjekti(); closeModal('transactionModal');
         }
 
-        async function vrati(transactionId) { if (confirm('✅ Potvrdi razduženje?')) { const trans = transactions.find(t => t.id === transactionId); if (trans) { trans.status = 'vraceno'; trans.dateReturned = new Date().toLocaleString('hr'); await saveToSupabase(); renderAll(); } } }
-        async function deleteObjekat(objekatId) { if (confirm('🗑 Obrisati?')) { objekti = objekti.filter(o => o.id !== objekatId); transactions = transactions.filter(t => t.objekatId !== objekatId); await saveToSupabase(); renderAll(); } }
-        async function addObjekat() { const name = document.getElementById('newObjekatName').value.trim(); if (!name) { alert('Unesite naziv!'); return; } objekti.push({ id: Date.now().toString(36), name, contact: document.getElementById('newObjekatContact').value.trim() }); document.getElementById('newObjekatName').value = ''; document.getElementById('newObjekatContact').value = ''; await saveToSupabase(); renderAll(); closeModal('objekatFormModal'); }
-        async function addItem() { const name = document.getElementById('newItemName').value.trim(); const unit = document.getElementById('newItemUnit').value.trim(); if (!name || !unit) { alert('Unesite naziv i jedinicu!'); return; } items.push({ id: Date.now().toString(36), name, unit }); document.getElementById('newItemName').value = ''; document.getElementById('newItemUnit').value = ''; await saveToSupabase(); closeModal('itemFormModal'); }
-        function exportData() { const data = JSON.stringify({ objekti, items, transactions }, null, 2); const blob = new Blob([data], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `pozajmnice_backup_${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url); }
-        function switchTab(event, tab) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none'); event.target.classList.add('active'); document.getElementById('tab-' + tab).style.display = 'block'; if (tab === 'logovi') renderLogovi(); if (tab === 'stanje') renderStanje(); }
+        function vrati(transactionId) {
+            if (confirm('Razdužiti?')) {
+                const trans = transactions.find(t => t.id === transactionId);
+                if (trans) { trans.status = 'vraceno'; trans.dateReturned = new Date().toLocaleString('hr'); saveData(); renderObjekti(); }
+            }
+        }
+
+        function deleteObjekat(objekatId) {
+            if (confirm('Obrisati objekat?')) {
+                objekti = objekti.filter(o => o.id !== objekatId);
+                transactions = transactions.filter(t => t.objekatId !== objekatId);
+                saveData(); renderObjekti();
+            }
+        }
+
+        function addObjekat() {
+            const name = document.getElementById('newObjekatName').value.trim();
+            if (!name) return;
+            objekti.push({ id: Date.now().toString(36), name, contact: document.getElementById('newObjekatContact').value.trim() });
+            document.getElementById('newObjekatName').value = '';
+            document.getElementById('newObjekatContact').value = '';
+            saveData(); renderObjekti(); closeModal('objekatFormModal');
+        }
+
+        function addItem() {
+            const name = document.getElementById('newItemName').value.trim();
+            const unit = document.getElementById('newItemUnit').value.trim();
+            if (!name || !unit) return;
+            items.push({ id: Date.now().toString(36), name, unit });
+            document.getElementById('newItemName').value = '';
+            document.getElementById('newItemUnit').value = '';
+            saveData(); closeModal('itemFormModal');
+            alert('✅ Artikal dodat!');
+        }
+
         function showModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); selectedItemId = null; }
-        window.onclick = function(event) { if (event.target.classList.contains('modal')) { event.target.classList.remove('active'); selectedItemId = null; } };
-        window.onload = function() { document.getElementById('passwordInput').focus(); };
+        window.onclick = function(event) { if (event.target.classList.contains('modal')) event.target.classList.remove('active'); };
     </script>
 </body>
 </html>
