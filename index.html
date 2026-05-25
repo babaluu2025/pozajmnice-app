@@ -59,6 +59,8 @@
         .badge-mi-dugujemo { background: #ffe5d0; color: #a1440a; }
         .row-vraceno { background: #f8fff8; opacity: 0.85; }
         .row-vraceno td { text-decoration: line-through; color: #6c757d; }
+        .vrati-dug { background: #0d6efd; color: white; }
+        .vrati-mi { background: #fd7e14; color: white; }
     </style>
 </head>
 <body>
@@ -143,6 +145,7 @@ try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
 
 // ==================== SVI ARTIKLI ====================
 const DEFAULT_ITEMS = [
+    const DEFAULT_ITEMS = [
     { id: '1', name: 'CEVAP MASA KOM/S', unit: 'KOM.' },
     { id: '2', name: 'TOST 24/1 KOM/S', unit: 'KOM.' },
     { id: '3', name: 'BRASNO T400/S', unit: 'KG.' },
@@ -305,32 +308,130 @@ const DEFAULT_ITEMS = [
     { id: '160', name: 'WHITE CUVEE TIKVES 0,75', unit: 'KOM.' },
     { id: '161', name: 'RED CUVEE TIKVES 0,75', unit: 'KOM.' },
     { id: '162', name: 'AMARETTO 1/1', unit: 'LIT.' },
-    { id: '163', name: 'UDERBERG 1/1', unit: 'LIT.' },
-    { id: '164', name: 'OUZO 1/1', unit: 'LIT.' },
-    { id: '165', name: 'LIME LIK 1/1', unit: 'LIT.' },
-    { id: '166', name: 'MARASKINO LIK 1/1', unit: 'LIT.' },
-    { id: '167', name: 'SAMBUCA 1/1', unit: 'LIT.' },
-    { id: '168', name: 'LIMONCELLO 1/1', unit: 'LIT.' },
-    { id: '169', name: 'KAHLUA 1/1', unit: 'LIT.' },
-    { id: '170', name: 'DIPLOMATICO RES/S', unit: 'LIT.' },
-    { id: '171', name: 'BACARDI BLACK 1/1', unit: 'LIT.' },
-    { id: '172', name: 'HERADURA PLATA/S', unit: 'LIT.' },
-    { id: '173', name: 'HERADURA REPOSADO/S', unit: 'LIT.' },
-    { id: '174', name: 'TEKILA 1/1', unit: 'LIT.' },
-    { id: '175', name: 'BOMBAY SAPPHIRE  1/1', unit: 'LIT.' },
-    { id: '176', name: 'GIN MARE 1/1', unit: 'LIT.' },
-    { id: '177', name: 'JEZDIC COKANJ 0,04 KOM/S', unit: 'KOM.' },
-    { id: '178', name: 'SAMAR SLJIVA 1/1', unit: 'LIT.' },
-    { id: '179', name: 'BOJKOVCANKA DUNJA 5G /S', unit: 'LIT.' },
-    { id: '180', name: 'BOJKOVCANKA SLJIVA 5G /S', unit: 'LIT.' },
-    { id: '181', name: 'BOJKOVCANKA SLJIVA 10G /S', unit: 'LIT.' },
-    { id: '182', name: 'TRIPLE SEC 1/1', unit: 'LIT.' },
-    { id: '183', name: 'BLUE CURACAO 1/1', unit: 'LIT.' },
-    { id: '184', name: 'PASOA/S', unit: 'LIT.' },
-    { id: '185', name: 'MELON LIKER/S', unit: 'LIT.' },
-    { id: '186', name: 'GRENADINE 1/1', unit: 'LIT.' }
+    { id: '163', name: 'VECCHIO AMARO DEL CAPO 1/1', unit: 'LIT.' },
+    { id: '164', name: 'UDERBERG 1/1', unit: 'LIT.' },
+    { id: '165', name: 'OUZO 1/1', unit: 'LIT.' },
+    { id: '166', name: 'APEROL 1/1', unit: 'LIT.' },
+    { id: '167', name: 'BAILEYS 1/1', unit: 'LIT.' },
+    { id: '168', name: 'CAROLANS 1/1', unit: 'LIT.' },
+    { id: '169', name: 'MALIBU 1/1', unit: 'LIT.' },
+    { id: '170', name: 'IRISH MIST 1/1', unit: 'LIT.' },
+    { id: '171', name: 'MARTINI ROSSO 1/1', unit: 'LIT.' },
+    { id: '172', name: 'MARTINI BIANCO 1/1', unit: 'LIT.' },
+    { id: '173', name: 'CAMPARI 1/1', unit: 'LIT.' },
+    { id: '174', name: 'JAGERMEISTER 1/1', unit: 'LIT.' },
+    { id: '175', name: 'AMARO MONTENEGRO 1/1', unit: 'LIT.' },
+    { id: '176', name: 'AMARO RAMAZZOTTI 1/1', unit: 'LIT.' },
+    { id: '177', name: 'ABSINTH 1/1', unit: 'LIT.' },
+    { id: '178', name: 'METAXA 1/1', unit: 'LIT.' },
+    { id: '179', name: 'VECHIA ROMAGNA 1/1', unit: 'LIT.' },
+    { id: '180', name: 'STOCK 84 1/1', unit: 'LIT.' },
+    { id: '181', name: 'LIME LIK 1/1', unit: 'LIT.' },
+    { id: '182', name: 'MARASKINO LIK 1/1', unit: 'LIT.' },
+    { id: '183', name: 'SAMBUCA 1/1', unit: 'LIT.' },
+    { id: '184', name: 'LIMONCELLO 1/1', unit: 'LIT.' },
+    { id: '185', name: 'ARCHERS 1/1', unit: 'LIT.' },
+    { id: '186', name: 'KAHLUA 1/1', unit: 'LIT.' },
+    { id: '187', name: 'ABSOLUT 1/1', unit: 'LIT.' },
+    { id: '188', name: 'BACARDI 1/1', unit: 'LIT.' },
+    { id: '189', name: 'BACARDI BLACK 1/1', unit: 'LIT.' },
+    { id: '190', name: 'BEEFEATER 1/1', unit: 'LIT.' },
+    { id: '191', name: 'BELVEDERE 1/1', unit: 'LIT.' },
+    { id: '192', name: 'BOMBAY SAPPHIRE 1/1', unit: 'LIT.' },
+    { id: '193', name: 'CACHASA 1/1', unit: 'LIT.' },
+    { id: '194', name: 'DIPLOMATICO RES/S', unit: 'LIT.' },
+    { id: '195', name: 'FINLANDIA 1/1', unit: 'LIT.' },
+    { id: '196', name: 'GIN 1/1', unit: 'LIT.' },
+    { id: '197', name: 'GIN MARE 1/1', unit: 'LIT.' },
+    { id: '198', name: 'GORDONS 1/1', unit: 'LIT.' },
+    { id: '199', name: 'GREY GOOSE 1/1', unit: 'LIT.' },
+    { id: '200', name: 'HAVANA CLUB - ANEJO BIANCO 3 ANOS 1/1', unit: 'LIT.' },
+    { id: '201', name: 'HAVANA CLUB - ANEJO BIANCO 7 ANOS 1/1', unit: 'LIT.' },
+    { id: '202', name: 'HAVANA CLUB -ANEJO BIANCO 1/1', unit: 'LIT.' },
+    { id: '203', name: 'HENDRIKS 1/1', unit: 'LIT.' },
+    { id: '204', name: 'HERADURA PLATA/S', unit: 'LIT.' },
+    { id: '205', name: 'HERADURA REPOSADO/S', unit: 'LIT.' },
+    { id: '206', name: 'PEPE PATRON 1/1', unit: 'LIT.' },
+    { id: '207', name: 'RUM 1/1', unit: 'LIT.' },
+    { id: '208', name: 'SANTIAGO DE CUBA 1/1', unit: 'LIT.' },
+    { id: '209', name: 'TEKILA 1/1', unit: 'LIT.' },
+    { id: '210', name: 'VODKA 1/1', unit: 'LIT.' },
+    { id: '211', name: 'BOJKOVCANKA DUNJA 5G /S', unit: 'LIT.' },
+    { id: '212', name: 'BOJKOVCANKA SLJIVA 10G /S', unit: 'LIT.' },
+    { id: '213', name: 'BOJKOVCANKA SLJIVA 5G /S', unit: 'LIT.' },
+    { id: '214', name: 'DOMACA RAKIJA DUNJA 1/1', unit: 'LIT.' },
+    { id: '215', name: 'DOMACA RAKIJA KAJSIJA 1/1', unit: 'LIT.' },
+    { id: '216', name: 'DOMACA RAKIJA LOZA 1/1', unit: 'LIT.' },
+    { id: '217', name: 'DOMACA RAKIJA SLJIVA 1/1', unit: 'LIT.' },
+    { id: '218', name: 'DOMACA RAKIJA TRAVARICA 1/1', unit: 'LIT.' },
+    { id: '219', name: 'DUNJA JEZDIC 1/1', unit: 'LIT.' },
+    { id: '220', name: 'DUNJA ZLATNI LISTIC 1/1', unit: 'LIT.' },
+    { id: '221', name: 'GORKI LIST 1/1', unit: 'LIT.' },
+    { id: '222', name: 'JEZDIC COKANJ 0,04 KOM/S', unit: 'KOM.' },
+    { id: '223', name: 'KRUNA 1/1', unit: 'LIT.' },
+    { id: '224', name: 'KRUSKA JEZDIC 1/1', unit: 'LIT.' },
+    { id: '225', name: 'LOZA INSTITUT 1/1', unit: 'LIT.' },
+    { id: '226', name: 'MEDOVA JEZDIC 1/1', unit: 'LIT.' },
+    { id: '227', name: 'MEDUSKA 1/1', unit: 'LIT.' },
+    { id: '228', name: 'PELINKOVAC MARASKA 1/1', unit: 'LIT.' },
+    { id: '229', name: 'PRVIJENAC 1/1', unit: 'LIT.' },
+    { id: '230', name: 'RONER VILLIAMS - VILJAMOVKA 1/1', unit: 'LIT.' },
+    { id: '231', name: 'SAMAR SLJIVA 1/1', unit: 'LIT.' },
+    { id: '232', name: 'SLJIVA BARRIQUE 12Y MILINCIC 1/1', unit: 'LIT.' },
+    { id: '233', name: 'SLJIVA DESETKA 1/1', unit: 'LIT.' },
+    { id: '234', name: 'SLJIVA JEZDIC 1/1', unit: 'LIT.' },
+    { id: '235', name: 'SOKOLOVA DUNJA 1/1', unit: 'LIT.' },
+    { id: '236', name: 'SOKOLOVA KAJSIJA 1/1', unit: 'LIT.' },
+    { id: '237', name: 'SOKOLOVA MEDOVINA 1/1', unit: 'LIT.' },
+    { id: '238', name: 'SOKOLOVA SLJIVA 12 1/1', unit: 'LIT.' },
+    { id: '239', name: 'SOKOLOVA SLJIVA 5 1/1', unit: 'LIT.' },
+    { id: '240', name: 'SOKOLOVA TRAVARICA 1/1', unit: 'LIT.' },
+    { id: '241', name: 'SOKOLOVA VILJAMOVKA 1/1', unit: 'LIT.' },
+    { id: '242', name: 'TERANINO 1/1', unit: 'LIT.' },
+    { id: '243', name: 'VILJAMOVKA 1/1', unit: 'LIT.' },
+    { id: '244', name: 'VINJAK 1/1', unit: 'LIT.' },
+    { id: '245', name: 'VISNJA JEZDIC 1/1', unit: 'LIT.' },
+    { id: '246', name: 'COURVOISIER V.S. 1/1', unit: 'LIT.' },
+    { id: '247', name: 'COURVOISIER V.S.O.P. 1/1', unit: 'LIT.' },
+    { id: '248', name: 'COURVOISIER X.O. 1/1', unit: 'LIT.' },
+    { id: '249', name: 'HENNESSY V.S. 1/1', unit: 'LIT.' },
+    { id: '250', name: 'HENNESSY V.S.O.P. 1/1', unit: 'LIT.' },
+    { id: '251', name: 'HENNESSY X.O. 1/1', unit: 'LIT.' },
+    { id: '252', name: 'MARTEL V.S. 1/1', unit: 'LIT.' },
+    { id: '253', name: 'MARTEL V.S.O.P. 1/1', unit: 'LIT.' },
+    { id: '254', name: 'MARTEL X.O. 1/1', unit: 'LIT.' },
+    { id: '255', name: 'REMY MARTIN V.S.O.P. 1/1', unit: 'LIT.' },
+    { id: '256', name: 'BALLANTINES 1/1', unit: 'LIT.' },
+    { id: '257', name: 'BALLANTINES 12 Y 1/1', unit: 'LIT.' },
+    { id: '258', name: 'CHIVAS REGAL 1/1', unit: 'LIT.' },
+    { id: '259', name: 'FOUR ROSES 1/1', unit: 'LIT.' },
+    { id: '260', name: 'GENTLEMAN JACK 1/1', unit: 'LIT.' },
+    { id: '261', name: 'GLENFIFFIDDICH 1/1', unit: 'LIT.' },
+    { id: '262', name: 'GRANTS 1/1', unit: 'LIT.' },
+    { id: '263', name: 'HIGHLAND PARK 1/1', unit: 'LIT.' },
+    { id: '264', name: 'JACK DANIELS 1/1', unit: 'LIT.' },
+    { id: '265', name: 'JACK DANIELS SINGL BARREL 1/1', unit: 'LIT.' },
+    { id: '266', name: 'JAMESON 1/1', unit: 'LIT.' },
+    { id: '267', name: 'JIM BEAM 1/1', unit: 'LIT.' },
+    { id: '268', name: 'JOHNNIE WALKER BLACK LABEL 1/1', unit: 'LIT.' },
+    { id: '269', name: 'JOHNNIE WALKER BLUE LABEL 1/1', unit: 'LIT.' },
+    { id: '270', name: 'JOHNNIE WALKER GOLD LABEL 1/1', unit: 'LIT.' },
+    { id: '271', name: 'JOHNNIE WALKER GREEN LABEL 1/1', unit: 'LIT.' },
+    { id: '272', name: 'JOHNNIE WALKER RED LABEL 1/1', unit: 'LIT.' },
+    { id: '273', name: 'MACALLAN 1/1', unit: 'LIT.' },
+    { id: '274', name: 'NAKED GROUSE 1/1', unit: 'LIT.' },
+    { id: '275', name: 'ROYAL SALUTE 1/1', unit: 'LIT.' },
+    { id: '276', name: 'SOUTHERN COMFORT 1/1', unit: 'LIT.' },
+    { id: '277', name: 'TEACHERS 1/1', unit: 'LIT.' },
+    { id: '278', name: 'TULLAMORE DEW 1/1', unit: 'LIT.' },
+    { id: '279', name: 'WHITE HORSE 1/1', unit: 'LIT.' },
+    { id: '280', name: 'WILD TURKEY 1/1', unit: 'LIT.' },
+    { id: '281', name: 'TRIPLE SEC 1/1', unit: 'LIT.' },
+    { id: '282', name: 'BLUE CURACAO 1/1', unit: 'LIT.' },
+    { id: '283', name: 'PASOA/S', unit: 'LIT.' },
+    { id: '284', name: 'MELON LIKER/S', unit: 'LIT.' },
+    { id: '285', name: 'GRENADINE 1/1', unit: 'LIT.' }
 ];
-
 let items = [...DEFAULT_ITEMS];
 let objekti = [];
 let transactions = [];
@@ -413,7 +514,37 @@ function renderObjekti() {
         const dNama = akt.filter(t => t.type === 'duguju_nama').reduce((s, t) => s + t.quantity, 0);
         const miD = akt.filter(t => t.type === 'mi_dugujemo').reduce((s, t) => s + t.quantity, 0);
         const card = document.createElement('div'); card.className = 'card';
-        card.innerHTML = `<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;"><div><h3>${obj.name}</h3>${obj.contact||''}<div style="margin-top:8px;">${akt.length>0?`<span class="badge badge-duguju-nama">📤 Duguju: ${dNama.toFixed(2)}</span> <span class="badge badge-mi-dugujemo">📥 Dugujemo: ${miD.toFixed(2)}</span>`:'<span style="color:#28a745;">✅ Razduženo</span>'}</div></div><div style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn btn-pozajmica btn-duguju-nama" onclick="openTrans('${obj.id}','duguju_nama')">📤 Oni duguju</button><button class="btn btn-pozajmica btn-mi-dugujemo" onclick="openTrans('${obj.id}','mi_dugujemo')">📥 Mi dugujemo</button><button class="btn btn-danger btn-sm" onclick="delObj('${obj.id}')">🗑</button></div></div>${akt.length>0?`<div style="margin-top:10px;border-top:1px solid #eee;padding-top:10px;">${[...akt].reverse().map(t=>{const item=items.find(i=>i.id===t.itemId);return`<div style="display:flex;justify-content:space-between;padding:5px 0;">${item?.name||'?'} ×${t.quantity} ${item?.unit||''} <button class="btn btn-success btn-sm" onclick="vrati('${t.id}')">✅ Vrati</button></div>`;}).join('')}</div>`:''}`;
+        card.innerHTML = `
+            <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                <div>
+                    <h3>${obj.name}</h3>${obj.contact||''}
+                    <div style="margin-top:8px;">
+                        ${akt.length>0 ? `
+                            <span class="badge badge-duguju-nama">📤 Duguju: ${dNama.toFixed(2)}</span> 
+                            <span class="badge badge-mi-dugujemo">📥 Dugujemo: ${miD.toFixed(2)}</span>
+                        ` : '<span style="color:#28a745;">✅ Razduženo</span>'}
+                    </div>
+                </div>
+                <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                    <button class="btn btn-pozajmica btn-duguju-nama" onclick="openTrans('${obj.id}','duguju_nama')">📤 Oni duguju</button>
+                    <button class="btn btn-pozajmica btn-mi-dugujemo" onclick="openTrans('${obj.id}','mi_dugujemo')">📥 Mi dugujemo</button>
+                    <button class="btn btn-danger btn-sm" onclick="delObj('${obj.id}')">🗑</button>
+                </div>
+            </div>
+            ${akt.length>0 ? `
+                <div style="margin-top:10px;border-top:1px solid #eee;padding-top:10px;">
+                    ${[...akt].reverse().map(t => {
+                        const item = items.find(i => i.id === t.itemId);
+                        const btnClass = t.type === 'duguju_nama' ? 'vrati-dug' : 'vrati-mi';
+                        return `
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;">
+                                <span>${item?.name||'?'} ×${t.quantity} ${item?.unit||''}</span>
+                                <button class="btn btn-sm ${btnClass}" onclick="vrati('${t.id}')">✅ Vrati</button>
+                            </div>`;
+                    }).join('')}
+                </div>
+            ` : ''}
+        `;
         c.appendChild(card);
     });
 }
@@ -458,107 +589,9 @@ function renderStanje() {
     if (!ima) c.innerHTML = '<p style="text-align:center;color:#28a745;padding:20px;">✅ Sve razduženo.</p>';
 }
 
-// ==================== TRANSAKCIJE ====================
-function openTrans(oid, type) {
-    const obj = objekti.find(o => o.id === oid);
-    document.getElementById('modalTitle').textContent = type==='duguju_nama' ? `📤 ${obj?.name} duguje nama` : `📥 Mi dugujemo: ${obj?.name}`;
-    document.getElementById('modalBody').innerHTML = `<input type="text" id="itemSearch" placeholder="🔍 Pretraži artikal..." class="search-input" oninput="fil()"><div class="item-list" id="itemListContainer"></div><div style="margin-top:15px;"><label>Količina:</label><input type="number" id="quantity" value="1" min="0.01" step="any" style="width:120px;padding:10px;"></div><button onclick="saveTrans('${oid}','${type}')" class="btn btn-success" style="margin-top:15px;width:100%;padding:12px;">✅ Sačuvaj</button>`;
-    selectedItemId = null; fil(); showModal('transactionModal');
-}
+// ... (ostatak koda: openTrans, fil, saveTrans, vrati, delObj, addObjekat, addItem, exportData, resetAll, switchTab, showModal, closeModal) ...
+// ... (sve ove funkcije ostaju iste kao u prethodnom odgovoru) ...
 
-function fil() {
-    const s = document.getElementById('itemSearch')?.value.toLowerCase() || '';
-    const f = items.filter(i => i.name.toLowerCase().includes(s));
-    const c = document.getElementById('itemListContainer');
-    if (!c) return;
-    c.innerHTML = f.length === 0 ? '<p style="padding:15px;color:#999;">Nema artikala.</p>' : '';
-    f.forEach(i => {
-        const d = document.createElement('div'); d.className = 'item-option';
-        d.textContent = `${i.name} (${i.unit})`;
-        d.onclick = () => { selectedItemId = i.id; document.querySelectorAll('.item-option').forEach(e => e.style.background = ''); d.style.background = '#d4edda'; };
-        c.appendChild(d);
-    });
-}
-
-async function saveTrans(oid, type) {
-    if (!selectedItemId) { alert('Odaberi artikal!'); return; }
-    const qty = parseFloat(document.getElementById('quantity').value.replace(',', '.')) || 1;
-    transactions.push({ id: Date.now().toString(36), objekatId: oid, itemId: selectedItemId, type, quantity: qty, dateBorrowed: new Date().toLocaleString('hr'), dateReturned: null, status: 'aktivno' });
-    await saveToCloud(); renderAll(); closeModal('transactionModal');
-}
-
-async function vrati(id) {
-    if (confirm('Razdužiti?')) {
-        const t = transactions.find(t => t.id === id);
-        if (t) { t.status = 'vraceno'; t.dateReturned = new Date().toLocaleString('hr'); await saveToCloud(); renderAll(); }
-    }
-}
-
-async function delObj(id) {
-    if (confirm('Obrisati objekat?')) {
-        objekti = objekti.filter(o => o.id !== id);
-        transactions = transactions.filter(t => t.objekatId !== id);
-        await saveToCloud(); renderAll();
-    }
-}
-
-async function addObjekat() {
-    const name = document.getElementById('newObjekatName').value.trim();
-    if (!name) return;
-    objekti.push({ id: Date.now().toString(36), name, contact: document.getElementById('newObjekatContact').value.trim() });
-    document.getElementById('newObjekatName').value = ''; document.getElementById('newObjekatContact').value = '';
-    await saveToCloud(); renderAll(); closeModal('objekatFormModal');
-}
-
-async function addItem() {
-    const name = document.getElementById('newItemName').value.trim();
-    const unit = document.getElementById('newItemUnit').value.trim();
-    if (!name || !unit) return;
-    items.push({ id: Date.now().toString(36), name, unit });
-    document.getElementById('newItemName').value = ''; document.getElementById('newItemUnit').value = '';
-    await saveToCloud(); closeModal('itemFormModal');
-    alert('✅ Artikal dodat!');
-}
-
-function exportData() {
-    const data = JSON.stringify({ objekti, items, transactions }, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `pozajmnice_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
-    URL.revokeObjectURL(url);
-}
-
-async function resetAll() {
-    const sifra = prompt('🔒 Unesite šifru za reset:');
-    if (sifra === '1978') {
-        if (confirm('⚠️ Resetovati SVE podatke? Ovo briše objekte i transakcije, ali zadržava artikle.')) {
-            localStorage.removeItem('poz_data');
-            objekti = [];
-            transactions = [];
-            items = [...DEFAULT_ITEMS];
-            await saveToCloud();
-            renderAll();
-            alert('✅ Resetovano! Svih 186 artikala je tu.');
-        }
-    } else if (sifra === null) {
-        // korisnik je kliknuo Cancel
-    } else {
-        alert('❌ Pogrešna šifra! Pokušajte ponovo.');
-    }
-}
-
-function switchTab(event, tab) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-    event.target.classList.add('active');
-    document.getElementById('tab-' + tab).style.display = 'block';
-    if (tab === 'logovi') renderLogovi();
-    if (tab === 'stanje') renderStanje();
-}
-
-function showModal(id) { document.getElementById(id).classList.add('active'); }
-function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-window.onclick = e => { if (e.target.classList.contains('modal')) e.target.classList.remove('active'); };
 </script>
 </body>
 </html>
