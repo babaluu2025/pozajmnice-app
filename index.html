@@ -74,6 +74,7 @@
                 <h1>🤝 Pozajmnice</h1>
                 <div>
                     <button onclick="showModal('objekatFormModal')" class="btn btn-success">+ Objekat</button>
+                    <button onclick="showModal('itemFormModal')" class="btn btn-info">+ Artikal</button>
                     <button id="logoutBtn" class="btn btn-danger">Odjava</button>
                 </div>
             </div>
@@ -81,6 +82,7 @@
         <div class="container"><div id="objektiContainer"></div></div>
     </div>
 
+    <!-- MODALI -->
     <div id="transactionModal" class="modal">
         <div class="modal-content">
             <div class="modal-header"><h3 id="modalTitle"></h3><button onclick="closeModal('transactionModal')" style="font-size:24px;background:none;border:none;">&times;</button></div>
@@ -96,9 +98,18 @@
             <button onclick="addObjekat()" class="btn btn-success">Sačuvaj</button>
         </div>
     </div>
+    
+    <div id="itemFormModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Dodaj artikal</h3><button onclick="closeModal('itemFormModal')" style="font-size:24px;background:none;border:none;">&times;</button></div>
+            <input type="text" id="newItemName" placeholder="Naziv artikla" class="search-input">
+            <input type="text" id="newItemUnit" placeholder="Jedinica (kom, kg, l...)" class="search-input">
+            <button onclick="addItem()" class="btn btn-success">Sačuvaj artikal</button>
+        </div>
+    </div>
 
     <script>
-        // ARTIKLI DIREKTNO U KODU - UVEK VIDLJIVI
+        // ARTIKLI DIREKTNO U KODU
         const items = [
             { id: '1', name: 'Koka kola 0.25', unit: 'kom' },
             { id: '2', name: 'Fanta 0.25', unit: 'kom' },
@@ -231,6 +242,17 @@
             document.getElementById('newObjekatName').value = '';
             document.getElementById('newObjekatContact').value = '';
             saveData(); renderObjekti(); closeModal('objekatFormModal');
+        }
+
+        function addItem() {
+            const name = document.getElementById('newItemName').value.trim();
+            const unit = document.getElementById('newItemUnit').value.trim();
+            if (!name || !unit) return;
+            items.push({ id: Date.now().toString(36), name, unit });
+            document.getElementById('newItemName').value = '';
+            document.getElementById('newItemUnit').value = '';
+            closeModal('itemFormModal');
+            alert('✅ Artikal dodat! Videćeš ga u pretrazi.');
         }
 
         function showModal(id) { document.getElementById(id).classList.add('active'); }
