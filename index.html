@@ -31,6 +31,7 @@
         .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; margin: 2px; color: white; font-weight: bold; }
         .btn-success { background: #28a745; } .btn-info { background: #17a2b8; } .btn-danger { background: #dc3545; }
+        .btn-warning { background: #ffc107; color: black; }
         .btn-sm { padding: 5px 12px; font-size: 13px; }
         .btn-pozajmica { padding: 12px 24px; font-size: 15px; min-width: 160px; border-radius: 10px; font-weight: bold; }
         .btn-duguju-nama { background: #0d6efd; color: white; } .btn-mi-dugujemo { background: #fd7e14; color: white; }
@@ -81,6 +82,7 @@
                 <button onclick="showModal('objekatFormModal')" class="btn btn-success">+ Objekat</button>
                 <button onclick="showModal('itemFormModal')" class="btn btn-info">+ Artikal</button>
                 <button onclick="exportData()" class="btn btn-info">📥 Export</button>
+                <button onclick="resetAll()" class="btn btn-warning">🔄 Reset</button>
                 <button id="logoutBtn" class="btn btn-danger">Odjava</button>
             </div>
         </div>
@@ -139,7 +141,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_nbUWlCIXbB48NoBRhH4ucg_PfCAmau1';
 let supabaseClient = null;
 try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
 
-// ==================== ARTIKLI ====================
+// ==================== SVI ARTIKLI ====================
 const DEFAULT_ITEMS = [
     { id: '1', name: 'CEVAP MASA KOM/S', unit: 'KOM.' },
     { id: '2', name: 'TOST 24/1 KOM/S', unit: 'KOM.' },
@@ -328,6 +330,7 @@ const DEFAULT_ITEMS = [
     { id: '185', name: 'MELON LIKER/S', unit: 'LIT.' },
     { id: '186', name: 'GRENADINE 1/1', unit: 'LIT.' }
 ];
+
 let items = [...DEFAULT_ITEMS];
 let objekti = [];
 let transactions = [];
@@ -410,7 +413,7 @@ function renderObjekti() {
         const dNama = akt.filter(t => t.type === 'duguju_nama').reduce((s, t) => s + t.quantity, 0);
         const miD = akt.filter(t => t.type === 'mi_dugujemo').reduce((s, t) => s + t.quantity, 0);
         const card = document.createElement('div'); card.className = 'card';
-        card.innerHTML = `<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;"><div><h3>${obj.name}</h3>${obj.contact||''}<div style="margin-top:8px;">${akt.length>0?`<span class="badge badge-duguju-nama">📤 Duguju: ${dNama.toFixed(2)}</span> <span class="badge badge-mi-dugujemo">📥 Dugujemo: ${miD.toFixed(2)}</span>`:'<span style="color:#28a745;">✅ Razduženo</span>'}</div></div><div style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn btn-pozajmica btn-duguju-nama" onclick="openTrans(\'${obj.id}\',\'duguju_nama\')">📤 Oni duguju</button><button class="btn btn-pozajmica btn-mi-dugujemo" onclick="openTrans(\'${obj.id}\',\'mi_dugujemo\')">📥 Mi dugujemo</button><button class="btn btn-danger btn-sm" onclick="delObj(\'${obj.id}\')">🗑</button></div></div>${akt.length>0?`<div style="margin-top:10px;border-top:1px solid #eee;padding-top:10px;">${[...akt].reverse().map(t=>{const item=items.find(i=>i.id===t.itemId);return`<div style="display:flex;justify-content:space-between;padding:5px 0;">${item?.name||'?'} ×${t.quantity} ${item?.unit||''} <button class="btn btn-success btn-sm" onclick="vrati(\'${t.id}\')">✅ Vrati</button></div>`;}).join('')}</div>`:''}`;
+        card.innerHTML = `<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;"><div><h3>${obj.name}</h3>${obj.contact||''}<div style="margin-top:8px;">${akt.length>0?`<span class="badge badge-duguju-nama">📤 Duguju: ${dNama.toFixed(2)}</span> <span class="badge badge-mi-dugujemo">📥 Dugujemo: ${miD.toFixed(2)}</span>`:'<span style="color:#28a745;">✅ Razduženo</span>'}</div></div><div style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn btn-pozajmica btn-duguju-nama" onclick="openTrans('${obj.id}','duguju_nama')">📤 Oni duguju</button><button class="btn btn-pozajmica btn-mi-dugujemo" onclick="openTrans('${obj.id}','mi_dugujemo')">📥 Mi dugujemo</button><button class="btn btn-danger btn-sm" onclick="delObj('${obj.id}')">🗑</button></div></div>${akt.length>0?`<div style="margin-top:10px;border-top:1px solid #eee;padding-top:10px;">${[...akt].reverse().map(t=>{const item=items.find(i=>i.id===t.itemId);return`<div style="display:flex;justify-content:space-between;padding:5px 0;">${item?.name||'?'} ×${t.quantity} ${item?.unit||''} <button class="btn btn-success btn-sm" onclick="vrati('${t.id}')">✅ Vrati</button></div>`;}).join('')}</div>`:''}`;
         c.appendChild(card);
     });
 }
@@ -459,7 +462,7 @@ function renderStanje() {
 function openTrans(oid, type) {
     const obj = objekti.find(o => o.id === oid);
     document.getElementById('modalTitle').textContent = type==='duguju_nama' ? `📤 ${obj?.name} duguje nama` : `📥 Mi dugujemo: ${obj?.name}`;
-    document.getElementById('modalBody').innerHTML = `<input type="text" id="itemSearch" placeholder="🔍 Pretraži artikal..." class="search-input" oninput="fil()"><div class="item-list" id="itemListContainer"></div><div style="margin-top:15px;"><label>Količina:</label><input type="number" id="quantity" value="1" min="0.01" step="any" style="width:120px;padding:10px;"></div><button onclick="saveTrans(\'${oid}\',\'${type}\')" class="btn btn-success" style="margin-top:15px;width:100%;padding:12px;">✅ Sačuvaj</button>`;
+    document.getElementById('modalBody').innerHTML = `<input type="text" id="itemSearch" placeholder="🔍 Pretraži artikal..." class="search-input" oninput="fil()"><div class="item-list" id="itemListContainer"></div><div style="margin-top:15px;"><label>Količina:</label><input type="number" id="quantity" value="1" min="0.01" step="any" style="width:120px;padding:10px;"></div><button onclick="saveTrans('${oid}','${type}')" class="btn btn-success" style="margin-top:15px;width:100%;padding:12px;">✅ Sačuvaj</button>`;
     selectedItemId = null; fil(); showModal('transactionModal');
 }
 
@@ -523,6 +526,18 @@ function exportData() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `pozajmnice_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
     URL.revokeObjectURL(url);
+}
+
+async function resetAll() {
+    if (confirm('⚠️ Resetovati SVE podatke? Ovo briše objekte i transakcije, ali zadržava artikle.')) {
+        localStorage.removeItem('poz_data');
+        objekti = [];
+        transactions = [];
+        items = [...DEFAULT_ITEMS];
+        await saveToCloud();
+        renderAll();
+        alert('✅ Resetovano! Svih 186 artikala je tu.');
+    }
 }
 
 function switchTab(event, tab) {
