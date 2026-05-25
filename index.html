@@ -59,7 +59,6 @@
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="loginScreen" class="login-container">
     <div class="login-box">
         <div class="login-icon">🤝</div>
@@ -71,7 +70,6 @@
     </div>
 </div>
 
-<!-- APLIKACIJA -->
 <div id="appContent" style="display:none;">
     <header>
         <div class="container header-content">
@@ -83,16 +81,13 @@
             </div>
         </div>
     </header>
-    
     <div class="container">
         <div class="tabs">
             <button class="tab active" onclick="switchTab(event, 'objekti')">🏢 Objekti</button>
             <button class="tab" onclick="switchTab(event, 'logovi')">📋 Logovi</button>
             <button class="tab" onclick="switchTab(event, 'stanje')">📊 Stanje</button>
         </div>
-        
         <div id="tab-objekti" class="tab-content"><div id="objektiContainer"></div></div>
-        
         <div id="tab-logovi" class="tab-content" style="display:none;">
             <div class="card">
                 <h3>Sve transakcije</h3>
@@ -104,14 +99,12 @@
                 <table id="logoviTable"><thead><tr><th>Objekat</th><th>Artikal</th><th>Tip</th><th>Kol</th><th>Pozajmljeno</th><th>Vraćeno</th><th>Status</th></tr></thead><tbody></tbody></table>
             </div>
         </div>
-        
         <div id="tab-stanje" class="tab-content" style="display:none;">
             <div class="card"><h3>📊 Sabrano stanje po objektima</h3><div id="stanjeContainer"></div></div>
         </div>
     </div>
 </div>
 
-<!-- MODALI -->
 <div id="transactionModal" class="modal">
     <div class="modal-content">
         <div class="modal-header"><h3 id="modalTitle"></h3><button onclick="closeModal('transactionModal')" style="font-size:24px;background:none;border:none;">&times;</button></div>
@@ -138,7 +131,6 @@
 <script>
 // ==================== ARTIKLI ====================
 const items = [
-   const items = [
     { id: '1', name: 'CEVAP MASA KOM/S', unit: 'KOM.' },
     { id: '2', name: 'TOST 24/1 KOM/S', unit: 'KOM.' },
     { id: '3', name: 'BRASNO T400/S', unit: 'KG.' },
@@ -326,6 +318,7 @@ const items = [
     { id: '185', name: 'MELON LIKER/S', unit: 'LIT.' },
     { id: '186', name: 'GRENADINE 1/1', unit: 'LIT.' }
 ];
+
 let objekti = [];
 let transactions = [];
 let selectedItemId = null;
@@ -343,7 +336,6 @@ function saveData() {
     localStorage.setItem('poz_data', JSON.stringify({ objekti, transactions }));
 }
 
-// ==================== LOGIN ====================
 document.getElementById('loginBtn').onclick = () => {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('appContent').style.display = 'block';
@@ -356,28 +348,17 @@ document.getElementById('logoutBtn').onclick = () => {
     document.getElementById('loginScreen').style.display = 'flex';
 };
 
-// ==================== RENDER ====================
 function renderAll() { renderObjekti(); renderLogovi(); renderStanje(); }
 
 function renderObjekti() {
     const c = document.getElementById('objektiContainer');
-    c.innerHTML = objekti.length === 0 ? '<p style="text-align:center;color:#999;padding:20px;">Nema objekata. Kliknite "+ Objekat".</p>' : '';
+    c.innerHTML = objekti.length === 0 ? '<p style="text-align:center;color:#999;padding:20px;">Nema objekata.</p>' : '';
     objekti.forEach(obj => {
         const akt = transactions.filter(t => t.objekatId === obj.id && t.status === 'aktivno');
         const dNama = akt.filter(t => t.type === 'duguju_nama').reduce((s, t) => s + t.quantity, 0);
         const miD = akt.filter(t => t.type === 'mi_dugujemo').reduce((s, t) => s + t.quantity, 0);
         const card = document.createElement('div'); card.className = 'card';
-        card.innerHTML = `
-            <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-                <div><h3>${obj.name}</h3>${obj.contact||''}
-                <div style="margin-top:8px;">${akt.length>0?`<span class="badge badge-duguju-nama">📤 Duguju: ${dNama.toFixed(2)}</span> <span class="badge badge-mi-dugujemo">📥 Dugujemo: ${miD.toFixed(2)}</span>`:'<span style="color:#28a745;">✅ Razduženo</span>'}</div></div>
-                <div style="display:flex;gap:5px;flex-wrap:wrap;">
-                    <button class="btn btn-pozajmica btn-duguju-nama" onclick="openTrans('${obj.id}','duguju_nama')">📤 Oni duguju</button>
-                    <button class="btn btn-pozajmica btn-mi-dugujemo" onclick="openTrans('${obj.id}','mi_dugujemo')">📥 Mi dugujemo</button>
-                    <button class="btn btn-danger btn-sm" onclick="delObj('${obj.id}')">🗑</button>
-                </div>
-            </div>
-            ${akt.length>0?`<div style="margin-top:10px;border-top:1px solid #eee;padding-top:10px;">${[...akt].reverse().map(t=>{const item=items.find(i=>i.id===t.itemId);return`<div style="display:flex;justify-content:space-between;padding:5px 0;">${item?.name||'?'} ×${t.quantity} ${item?.unit||''} <button class="btn btn-success btn-sm" onclick="vrati('${t.id}')">✅ Vrati</button></div>`;}).join('')}</div>`:''}`;
+        card.innerHTML = `<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;"><div><h3>${obj.name}</h3>${obj.contact||''}<div style="margin-top:8px;">${akt.length>0?`<span class="badge badge-duguju-nama">📤 Duguju: ${dNama.toFixed(2)}</span> <span class="badge badge-mi-dugujemo">📥 Dugujemo: ${miD.toFixed(2)}</span>`:'<span style="color:#28a745;">✅ Razduženo</span>'}</div></div><div style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn btn-pozajmica btn-duguju-nama" onclick="openTrans(\'${obj.id}\',\'duguju_nama\')">📤 Oni duguju</button><button class="btn btn-pozajmica btn-mi-dugujemo" onclick="openTrans(\'${obj.id}\',\'mi_dugujemo\')">📥 Mi dugujemo</button><button class="btn btn-danger btn-sm" onclick="delObj(\'${obj.id}\')">🗑</button></div></div>${akt.length>0?`<div style="margin-top:10px;border-top:1px solid #eee;padding-top:10px;">${[...akt].reverse().map(t=>{const item=items.find(i=>i.id===t.itemId);return`<div style="display:flex;justify-content:space-between;padding:5px 0;">${item?.name||'?'} ×${t.quantity} ${item?.unit||''} <button class="btn btn-success btn-sm" onclick="vrati(\'${t.id}\')">✅ Vrati</button></div>`;}).join('')}</div>`:''}`;
         c.appendChild(card);
     });
 }
@@ -422,16 +403,10 @@ function renderStanje() {
     if (!ima) c.innerHTML = '<p style="text-align:center;color:#28a745;padding:20px;">✅ Sve razduženo.</p>';
 }
 
-// ==================== TRANSAKCIJE ====================
 function openTrans(oid, type) {
     const obj = objekti.find(o => o.id === oid);
     document.getElementById('modalTitle').textContent = type==='duguju_nama' ? `📤 ${obj?.name} duguje nama` : `📥 Mi dugujemo: ${obj?.name}`;
-    document.getElementById('modalBody').innerHTML = `
-        <input type="text" id="itemSearch" placeholder="🔍 Pretraži artikal..." class="search-input" oninput="fil()">
-        <div class="item-list" id="itemListContainer"></div>
-        <div style="margin-top:15px;"><label>Količina:</label>
-        <input type="number" id="quantity" value="1" min="0.01" step="any" style="width:120px;padding:10px;"></div>
-        <button onclick="saveTrans('${oid}','${type}')" class="btn btn-success" style="margin-top:15px;width:100%;padding:12px;">✅ Sačuvaj</button>`;
+    document.getElementById('modalBody').innerHTML = `<input type="text" id="itemSearch" placeholder="🔍 Pretraži artikal..." class="search-input" oninput="fil()"><div class="item-list" id="itemListContainer"></div><div style="margin-top:15px;"><label>Količina:</label><input type="number" id="quantity" value="1" min="0.01" step="any" style="width:120px;padding:10px;"></div><button onclick="saveTrans(\'${oid}\',\'${type}\')" class="btn btn-success" style="margin-top:15px;width:100%;padding:12px;">✅ Sačuvaj</button>`;
     selectedItemId = null;
     fil();
     showModal('transactionModal');
@@ -491,7 +466,6 @@ function addItem() {
     alert('✅ Artikal dodat!');
 }
 
-// ==================== TABOVI ====================
 function switchTab(event, tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
