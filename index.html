@@ -638,7 +638,17 @@ async function vrati(id) {
             t.dateReturned = new Date().toLocaleString('hr');
             
             const item = items.find(i => i.id === t.itemId);
-            lastMessage = `Wow/razduzeno/${item?.name} ${t.quantity} ${item?.unit}`;
+            // Formiramo poruku u zavisnosti od tipa prvobitne pozajmice
+            if (t.type === 'duguju_nama') {
+                // Oni su dugovali nama, sada vraćaju -> oduzimamo sa njihovog stanja
+                lastMessage = `Vraceno/oduzeti sa stanja/${item?.name} ${t.quantity} ${item?.unit}`;
+            } else if (t.type === 'mi_dugujemo') {
+                // Mi smo dugovali njima, sada vraćamo -> dodajemo na naše stanje
+                lastMessage = `Vraceno/dodaj na stanju/${item?.name} ${t.quantity} ${item?.unit}`;
+            } else {
+                // Fallback (ne bi trebalo da se desi, ali čisto da imamo)
+                lastMessage = `Wow/razduzeno/${item?.name} ${t.quantity} ${item?.unit}`;
+            }
             copyToClipboard(lastMessage);
             
             await saveToCloud(); renderAll();
