@@ -84,6 +84,7 @@
                 <button onclick="showModal('objekatFormModal')" class="btn btn-success">+ Objekat</button>
                 <button onclick="showModal('itemFormModal')" class="btn btn-info">+ Artikal</button>
                 <button onclick="exportData()" class="btn btn-info">📥 Export</button>
+                <button onclick="copyLastMessage()" class="btn btn-info">📋 Kopiraj</button>
                 <button onclick="resetAll()" class="btn btn-warning">🔄 Reset</button>
                 <button id="logoutBtn" class="btn btn-danger">Odjava</button>
             </div>
@@ -434,6 +435,7 @@ let items = [...DEFAULT_ITEMS];
 let objekti = [];
 let transactions = [];
 let selectedItemId = null;
+let lastMessage = '';  // čuva poslednju poruku za kopiranje
 
 function updateSyncStatus(online) {
     const dot = document.getElementById('syncDot');
@@ -612,14 +614,58 @@ function fil() {
 async function saveTrans(oid, type) {
     if (!selectedItemId) { alert('Odaberi artikal!'); return; }
     const qty = parseFloat(document.getElementById('quantity').value.replace(',', '.')) || 1;
+    const item = items.find(i => i.id === selectedItemId);
+    const obj = objekti.find(o => o.id === oid);
+    
     transactions.push({ id: Date.now().toString(36), objekatId: oid, itemId: selectedItemId, type, quantity: qty, dateBorrowed: new Date().toLocaleString('hr'), dateReturned: null, status: 'aktivno' });
+    
+    // Formiraj i kopiraj poruku
+    const action = type === 'duguju_nama' ? 'Oni uzeli' : 'Mi uzeli';
+    lastMessage = `${obj?.name||'Objekat'}: ${action} ${item?.name||'Artikal'} ${qty} ${item?.unit||''}`;
+    copyToClipboard(lastMessage);
+    
     await saveToCloud(); renderAll(); closeModal('transactionModal');
 }
 
 async function vrati(id) {
     if (confirm('Razdužiti?')) {
         const t = transactions.find(t => t.id === id);
-        if (t) { t.status = 'vraceno'; t.dateReturned = new Date().toLocaleString('hr'); await saveToCloud(); renderAll(); }
+        if (t) {
+            t.status = 'vraceno';
+            t.dateReturned = new Date().toLocaleString('hr');
+            
+            const item = items.find(i => i.id === t.itemId);
+            const obj = objekti.find(o => o.id === t.objekatId);
+            lastMessage = `${obj?.name||'Objekat'}: Razduženo ${item?.name||'Artikal'} ${t.quantity} ${item?.unit||''}`;
+            copyToClipboard(lastMessage);
+            
+            await saveToCloud(); renderAll();
+        }
+    }
+}
+
+function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            // Možemo da prikažemo kratku obaveštenje, ali nećemo da smetamo
+        }).catch(() => {
+            fallbackCopy(text);
+        });
+    } else {
+        fallbackCopy(text);
+    }
+}
+
+function fallbackCopy(text) {
+    // Ako clipboard API nije dostupan, prikazujemo prompt sa porukom
+    prompt('📋 Poruka je spremna. Kopiraj je ručno:', text);
+}
+
+function copyLastMessage() {
+    if (lastMessage) {
+        copyToClipboard(lastMessage);
+    } else {
+        alert('Nema poruke za kopiranje. Prvo napravite transakciju.');
     }
 }
 
