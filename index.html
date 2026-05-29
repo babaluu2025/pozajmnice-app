@@ -620,8 +620,11 @@ async function saveTrans(oid, type) {
     transactions.push({ id: Date.now().toString(36), objekatId: oid, itemId: selectedItemId, type, quantity: qty, dateBorrowed: new Date().toLocaleString('hr'), dateReturned: null, status: 'aktivno' });
     
     // Formiraj i kopiraj poruku
-    const action = type === 'duguju_nama' ? 'Oni uzeli' : 'Mi uzeli';
-    lastMessage = `${obj?.name||'Objekat'}: ${action} ${item?.name||'Artikal'} ${qty} ${item?.unit||''}`;
+    if (type === 'duguju_nama') {
+        lastMessage = `Wow/uzeli oni/dodaj na stanju/${item?.name} ${qty} ${item?.unit}`;
+    } else {
+        lastMessage = `Wow/uzeli mi/skini sa stanja/${item?.name} ${qty} ${item?.unit}`;
+    }
     copyToClipboard(lastMessage);
     
     await saveToCloud(); renderAll(); closeModal('transactionModal');
@@ -635,8 +638,7 @@ async function vrati(id) {
             t.dateReturned = new Date().toLocaleString('hr');
             
             const item = items.find(i => i.id === t.itemId);
-            const obj = objekti.find(o => o.id === t.objekatId);
-            lastMessage = `${obj?.name||'Objekat'}: Razduženo ${item?.name||'Artikal'} ${t.quantity} ${item?.unit||''}`;
+            lastMessage = `Wow/razduzeno/${item?.name} ${t.quantity} ${item?.unit}`;
             copyToClipboard(lastMessage);
             
             await saveToCloud(); renderAll();
@@ -646,18 +648,13 @@ async function vrati(id) {
 
 function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(() => {
-            // Možemo da prikažemo kratku obaveštenje, ali nećemo da smetamo
-        }).catch(() => {
-            fallbackCopy(text);
-        });
+        navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
     } else {
         fallbackCopy(text);
     }
 }
 
 function fallbackCopy(text) {
-    // Ako clipboard API nije dostupan, prikazujemo prompt sa porukom
     prompt('📋 Poruka je spremna. Kopiraj je ručno:', text);
 }
 
