@@ -435,7 +435,7 @@ let items = [...DEFAULT_ITEMS];
 let objekti = [];
 let transactions = [];
 let selectedItemId = null;
-let lastMessage = '';  // čuva poslednju poruku za kopiranje
+let lastMessage = '';
 
 function updateSyncStatus(online) {
     const dot = document.getElementById('syncDot');
@@ -611,6 +611,7 @@ function fil() {
     });
 }
 
+// ⬇️⬇️⬇️ IZMENJENA FUNKCIJA ⬇️⬇️⬇️
 async function saveTrans(oid, type) {
     if (!selectedItemId) { alert('Odaberi artikal!'); return; }
     const qty = parseFloat(document.getElementById('quantity').value.replace(',', '.')) || 1;
@@ -619,17 +620,20 @@ async function saveTrans(oid, type) {
     
     transactions.push({ id: Date.now().toString(36), objekatId: oid, itemId: selectedItemId, type, quantity: qty, dateBorrowed: new Date().toLocaleString('hr'), dateReturned: null, status: 'aktivno' });
     
-    // Formiraj i kopiraj poruku
+    // OBRNUTA LOGIKA:
+    // "duguju_nama" = Oni uzeli od nas → mi skidamo sa stanja
     if (type === 'duguju_nama') {
-        lastMessage = `Wow/uzeli oni/dodaj na stanju/${item?.name} ${qty} ${item?.unit}`;
+        lastMessage = `Wow/uzeli oni/skini sa stanja/${item?.name} ${qty} ${item?.unit}`;
     } else {
-        lastMessage = `Wow/uzeli mi/skini sa stanja/${item?.name} ${qty} ${item?.unit}`;
+        lastMessage = `Wow/uzeli mi/dodaj na stanju/${item?.name} ${qty} ${item?.unit}`;
     }
     copyToClipboard(lastMessage);
     
     await saveToCloud(); renderAll(); closeModal('transactionModal');
 }
+// ⬆️⬆️⬆️ KRAJ IZMENE ⬆️⬆️⬆️
 
+// ⬇️⬇️⬇️ IZMENJENA FUNKCIJA ⬇️⬇️⬇️
 async function vrati(id) {
     if (confirm('Razdužiti?')) {
         const t = transactions.find(t => t.id === id);
@@ -638,15 +642,14 @@ async function vrati(id) {
             t.dateReturned = new Date().toLocaleString('hr');
             
             const item = items.find(i => i.id === t.itemId);
-            // Formiramo poruku u zavisnosti od tipa prvobitne pozajmice
+            // OBRNUTA LOGIKA ZA POVRAĆAJ:
+            // Ako su oni dugovali nama (duguju_nama), sada vraćaju → dodajemo na stanje
             if (t.type === 'duguju_nama') {
-                // Oni su dugovali nama, sada vraćaju -> oduzimamo sa njihovog stanja
-                lastMessage = `Vraceno/oduzeti sa stanja/${item?.name} ${t.quantity} ${item?.unit}`;
-            } else if (t.type === 'mi_dugujemo') {
-                // Mi smo dugovali njima, sada vraćamo -> dodajemo na naše stanje
                 lastMessage = `Vraceno/dodaj na stanju/${item?.name} ${t.quantity} ${item?.unit}`;
+            } else if (t.type === 'mi_dugujemo') {
+                // Mi smo dugovali njima, sada vraćamo → oduzimamo sa stanja
+                lastMessage = `Vraceno/oduzeti sa stanja/${item?.name} ${t.quantity} ${item?.unit}`;
             } else {
-                // Fallback (ne bi trebalo da se desi, ali čisto da imamo)
                 lastMessage = `Wow/razduzeno/${item?.name} ${t.quantity} ${item?.unit}`;
             }
             copyToClipboard(lastMessage);
@@ -655,6 +658,7 @@ async function vrati(id) {
         }
     }
 }
+// ⬆️⬆️⬆️ KRAJ IZMENE ⬆️⬆️⬆️
 
 function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -713,14 +717,14 @@ function exportData() {
 async function resetAll() {
     const sifra = prompt('🔒 Unesite šifru za reset:');
     if (sifra === '1978') {
-        if (confirm('⚠️ Resetovati SVE podatke? Ovo briše objekte i transakcije, ali zadržava artikle.')) {
+        if (confirm('⚠️ Resetovati SVE podatke?')) {
             localStorage.removeItem('poz_data');
             objekti = [];
             transactions = [];
             items = [...DEFAULT_ITEMS];
             await saveToCloud();
             renderAll();
-            alert('✅ Resetovano! Svih 285 artikala je tu.');
+            alert('✅ Resetovano!');
         }
     } else if (sifra !== null) {
         alert('❌ Pogrešna šifra!');
