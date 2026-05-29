@@ -611,26 +611,27 @@ function fil() {
     });
 }
 
-// ⬇️⬇️⬇️ OBRNUTA LOGIKA ZA POZAJMICE ⬇️⬇️⬇️
+// ⬇️⬇️⬇️ DODAT NAZIV OBJEKTA U PORUKE ZA POZAJMICU ⬇️⬇️⬇️
 async function saveTrans(oid, type) {
     if (!selectedItemId) { alert('Odaberi artikal!'); return; }
     const qty = parseFloat(document.getElementById('quantity').value.replace(',', '.')) || 1;
     const item = items.find(i => i.id === selectedItemId);
     const obj = objekti.find(o => o.id === oid);
+    const objName = obj?.name || 'Objekat';  // 👈 uzimamo naziv lokala
     
     transactions.push({ id: Date.now().toString(36), objekatId: oid, itemId: selectedItemId, type, quantity: qty, dateBorrowed: new Date().toLocaleString('hr'), dateReturned: null, status: 'aktivno' });
     
     if (type === 'duguju_nama') {
-        lastMessage = `Wow/uzeli oni/skini sa stanja/${item?.name} ${qty} ${item?.unit}`;
+        lastMessage = `${objName}: Wow/uzeli oni/skini sa stanja/${item?.name} ${qty} ${item?.unit}`;
     } else {
-        lastMessage = `Wow/uzeli mi/dodaj na stanju/${item?.name} ${qty} ${item?.unit}`;
+        lastMessage = `${objName}: Wow/uzeli mi/dodaj na stanju/${item?.name} ${qty} ${item?.unit}`;
     }
     copyToClipboard(lastMessage);
     
     await saveToCloud(); renderAll(); closeModal('transactionModal');
 }
 
-// ⬇️⬇️⬇️ OBRNUTA LOGIKA ZA VRAĆANJE + NAZIV LOKALA ⬇️⬇️⬇️
+// ⬇️⬇️⬇️ VRAĆANJE – PORUKA SA LOKALOM I OBRNUTOM LOGIKOM ⬇️⬇️⬇️
 async function vrati(id) {
     if (confirm('Razdužiti?')) {
         const t = transactions.find(t => t.id === id);
